@@ -1,0 +1,90 @@
+:host {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    direction: rtl; /* Ensure RTL layout */
+}
+.rounded-xl {
+    border-radius: 0.75rem !important;
+}
+.rounded-lg {
+    border-radius: 0.5rem !important;
+}
+.rounded-top-xl {
+    border-top-left-radius: 0.75rem !important;
+    border-top-right-radius: 0.75rem !important;
+}
+.driver-status-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 0.5rem; /* Space before the text in RTL */
+}
+
+/* Primary Brand Color */
+.btn-primary-custom, .btn-primary-custom:focus {
+    background-color: #1193d4 !important;
+    border-color: #1193d4 !important;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+.btn-primary-custom:hover {
+    background-color: #0c7dbf !important;
+    border-color: #0c7dbf !important;
+}
+.btn-success {
+    background-color: #10B981 !important;
+    border-color: #10B981 !important;
+}
+
+/* Background and Text Colors */
+.bg-light {
+    background-color: #f6f7f8 !important;
+}
+.card {
+    color: #1C1C1E; /* Default text color */
+    border: none;
+}
+.text-dark {
+    color: #1C1C1E !important;
+}
+
+/* Modal styling */
+.modal {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+.modal-dialog {
+    max-width: 90%;
+    margin: 1.75rem auto;
+}
+@media (min-width: 576px) {
+    .modal-dialog {
+        max-width: 500px;
+    }
+    .modal-dialog.modal-lg {
+        max-width: 800px;
+    }
+}
+
+/* Desktop Optimization: Adjust content width for better viewing on laptops/desktops */
+@media (min-width: 992px) {
+    .container-fluid {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .sticky-lg-top {
+        position: sticky;
+        top: 80px; /* Adjust as needed */
+    }
+    /* NEW: Make driver action buttons smaller on large screens (lg and up) */
+    .btn-lg-small {
+        padding: 0.5rem 1rem !important; /* Smaller vertical padding */
+        font-size: 0.875rem !important; /* Smaller font size */
+    }
+
+    
+    /* NEW: Adjust margin between the reordered buttons on large screens */
+    .mt-auto .mt-3 {
+        margin-top: 0.5rem !important;
+    }
+}

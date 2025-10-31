@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Update Status</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#1193d4",
+              "background-light": "#f8f9fa",
+              "background-dark": "#121212",
+              "text-light": "#212529",
+              "text-dark": "#efefef",
+              "status-green": "#28a745",
+              "status-yellow": "#ffc107",
+              "status-blue": "#17a2b8",
+              "status-red": "#dc3545",
+              "status-gray": "#6c757d",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {
+              "DEFAULT": "0.5rem",
+              "lg": "0.75rem",
+              "xl": "1rem",
+              "full": "9999px"
+            },
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-10 flex items-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm p-4 pb-3 justify-between border-b border-slate-200 dark:border-slate-800">
+<div class="flex size-10 shrink-0 items-center justify-center">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary" data-alt="User avatar placeholder image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBKf5b7pBfnEt8j6vaFsDpjQNTgnw69spjSVn1XEimreg9P9Gx_ZjsbDd9YKGZUCJkPH-yTANHWEIXvqfhhZau8nEC7pfWEyuPadvVvyZCOnxQHMO-lMfOOdyC_IIECtvo0GX-fSLU7tthd40kZzyHNnZ3g41CszKUJgJk9rxzUiMyrYVXzjBG5iI_1WHtB9Wcs9NBSn3hMS-faUpeOIzZoZ-XNkB_E7YvZc_vK3vrLDJ807m7eoeGEs8YS8cDH1Opl4eX53MdnEBo");'></div>
+</div>
+<h1 class="text-text-light dark:text-text-dark text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Update Status</h1>
+<div class="flex w-10 items-center justify-end"><p class="text-text-light dark:text-text-dark text-base font-bold leading-normal tracking-[0.015em] shrink-0 whitespace-nowrap">John D.</p></div>
+</header>
+<main class="flex-grow flex flex-col px-4 pt-6 pb-24">
+<!-- Current Status Display -->
+<div class="mb-6">
+<h2 class="text-text-light dark:text-text-dark tracking-light text-2xl font-bold leading-tight text-left pb-3">Current Status</h2>
+<div class="p-4 @container bg-status-yellow/10 dark:bg-status-yellow/20 rounded-xl border border-status-yellow/50">
+<div class="flex flex-row items-center justify-start gap-4">
+<div class="flex items-center justify-center size-12 bg-status-yellow rounded-full shrink-0">
+<span class="material-symbols-outlined text-white text-3xl">route</span>
+</div>
+<div class="flex grow flex-col items-stretch justify-center gap-1">
+<p class="text-status-yellow text-lg font-bold leading-tight tracking-[-0.015em]">On Route</p>
+<p class="text-text-light/80 dark:text-text-dark/80 text-base font-normal leading-normal">You are currently on route to a patient.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Status Selection Buttons -->
+<div class="flex flex-1 flex-col items-stretch gap-3">
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-status-green text-white text-lg font-bold leading-normal tracking-[0.015em] w-full gap-3 transition-transform active:scale-95">
+<span class="material-symbols-outlined">health_and_safety</span>
+<span class="truncate">Available</span>
+</button>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-status-yellow text-black text-lg font-bold leading-normal tracking-[0.015em] w-full gap-3 transition-transform active:scale-95">
+<span class="material-symbols-outlined">route</span>
+<span class="truncate">On Route to Patient</span>
+</button>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-status-blue text-white text-lg font-bold leading-normal tracking-[0.015em] w-full gap-3 transition-transform active:scale-95">
+<span class="material-symbols-outlined">pin_drop</span>
+<span class="truncate">On Scene</span>
+</button>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-status-blue text-white text-lg font-bold leading-normal tracking-[0.015em] w-full gap-3 transition-transform active:scale-95">
+<span class="material-symbols-outlined">emergency</span>
+<span class="truncate">En Route to Hospital</span>
+</button>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-status-blue text-white text-lg font-bold leading-normal tracking-[0.015em] w-full gap-3 transition-transform active:scale-95">
+<span class="material-symbols-outlined">local_hospital</span>
+<span class="truncate">At Destination</span>
+</button>
+</div>
+<div class="flex flex-col items-stretch gap-3 mt-8 pt-4 border-t border-slate-200 dark:border-slate-800">
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-status-gray text-white text-lg font-bold leading-normal tracking-[0.015em] w-full gap-3 transition-transform active:scale-95">
+<span class="material-symbols-outlined">no_crash</span>
+<span class="truncate">Out of Service</span>
+</button>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-status-red text-white text-lg font-bold leading-normal tracking-[0.015em] w-full gap-3 transition-transform active:scale-95">
+<span class="material-symbols-outlined">logout</span>
+<span class="truncate">End Shift</span>
+</button>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-800">
+<div class="flex justify-around items-center h-16 max-w-md mx-auto">
+<a class="flex flex-col items-center justify-center w-full h-full text-text-light/60 dark:text-text-dark/60 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-xs font-medium">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-primary dark:text-primary font-bold transition-colors" href="#">
+<span class="material-symbols-outlined">update</span>
+<span class="text-xs font-medium">Status</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-text-light/60 dark:text-text-dark/60 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="text-xs font-medium">Trips</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-text-light/60 dark:text-text-dark/60 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="text-xs font-medium">Profile</span>
+</a>
+</div>
+</nav>
+</div>
+</body></html>

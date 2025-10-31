@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Driver Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1193d4",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101c22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="flex items-center bg-white dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<div class="flex size-12 shrink-0 items-center">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="John Doe's profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAitSC2DC91pyIaJEwjMEHBvx3n-0E0yazmeJoWyo7Mm0KCKHXv_exhrb5v8aRzt4_CrQO7X-fa92fRNFHTcLX6YjRY1posaLaeIgpvBMuZpZBQAHoYfXuNir2RQHQIU_Gkt3zjFCkbJbN2cx9H9umosLpoy7_toJCVXk-WuNl6NZSXpDGX4k2QKaOykibJN9hJevbFbVMxby-akPw8iN4F38MIJPB4JuNcWkm297XrcxvRiWVwWPnV4iGr6CpD_I9pfjAOBcUFvnI");'></div>
+</div>
+<h2 class="text-[#111618] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 ml-2">John Doe</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 w-12 bg-transparent text-[#111618] dark:text-white gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0">
+<span class="material-symbols-outlined text-[#111618] dark:text-white" style="font-size: 24px;">notifications</span>
+</button>
+</div>
+</div>
+<!-- Status Card -->
+<div class="p-4 pt-2 @container">
+<div class="flex flex-col items-stretch justify-start rounded-xl bg-[#28A745] text-white">
+<div class="flex w-full flex-col items-center justify-center gap-1 p-8">
+<p class="text-white text-4xl font-bold leading-tight tracking-[-0.015em]">AVAILABLE</p>
+<p class="text-white/80 text-base font-normal leading-normal">You are ready for the next trip.</p>
+</div>
+</div>
+</div>
+<!-- Button Group -->
+<div class="flex justify-stretch">
+<div class="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-between">
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] flex-1">
+<span class="truncate">Start Trip</span>
+</button>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-background-light dark:bg-white/10 text-[#111618] dark:text-white text-base font-bold leading-normal tracking-[0.015em] flex-1">
+<span class="truncate">End Shift</span>
+</button>
+</div>
+</div>
+<!-- Section Header -->
+<h3 class="text-[#111618] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Today's Summary</h3>
+<!-- Stats -->
+<div class="flex flex-wrap gap-4 px-4">
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-background-dark border border-[#dbe2e6] dark:border-white/10">
+<p class="text-[#111618] dark:text-white/80 text-base font-medium leading-normal">Trips Completed</p>
+<p class="text-[#111618] dark:text-white tracking-light text-3xl font-bold leading-tight">4</p>
+</div>
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-background-dark border border-[#dbe2e6] dark:border-white/10">
+<p class="text-[#111618] dark:text-white/80 text-base font-medium leading-normal">Total Earnings</p>
+<p class="text-[#111618] dark:text-white tracking-light text-3xl font-bold leading-tight">$320.50</p>
+</div>
+</div>
+<!-- Location Card -->
+<div class="p-4 @container">
+<div class="flex flex-col items-stretch justify-start rounded-xl @xl:flex-row @xl:items-start bg-white dark:bg-background-dark border border-[#dbe2e6] dark:border-white/10 overflow-hidden">
+<div class="w-full bg-center bg-no-repeat aspect-[16/7] bg-cover" data-alt="Map showing current location in a city." data-location="San Francisco" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBqmTI3zG9WJPPfYynjTiTZJFmbi2T1vT6qhMqcdVdQDTIuYawzz13Tw2tGGiXiWAv0K9ibS8-RS4DWN5G4c9bBvKQj99Aq7t4HvPgI76CHi4jjktZEhfo6UcY9_wIJVFjdm0uj81RkPX0xuJ29fBu8wE1mWkxhHKELhd8LlrdULbQE3-hRtcEPXVto8Yp-bKrumvdj5_k77HDIrDGLpGg3Hureet7qoIOAFerqtcgjiO43ddaACU0hUn2XGxMIXv6-2b_wZdMR8dM");'></div>
+<div class="flex w-full flex-col items-stretch justify-center gap-1 p-4">
+<div class="flex items-center justify-between gap-4">
+<p class="text-[#111618] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Current Location</p>
+<button class="flex items-center justify-center rounded-full h-8 w-8 text-[#111618] dark:text-white">
+<span class="material-symbols-outlined" style="font-size: 20px;">refresh</span>
+</button>
+</div>
+<p class="text-[#617c89] dark:text-white/60 text-base font-normal leading-normal">123 Market St, San Francisco, CA</p>
+</div>
+</div>
+</div>
+<!-- Section Header for Quick Actions -->
+<h3 class="text-[#111618] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Quick Actions</h3>
+<!-- Quick Action Grid -->
+<div class="grid grid-cols-2 gap-4 px-4 pb-24">
+<button class="flex flex-col items-center justify-center gap-2 rounded-xl p-6 bg-white dark:bg-background-dark border border-[#dbe2e6] dark:border-white/10 aspect-square">
+<span class="material-symbols-outlined text-primary" style="font-size: 32px;">local_gas_station</span>
+<p class="text-[#111618] dark:text-white text-base font-medium leading-normal">Add Fuel</p>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 rounded-xl p-6 bg-white dark:bg-background-dark border border-[#dbe2e6] dark:border-white/10 aspect-square">
+<span class="material-symbols-outlined text-primary" style="font-size: 32px;">build</span>
+<p class="text-[#111618] dark:text-white text-base font-medium leading-normal">Add Maintenance</p>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 rounded-xl p-6 bg-white dark:bg-background-dark border border-[#dbe2e6] dark:border-white/10 aspect-square">
+<span class="material-symbols-outlined text-primary" style="font-size: 32px;">receipt_long</span>
+<p class="text-[#111618] dark:text-white text-base font-medium leading-normal">View Trips</p>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 rounded-xl p-6 bg-white dark:bg-background-dark border border-[#dbe2e6] dark:border-white/10 aspect-square">
+<span class="material-symbols-outlined text-primary" style="font-size: 32px;">account_balance_wallet</span>
+<p class="text-[#111618] dark:text-white text-base font-medium leading-normal">View Wallet</p>
+</button>
+</div>
+<!-- Bottom Navigation Bar -->
+<div class="fixed bottom-0 left-0 right-0 h-20 bg-white/80 dark:bg-background-dark/80 backdrop-blur-lg border-t border-black/10 dark:border-white/10">
+<div class="flex justify-around items-center h-full max-w-lg mx-auto">
+<button class="flex flex-col items-center justify-center gap-1 text-primary">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-xs font-bold">Dashboard</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 text-[#617c89] dark:text-white/60">
+<span class="material-symbols-outlined">map</span>
+<span class="text-xs font-medium">Trips</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 text-[#617c89] dark:text-white/60">
+<span class="material-symbols-outlined">wallet</span>
+<span class="text-xs font-medium">Wallet</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 text-[#617c89] dark:text-white/60">
+<span class="material-symbols-outlined">person</span>
+<span class="text-xs font-medium">Profile</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>

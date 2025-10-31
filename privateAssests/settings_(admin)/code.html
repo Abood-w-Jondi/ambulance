@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - Ambulance Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#005A9C",
+              "background-light": "#F5F7FA",
+              "background-dark": "#101c22",
+              "text-light": "#333333",
+              "text-dark": "#E0E0E0",
+              "subtext-light": "#666666",
+              "subtext-dark": "#A0A0A0",
+              "card-light": "#FFFFFF",
+              "card-dark": "#1A2830",
+              "border-light": "#E0E0E0",
+              "border-dark": "#303E46",
+              "icon-bg-light": "#EBF2F8",
+              "icon-bg-dark": "#25343D",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-light dark:text-text-dark">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="flex items-center bg-card-light dark:bg-card-dark p-4 pb-3 justify-between border-b border-border-light dark:border-border-dark sticky top-0 z-10">
+<button class="flex size-10 shrink-0 items-center justify-center">
+<span class="material-symbols-outlined text-text-light dark:text-text-dark">arrow_back</span>
+</button>
+<h1 class="text-xl font-bold leading-tight tracking-tight text-text-light dark:text-text-dark flex-1 text-center -ml-10">Settings</h1>
+</div>
+<main class="flex flex-col gap-6 p-4">
+<!-- General Section -->
+<section class="flex flex-col gap-3">
+<h2 class="text-lg font-bold leading-tight tracking-tight px-2">General</h2>
+<div class="flex flex-col overflow-hidden rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark">
+<!-- Manage Transportation Types -->
+<a class="flex items-center gap-4 px-4 py-3 min-h-16 justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150 group" href="#">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-full bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-11">
+<span class="material-symbols-outlined">ambulance</span>
+</div>
+<p class="text-base font-medium leading-normal flex-1 truncate text-text-light dark:text-text-dark">Manage Transportation Types</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-subtext-light dark:text-subtext-dark group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</a>
+<hr class="border-t border-border-light dark:border-border-dark ml-20"/>
+<!-- Manage Maintenance Types -->
+<a class="flex items-center gap-4 px-4 py-3 min-h-16 justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150 group" href="#">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-full bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-11">
+<span class="material-symbols-outlined">build</span>
+</div>
+<p class="text-base font-medium leading-normal flex-1 truncate text-text-light dark:text-text-dark">Manage Maintenance Types</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-subtext-light dark:text-subtext-dark group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</a>
+<hr class="border-t border-border-light dark:border-border-dark ml-20"/>
+<!-- Manage Common Locations -->
+<a class="flex items-center gap-4 px-4 py-3 min-h-16 justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150 group" href="#">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-full bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-11">
+<span class="material-symbols-outlined">pin_drop</span>
+</div>
+<p class="text-base font-medium leading-normal flex-1 truncate text-text-light dark:text-text-dark">Manage Common Locations</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-subtext-light dark:text-subtext-dark group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</a>
+</div>
+</section>
+<!-- Accounting Section -->
+<section class="flex flex-col gap-3">
+<h2 class="text-lg font-bold leading-tight tracking-tight px-2">Accounting</h2>
+<div class="flex flex-col overflow-hidden rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark">
+<!-- Payment Settings -->
+<a class="flex items-center gap-4 px-4 py-3 min-h-16 justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150 group" href="#">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-full bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-11">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<div class="flex flex-col">
+<p class="text-base font-medium leading-normal text-text-light dark:text-text-dark">Payment Settings</p>
+<p class="text-sm font-normal text-subtext-light dark:text-subtext-dark">Fees, rates, and charges</p>
+</div>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-subtext-light dark:text-subtext-dark group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</a>
+</div>
+</section>
+<!-- Account Section -->
+<section class="flex flex-col gap-3">
+<h2 class="text-lg font-bold leading-tight tracking-tight px-2">Account</h2>
+<div class="flex flex-col overflow-hidden rounded-xl border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark">
+<!-- Manage Users -->
+<a class="flex items-center gap-4 px-4 py-3 min-h-16 justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-150 group" href="#">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center rounded-full bg-icon-bg-light dark:bg-icon-bg-dark shrink-0 size-11">
+<span class="material-symbols-outlined">group</span>
+</div>
+<p class="text-base font-medium leading-normal flex-1 truncate text-text-light dark:text-text-dark">Manage Users</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-subtext-light dark:text-subtext-dark group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</a>
+<hr class="border-t border-border-light dark:border-border-dark ml-20"/>
+<!-- Logout -->
+<button class="w-full flex items-center gap-4 px-4 py-3 min-h-16 justify-between hover:bg-red-500/10 dark:hover:bg-red-500/10 transition-colors duration-150 group">
+<div class="flex items-center gap-4">
+<div class="text-red-600 dark:text-red-500 flex items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40 shrink-0 size-11">
+<span class="material-symbols-outlined">logout</span>
+</div>
+<p class="text-base font-medium leading-normal flex-1 truncate text-red-600 dark:text-red-500 text-left">Logout</p>
+</div>
+</button>
+</div>
+</section>
+</main>
+</div>
+</body></html>

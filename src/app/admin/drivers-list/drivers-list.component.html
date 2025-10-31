@@ -1,0 +1,255 @@
+
+<div class="d-flex flex-column min-vh-100 bg-light">
+
+    @if (isDeleteModalOpen()) {
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-xl shadow-lg border-0">
+                <div class="modal-header bg-danger text-white rounded-top-xl border-0 justify-content-between">
+                    <h5 class="modal-title fw-bold">تأكيد حذف السائق</h5>
+                    <button type="button" style="background-color: transparent; border: none;" (click)="closeDeleteConfirmation()"><i class="fa-solid fa-xmark" style="font-size: 20px;"></i></button>
+                </div>
+                <div class="modal-body text-end p-4">
+                    <p class="mb-4">
+                        هل أنت متأكد من أنك تريد حذف حساب السائق
+                        <span class="fw-bold text-danger">{{ driverToDelete()?.arabicName }}</span>؟
+                        <br>
+                        لا يمكن التراجع عن هذا الإجراء.
+                    </p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                            (click)="closeDeleteConfirmation()">إلغاء</button>
+                        <button type="button" class="btn btn-danger rounded-pill px-4"
+                            (click)="confirmDeleteDriver()">حذف</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    @if (isAddModalOpen()) {
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-xl shadow-lg border-0">
+                <div class="modal-header bg-primary-custom rounded-top-xl border-0 justify-content-between">
+                    <h5 class="modal-title fw-bold text-dark">إضافة سائق جديد</h5>
+                    <button type="button" style="background-color: transparent; border: none;" (click)="isAddModalOpen.set(false)"><i class="fa-solid fa-xmark" style="font-size: 20px;"></i></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form (ngSubmit)="addNewDriver()">
+                        <div class="row g-3 text-end">
+                            <div class="col-md-6 mb-3">
+                                <label for="newArabicName" class="form-label small fw-medium">الاسم العربي للسائق</label>
+                                <input id="newArabicName" type="text" class="form-control" placeholder="مثال: خالد العلي"
+                                    [(ngModel)]="newDriver.arabicName" name="arabicName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="newName" class="form-label small fw-medium">الاسم الإنجليزي (للبحث)</label>
+                                <input id="newName" type="text" class="form-control" placeholder="Example: Khalid Alali"
+                                    [(ngModel)]="newDriver.name" name="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="newInitialOwed" class="form-label small fw-medium">المبلغ المستحق الأولي ($)</label>
+                                <input id="newInitialOwed" type="number" class="form-control" min="0" step="0.01"
+                                    [(ngModel)]="newDriver.amountOwed" name="amountOwed" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="newTrips" class="form-label small fw-medium">عدد الرحلات اليوم</label>
+                                <input id="newTrips" type="number" class="form-control" min="0"
+                                    [(ngModel)]="newDriver.tripsToday" name="tripsToday" required>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn btn-primary-custom rounded-pill px-4 fw-bold">إضافة السائق</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <main class="flex-grow-1 p-3 p-lg-4">
+        <div class="container-fluid p-0">
+
+            <div class="d-flex justify-content-between mb-3 d-lg-none">
+
+                <button class="btn btn-primary-custom rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
+                    (click)="isAddModalOpen.set(true)">
+                    <i class="fa-solid fa-user-plus fs-6"></i>
+                    <span class="fw-bold">
+                        سائق جديد
+                    </span>
+                </button>
+
+                <button class="btn rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
+                [ngClass]="{'btn-success': !showFiltersOnMobile(), 'btn-secondary': showFiltersOnMobile()}"
+                    (click)="toggleMobileFilters()">
+                    <i class="fa-solid fa-filter fs-6"></i>
+                    <span class="fw-bold">
+                        {{ showFiltersOnMobile() ? 'إخفاء الفلاتر' : 'إظهار الفلاتر' }}
+                    </span>
+                </button>
+            </div>
+
+            <div class="row g-4">
+
+                <div class="col-12 col-lg-4">
+                    <div id="filter-sidebar" class="card shadow-sm rounded-xl p-4 mt-lg-5 sticky-lg-top awayFromTop"
+                        [ngClass]="{'d-block': showFiltersOnMobile(), 'd-none': !showFiltersOnMobile(), 'd-lg-block': true}">
+                        
+                        <h6 class="fw-bold mb-3 text-dark border-bottom pb-2">خيارات البحث والتصفية</h6>
+
+                        <div class="mb-3">
+                            <label for="searchTerm" class="form-label small fw-medium">البحث بالاسم</label>
+                            <input id="searchTerm" type="text" class="form-control" placeholder="اسم السائق"
+                                [(ngModel)]="searchTermValue" (ngModelChange)="searchTerm.set($event)">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="filterStatus" class="form-label small fw-medium">حالة السائق</label>
+                            <select id="filterStatus" class="form-select" [(ngModel)]="filterStatusValue"
+                                (ngModelChange)="filterStatus.set($event)">
+                                <option value="all">الكل</option>
+                                <option value="متاح">متاح</option>
+                                <option value="في رحلة">في رحلة</option>
+                                <option value="غير متصل">غير متصل</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="minOwed" class="form-label small fw-medium">الحد الأدنى للمبلغ المستحق</label>
+                            <input id="minOwed" type="number" class="form-control text-end" [(ngModel)]="minOwedValue"
+                                (ngModelChange)="minOwed.set($event)" style="direction: ltr;">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="maxOwed" class="form-label small fw-medium">الحد الأقصى للمبلغ المستحق</label>
+                            <input id="maxOwed" type="number" class="form-control text-end" [(ngModel)]="maxOwedValue"
+                                (ngModelChange)="maxOwed.set($event)" style="direction: ltr;">
+                        </div>
+
+                        <button class="btn btn-primary-custom w-100 mt-4 d-lg-none" (click)="toggleMobileFilters()">
+                            عرض النتائج
+                        </button>
+
+                        <button class="btn btn-outline-secondary w-100 mt-2" (click)="resetFilters()">إعادة تعيين
+                            الفلاتر</button>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-8">
+                    <div class="d-lg-flex justify-content-end mb-3 d-none">
+                        <button class="btn btn-primary-custom rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
+                            (click)="isAddModalOpen.set(true)">
+                            <i class="fa-solid fa-user-plus fs-6"></i>
+                            <span class="fw-bold">سائق جديد</span>
+                        </button>
+                    </div>
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                        @for (driver of filteredDrivers(); track driver.id) {
+                        <div class="col">
+                            <div class="card shadow-sm rounded-xl h-100 position-relative">
+
+                                <button
+                                    class="btn btn-sm btn-outline-danger position-absolute top-0 start-0 m-3 rounded-circle"
+                                    style="width: 32px; height: 32px; padding: 0;"
+                                    (click)="showDeleteConfirmation(driver)">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+
+                                <div class="card-body p-4 d-flex flex-column">
+
+                                    <div class="d-flex align-items-center gap-3 mb-4">
+                                        <img class="rounded-circle object-fit-cover flex-shrink-0"
+                                            style="width: 56px; height: 56px;" [alt]="driver.imageAlt"
+                                            [src]="driver.imageUrl" />
+                                        <div class="flex-grow-1">
+                                            <p class="h6 fw-bold m-0 text-dark">{{ driver.arabicName }}</p>
+                                            <div class="d-flex align-items-center gap-2 mt-1">
+                                                <span class="driver-status-dot"
+                                                    [ngStyle]="{'background-color': driver.statusColor}"></span>
+                                                <p class="small fw-medium m-0"
+                                                    [ngStyle]="{'color': driver.statusColor}">{{ driver.arabicStatus }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row pt-4 border-top border-light-subtle g-3 mb-4">
+                                        <div class="col-6">
+                                            <p class="text-muted small m-0">{{ 'عدد الرحلات اليوم' }}</p>
+                                            <p class="h5 fw-semibold m-0 text-dark">{{ driver.tripsToday }}</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <p class="text-muted small m-0">{{ 'المبلغ المستحق' }}</p>
+                                            <p class="h5 fw-semibold m-0"
+                                                [class]="{'text-warning': driver.amountOwed > 0, 'text-success': driver.amountOwed === 0}">
+                                                ${{ driver.amountOwed.toFixed(2) }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    @if (driver.amountOwed > 0) {
+                                    <div class="mt-auto pt-3">
+                                        <div class="input-group mb-2 mt-3">
+                                            <input type="number" class="form-control text-end"
+                                                placeholder="مبلغ التخفيض" min="0.01" [max]="driver.amountOwed"
+                                                [ngModel]="reductionAmounts[driver.id] || null"
+                                                (ngModelChange)="reductionAmounts[driver.id] = $event"
+                                                style="direction: ltr;">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        
+                                        <button class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
+                                            [disabled]="!reductionAmounts[driver.id] || reductionAmounts[driver.id] <= 0 || reductionAmounts[driver.id] > driver.amountOwed"
+                                            (click)="reduceBalance(driver, reductionAmounts[driver.id])">
+                                            تخفيض الرصيد المحدد
+                                        </button>
+
+                                        <button class="btn btn-success fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small"
+                                            (click)="clearIndividualBalance(driver)">
+                                            تصفية الحساب بالكامل
+                                        </button>
+
+                                    </div>
+                                    } @else {
+                                    <div class="mt-auto pt-3">
+                                        <div class="input-group mb-2 mt-3">
+                                            <input type="number" class="form-control text-end"
+                                                placeholder="مبلغ التخفيض" min="0.01" [max]="driver.amountOwed"
+                                                [ngModel]="reductionAmounts[driver.id] || null"
+                                                (ngModelChange)="reductionAmounts[driver.id] = $event"
+                                                style="direction: ltr;" disabled> <span class="input-group-text">$</span>
+                                        </div>
+                                        <button class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
+                                            disabled>
+                                            تخفيض الرصيد المحدد
+                                        </button>
+                                        <button class="btn btn-secondary fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small" disabled>
+                                            تم تصفية الحساب
+                                        </button>
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        }
+
+                        @if (filteredDrivers().length === 0) {
+                        <div class="col-12 text-center text-muted p-5">
+                            <i class="fa-solid fa-face-frown fs-2 mb-3"></i>
+                            <p class="h5">لا يوجد سائقون يطابقون معايير التصفية المحددة.</p>
+                        </div>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+</div>

@@ -1,0 +1,176 @@
+/* --- Root Variables --- */
+:host {
+  /* Using a variable makes it easy to change the width */
+  --sidebar-width-desktop: 280px;
+  --sidebar-width-mobile: 300px; /* max-width for 80vw */
+  
+  /* Colors from your target design */
+  --primary-color: #1193d4;
+  --primary-color-light: #e0f2fe; /* Tailwind primary/20 */
+  --hover-bg: #f1f5f9; /* Tailwind slate-100 */
+  --text-color: #333;
+  --text-color-light: #555;
+  --border-color: #eee;
+}
+
+/* --- Sidebar Overlay --- */
+/* This logic is unchanged, but we add a query to hide it on desktop */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+  z-index: 1040;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* --- Sidebar Container (Mobile-First) --- */
+.sidebar {
+  position: fixed;
+  top: 0px; /* Adjusted for header height */
+  right: -100vw; /* Start off-screen (RTL) */
+  width: 80vw;
+  max-width: var(--sidebar-width-mobile);
+  height: 100vh; /* Adjusted for header height */
+  background: #fff;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease-in-out;
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar.active {
+  right: 0;
+}
+
+/* --- Sidebar Header --- */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 2.5rem;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--text-color-light);
+  cursor: pointer;
+  padding: 0;
+}
+
+/* --- Sidebar Navigation --- */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Pushes footer links down */
+  flex-grow: 1;
+  padding: 1rem;
+}
+
+.nav-group {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* Space between links */
+}
+
+.nav-group-footer {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Space between icon and text */
+  padding: 0.75rem 1rem; /* 12px 16px */
+  height: 3rem; /* 48px */
+  border-radius: 0.5rem; /* 8px */
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem; /* 16px */
+  color: var(--text-color-light);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-icon {
+  font-size: 1.25rem; /* 20px */
+  width: 24px; /* Fixed width for alignment */
+  text-align: center;
+  color: #888;
+  transition: color 0.2s;
+}
+
+/* Hover state for links */
+.sidebar-nav a:hover {
+  background-color: var(--hover-bg);
+  color: var(--text-color);
+}
+.sidebar-nav a:hover .nav-icon {
+  color: var(--text-color);
+}
+
+/* Active state for links */
+.sidebar-nav a.active {
+  background-color: var(--primary-color-light);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+.sidebar-nav a.active .nav-icon {
+  color: var(--primary-color);
+}
+
+/* ----------------------------------------------- */
+/* --- 💻 Desktop Styles (Permanent Sidebar) --- */
+/* ----------------------------------------------- */
+/* We use 768px (Bootstrap's 'md' breakpoint) */
+@media (min-width: 768px) {
+  
+  .sidebar {
+    height: calc(100vh - 61px); /* Adjusted for header height */
+    top: 61px;
+    /* Lock it open on the right */
+    right: 0;
+    width: var(--sidebar-width-desktop);
+    max-width: none;
+    transition: none; /* No sliding animation */
+    /* Ensure it stays visible even if component state is 'closed' */
+    transform: translateX(0) !important; 
+  }
+
+  /* Hide the overlay on desktop */
+  .sidebar-overlay {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  
+  /* Hide the mobile close button */
+  .sidebar-header .close-btn {
+    display: none;
+  }
+}

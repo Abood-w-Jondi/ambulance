@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fuel History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#1193d4",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101c22",
+              "primary-text": "#111618",
+              "secondary-text": "#617c89",
+              "card-light": "#ffffff",
+              "card-dark": "#1a2a33",
+              "border-light": "#dbe2e6",
+              "border-dark": "#344b58",
+            },
+            fontFamily: {
+              "display": ["Inter"]
+            },
+            borderRadius: {
+              "DEFAULT": "0.5rem",
+              "lg": "0.75rem",
+              "xl": "1rem",
+              "full": "9999px"
+            },
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden text-primary-text dark:text-white">
+<!-- Top App Bar -->
+<div class="flex items-center bg-card-light dark:bg-card-dark p-4 pb-2 justify-between sticky top-0 z-10 border-b border-border-light dark:border-border-dark">
+<div class="flex size-12 shrink-0 items-center -ml-2">
+<span class="material-symbols-outlined text-2xl text-primary-text dark:text-white">arrow_back_ios_new</span>
+</div>
+<h1 class="text-xl font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Fuel History</h1>
+<div class="size-12 shrink-0"></div> <!-- Spacer -->
+</div>
+<!-- Filter Section -->
+<div class="bg-card-light dark:bg-card-dark pb-4">
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Filter Records</h2>
+<!-- Date Range Selector -->
+<div class="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+<label class="flex flex-col min-w-40 flex-1">
+<p class="text-base font-medium leading-normal pb-2">Start Date</p>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-primary-text dark:text-white focus:outline-0 focus:ring-0 border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark focus:border-primary h-14 placeholder:text-secondary-text p-[15px] text-base font-normal leading-normal" type="date" value="2023-10-01"/>
+</label>
+<label class="flex flex-col min-w-40 flex-1">
+<p class="text-base font-medium leading-normal pb-2">End Date</p>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-primary-text dark:text-white focus:outline-0 focus:ring-0 border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark focus:border-primary h-14 placeholder:text-secondary-text p-[15px] text-base font-normal leading-normal" type="date" value="2023-10-31"/>
+</label>
+</div>
+<!-- Vehicle Selector -->
+<div class="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3" style="--select-button-svg: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2724px%27 height=%2724px%27 fill=%27rgb(97,124,137)%27 viewBox=%270 0 256 256%27%3e%3cpath d=%27M181.66,170.34a8,8,0,0,1,0,11.32l-48,48a8,8,0,0,1-11.32,0l-48-48a8,8,0,0,1,11.32-11.32L128,212.69l42.34-42.35A8,8,0,0,1,181.66,170.34Zm-96-84.68L128,43.31l42.34,42.35a8,8,0,0,0,11.32-11.32l-48-48a8,8,0,0,0-11.32,0l-48,48A8,8,0,0,0,85.66,85.66Z%27%3e%3c/path%3e%3c/svg%3e');">
+<label class="flex flex-col w-full">
+<p class="text-base font-medium leading-normal pb-2">Vehicle</p>
+<select class="form-select appearance-none flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-primary-text dark:text-white focus:outline-0 focus:ring-0 border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark focus:border-primary h-14 bg-[image:--select-button-svg] bg-no-repeat bg-[center_right_1rem] placeholder:text-secondary-text p-[15px] text-base font-normal leading-normal">
+<option value="all">All Vehicles</option>
+<option selected="" value="amb04">Ambulance 04</option>
+<option value="amb07">Ambulance 07</option>
+<option value="sup01">Supervisor 01</option>
+</select>
+</label>
+</div>
+<!-- Action Buttons -->
+<div class="flex justify-stretch">
+<div class="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-between">
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-background-light dark:bg-background-dark text-primary-text dark:text-white text-base font-bold leading-normal tracking-[0.015em] flex-1 border border-border-light dark:border-border-dark">
+<span class="truncate">Clear</span>
+</button>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] flex-1">
+<span class="truncate">Apply Filters</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Fuel Records List -->
+<div class="flex flex-col gap-4 p-4">
+<!-- Fuel Record Card 1 -->
+<div class="bg-card-light dark:bg-card-dark rounded-xl shadow-sm p-4 flex flex-col gap-3 border border-border-light dark:border-transparent">
+<div class="flex justify-between items-start">
+<h3 class="text-base font-bold text-primary-text dark:text-white">Ambulance 04</h3>
+<p class="text-sm text-secondary-text">Oct 26, 2023</p>
+</div>
+<div class="border-t border-border-light dark:border-border-dark pt-3 flex flex-col gap-2 text-sm">
+<div class="flex justify-between">
+<span class="text-secondary-text">Odometer:</span>
+<span class="font-medium text-primary-text dark:text-white">125,400 mi - 125,750 mi</span>
+</div>
+<div class="flex justify-between">
+<span class="text-secondary-text">Fuel:</span>
+<span class="font-medium text-primary-text dark:text-white">15.2 gal</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-secondary-text">Cost:</span>
+<span class="font-bold text-lg text-green-600 dark:text-green-400">$75.50</span>
+</div>
+</div>
+</div>
+<!-- Fuel Record Card 2 -->
+<div class="bg-card-light dark:bg-card-dark rounded-xl shadow-sm p-4 flex flex-col gap-3 border border-border-light dark:border-transparent">
+<div class="flex justify-between items-start">
+<h3 class="text-base font-bold text-primary-text dark:text-white">Ambulance 04</h3>
+<p class="text-sm text-secondary-text">Oct 19, 2023</p>
+</div>
+<div class="border-t border-border-light dark:border-border-dark pt-3 flex flex-col gap-2 text-sm">
+<div class="flex justify-between">
+<span class="text-secondary-text">Odometer:</span>
+<span class="font-medium text-primary-text dark:text-white">125,015 mi - 125,400 mi</span>
+</div>
+<div class="flex justify-between">
+<span class="text-secondary-text">Fuel:</span>
+<span class="font-medium text-primary-text dark:text-white">14.8 gal</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-secondary-text">Cost:</span>
+<span class="font-bold text-lg text-green-600 dark:text-green-400">$72.30</span>
+</div>
+<div class="border-t border-border-light dark:border-border-dark pt-2 mt-2 flex items-start gap-2">
+<span class="material-symbols-outlined text-base text-secondary-text mt-0.5">sticky_note_2</span>
+<p class="text-secondary-text text-sm flex-1">Pump #3 was slow. Reported to station attendant.</p>
+</div>
+</div>
+</div>
+<!-- Fuel Record Card 3 -->
+<div class="bg-card-light dark:bg-card-dark rounded-xl shadow-sm p-4 flex flex-col gap-3 border border-border-light dark:border-transparent">
+<div class="flex justify-between items-start">
+<h3 class="text-base font-bold text-primary-text dark:text-white">Ambulance 04</h3>
+<p class="text-sm text-secondary-text">Oct 12, 2023</p>
+</div>
+<div class="border-t border-border-light dark:border-border-dark pt-3 flex flex-col gap-2 text-sm">
+<div class="flex justify-between">
+<span class="text-secondary-text">Odometer:</span>
+<span class="font-medium text-primary-text dark:text-white">124,650 mi - 125,015 mi</span>
+</div>
+<div class="flex justify-between">
+<span class="text-secondary-text">Fuel:</span>
+<span class="font-medium text-primary-text dark:text-white">15.5 gal</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-secondary-text">Cost:</span>
+<span class="font-bold text-lg text-green-600 dark:text-green-400">$78.10</span>
+</div>
+</div>
+</div>
+<!-- Empty State Example (commented out by default) -->
+<!--
+            <div class="flex flex-col items-center justify-center text-center p-12 mt-8 bg-card-light dark:bg-card-dark rounded-xl">
+                 <span class="material-symbols-outlined text-6xl text-secondary-text mb-4">search_off</span>
+                 <h3 class="text-lg font-bold text-primary-text dark:text-white">No Fuel Records Found</h3>
+                 <p class="text-secondary-text mt-1">Try adjusting your filters or selecting a different date range.</p>
+            </div>
+            -->
+</div>
+</div>
+</body></html>

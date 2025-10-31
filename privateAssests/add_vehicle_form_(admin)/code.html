@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Add New Vehicle</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007AFF",
+                        "background-light": "#F2F2F7",
+                        "background-dark": "#101c22",
+                        "component-light": "#FFFFFF",
+                        "component-dark": "#1C1C1E",
+                        "text-primary-light": "#1C1C1E",
+                        "text-primary-dark": "#F2F2F7",
+                        "text-secondary-light": "#8A8A8E",
+                        "text-secondary-dark": "#8A8A8E",
+                        "border-light": "#E5E5EA",
+                        "border-dark": "#38383A",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px",
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display">
+<div class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-10 flex h-14 items-center border-b border-border-light/80 bg-background-light/80 dark:border-border-dark/80 dark:bg-background-dark/80 backdrop-blur-sm px-4">
+<button class="flex size-10 shrink-0 items-center justify-center rounded-full text-text-primary-light dark:text-text-primary-dark">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<h1 class="flex-1 text-center text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">Add New Vehicle</h1>
+<div class="w-10"></div>
+</header>
+<!-- Main Content -->
+<main class="flex flex-1 flex-col p-4">
+<div class="space-y-6">
+<!-- Vehicle ID Field -->
+<div class="flex flex-col">
+<label class="mb-2 text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark" for="vehicle-id">Vehicle ID</label>
+<input class="form-input w-full rounded-lg border border-border-light bg-component-light px-4 py-3.5 text-base text-text-primary-light placeholder:text-text-secondary-light focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-border-dark dark:bg-component-dark dark:text-text-primary-dark dark:placeholder:text-text-secondary-dark" id="vehicle-id" placeholder="e.g., Unit 101" type="text"/>
+</div>
+<!-- Vehicle Type Dropdown -->
+<div class="flex flex-col">
+<label class="mb-2 text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark" for="vehicle-type">Vehicle Type</label>
+<div class="relative">
+<select class="form-select w-full appearance-none rounded-lg border border-border-light bg-component-light px-4 py-3.5 text-base text-text-primary-light focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-border-dark dark:bg-component-dark dark:text-text-primary-dark" id="vehicle-type">
+<option>ALS Ambulance</option>
+<option>BLS Ambulance</option>
+<option>Wheelchair Van</option>
+<option>Medical Transport Vehicle</option>
+</select>
+<span class="material-symbols-outlined pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary-light dark:text-text-secondary-dark">unfold_more</span>
+</div>
+</div>
+<!-- Color Field -->
+<div class="flex flex-col">
+<label class="mb-2 text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark" for="color">Color</label>
+<input class="form-input w-full rounded-lg border border-border-light bg-component-light px-4 py-3.5 text-base text-text-primary-light placeholder:text-text-secondary-light focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-border-dark dark:bg-component-dark dark:text-text-primary-dark dark:placeholder:text-text-secondary-dark" id="color" placeholder="e.g., White/Red Stripe" type="text"/>
+</div>
+<!-- Purchase Cost Field -->
+<div class="flex flex-col">
+<label class="mb-2 text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark" for="purchase-cost">Purchase Cost</label>
+<div class="relative">
+<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+<span class="text-text-secondary-light dark:text-text-secondary-dark">$</span>
+</div>
+<input class="form-input w-full rounded-lg border border-border-light bg-component-light py-3.5 pl-8 pr-4 text-base text-text-primary-light placeholder:text-text-secondary-light focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-border-dark dark:bg-component-dark dark:text-text-primary-dark dark:placeholder:text-text-secondary-dark" id="purchase-cost" inputmode="decimal" placeholder="0.00" type="number"/>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer with CTA Button -->
+<footer class="sticky bottom-0 bg-background-light p-4 dark:bg-background-dark">
+<button class="flex w-full items-center justify-center rounded-xl bg-primary px-6 py-4 text-base font-semibold text-white transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-dark">
+                Save Vehicle
+            </button>
+</footer>
+</div>
+</body></html>

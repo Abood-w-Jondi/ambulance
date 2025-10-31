@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ambulance Management Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#005A9C",
+                        "background-light": "#F5F7FA",
+                        "background-dark": "#101c22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative min-h-screen w-full flex-col">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-10 flex items-center justify-between bg-background-light dark:bg-background-dark p-4 shadow-sm">
+<div class="flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined text-zinc-800 dark:text-zinc-200">menu</span>
+</div>
+<h1 class="flex-1 text-center text-lg font-bold tracking-tight text-zinc-800 dark:text-white">Reports</h1>
+<div class="flex w-12 items-center justify-end">
+<button class="flex h-12 cursor-pointer items-center justify-center rounded-full bg-transparent text-zinc-800 dark:text-white">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</header>
+<main class="flex flex-col gap-4 p-4 pb-24">
+<!-- Chips / Date Range Selector -->
+<div class="flex gap-2 overflow-x-auto pb-2">
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-1.5 rounded-full bg-primary/20 px-4 text-primary">
+<p class="text-sm font-medium">This Week</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 px-4 text-zinc-700 dark:text-zinc-200">
+<p class="text-sm font-medium">This Month</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 pl-4 pr-3 text-zinc-700 dark:text-zinc-200">
+<p class="text-sm font-medium">Custom</p>
+<span class="material-symbols-outlined !text-xl">calendar_today</span>
+</button>
+</div>
+<!-- Stats Grid -->
+<section class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1.5 rounded-xl bg-white dark:bg-zinc-800 p-4 shadow-sm">
+<p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Total Transportations</p>
+<p class="text-2xl font-bold text-zinc-800 dark:text-white">1,204</p>
+<p class="text-sm font-medium text-green-600 dark:text-green-500">+5%</p>
+</div>
+<div class="flex flex-col gap-1.5 rounded-xl bg-white dark:bg-zinc-800 p-4 shadow-sm">
+<p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Total Revenue</p>
+<p class="text-2xl font-bold text-zinc-800 dark:text-white">$180.6K</p>
+<p class="text-sm font-medium text-green-600 dark:text-green-500">+8%</p>
+</div>
+<div class="flex flex-col gap-1.5 rounded-xl bg-white dark:bg-zinc-800 p-4 shadow-sm">
+<p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Total Costs</p>
+<p class="text-2xl font-bold text-zinc-800 dark:text-white">$95.5K</p>
+<p class="text-sm font-medium text-red-600 dark:text-red-500">-2%</p>
+</div>
+<div class="flex flex-col gap-1.5 rounded-xl bg-white dark:bg-zinc-800 p-4 shadow-sm">
+<p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Net Profit</p>
+<p class="text-2xl font-bold text-zinc-800 dark:text-white">$85.1K</p>
+<p class="text-sm font-medium text-green-600 dark:text-green-500">+15%</p>
+</div>
+</section>
+<!-- Charts Section -->
+<section class="flex flex-col gap-4">
+<!-- Bar Chart -->
+<div class="flex flex-col gap-2 rounded-xl bg-white dark:bg-zinc-800 p-4 shadow-sm">
+<p class="text-base font-bold text-zinc-800 dark:text-white">Transportations Over Time</p>
+<div class="flex items-baseline gap-2">
+<p class="text-3xl font-bold text-zinc-800 dark:text-white">1.2K</p>
+<p class="text-sm font-medium text-green-600 dark:text-green-500">+5%</p>
+</div>
+<div class="grid min-h-[160px] grid-flow-col items-end gap-3 pt-4">
+<div class="flex h-full flex-col items-center justify-end gap-2">
+<div class="w-full rounded bg-primary/20 dark:bg-primary/30" style="height: 80%;"></div>
+<p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Mon</p>
+</div>
+<div class="flex h-full flex-col items-center justify-end gap-2">
+<div class="w-full rounded bg-primary/20 dark:bg-primary/30" style="height: 60%;"></div>
+<p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Tue</p>
+</div>
+<div class="flex h-full flex-col items-center justify-end gap-2">
+<div class="w-full rounded bg-primary/20 dark:bg-primary/30" style="height: 90%;"></div>
+<p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Wed</p>
+</div>
+<div class="flex h-full flex-col items-center justify-end gap-2">
+<div class="w-full rounded bg-primary/20 dark:bg-primary/30" style="height: 40%;"></div>
+<p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Thu</p>
+</div>
+<div class="flex h-full flex-col items-center justify-end gap-2">
+<div class="w-full rounded bg-primary" style="height: 100%;"></div>
+<p class="text-xs font-bold text-zinc-800 dark:text-white">Fri</p>
+</div>
+<div class="flex h-full flex-col items-center justify-end gap-2">
+<div class="w-full rounded bg-primary/20 dark:bg-primary/30" style="height: 80%;"></div>
+<p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Sat</p>
+</div>
+<div class="flex h-full flex-col items-center justify-end gap-2">
+<div class="w-full rounded bg-primary/20 dark:bg-primary/30" style="height: 70%;"></div>
+<p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Sun</p>
+</div>
+</div>
+</div>
+<!-- Doughnut Chart -->
+<div class="flex flex-col gap-4 rounded-xl bg-white dark:bg-zinc-800 p-4 shadow-sm">
+<p class="text-base font-bold text-zinc-800 dark:text-white">Cost Breakdown</p>
+<div class="flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-10">
+<div class="relative flex h-40 w-40 items-center justify-center">
+<svg class="h-full w-full -rotate-90 transform" viewbox="0 0 36 36">
+<circle class="stroke-current text-purple-200 dark:text-purple-900/50" cx="18" cy="18" fill="transparent" r="15.9155" stroke-width="4"></circle>
+<circle class="stroke-current text-blue-500" cx="18" cy="18" fill="transparent" r="15.9155" stroke-dasharray="45, 100" stroke-dashoffset="0" stroke-width="4"></circle>
+<circle class="stroke-current text-green-500" cx="18" cy="18" fill="transparent" r="15.9155" stroke-dasharray="30, 100" stroke-dashoffset="-45" stroke-width="4"></circle>
+<circle class="stroke-current text-orange-500" cx="18" cy="18" fill="transparent" r="15.9155" stroke-dasharray="15, 100" stroke-dashoffset="-75" stroke-width="4"></circle>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="text-xs text-zinc-500 dark:text-zinc-400">Total</span>
+<span class="text-2xl font-bold text-zinc-800 dark:text-white">$95.5K</span>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-2">
+<div class="h-3 w-3 rounded-full bg-blue-500"></div>
+<span class="text-sm text-zinc-700 dark:text-zinc-300">Fuel</span>
+<span class="ml-auto text-sm font-bold text-zinc-800 dark:text-white">$42.9K</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="h-3 w-3 rounded-full bg-green-500"></div>
+<span class="text-sm text-zinc-700 dark:text-zinc-300">Maintenance</span>
+<span class="ml-auto text-sm font-bold text-zinc-800 dark:text-white">$28.6K</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="h-3 w-3 rounded-full bg-orange-500"></div>
+<span class="text-sm text-zinc-700 dark:text-zinc-300">Salaries</span>
+<span class="ml-auto text-sm font-bold text-zinc-800 dark:text-white">$14.3K</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="h-3 w-3 rounded-full bg-purple-200 dark:bg-purple-900/50"></div>
+<span class="text-sm text-zinc-700 dark:text-zinc-300">Other</span>
+<span class="ml-auto text-sm font-bold text-zinc-800 dark:text-white">$9.7K</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button -->
+<div class="fixed bottom-6 right-6 z-10">
+<button class="flex h-14 w-14 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-primary text-white shadow-lg transition-transform duration-200 ease-in-out hover:scale-105">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+</div>
+</body></html>
