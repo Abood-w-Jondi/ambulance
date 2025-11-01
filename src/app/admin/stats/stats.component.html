@@ -1,0 +1,103 @@
+<div class="d-flex flex-column min-vh-100 bg-white text-right" style="font-family: 'Inter', sans-serif;" dir="rtl">
+
+  <main class="flex-grow-1 p-4" style="background-color: #f8f9fa;">
+    <div class="d-flex gap-2 overflow-auto pb-3 flex-nowrap">
+      <button class="btn rounded-pill px-4" 
+              [ngClass]="{'btn-primary': selectedRange() === 'week', 'btn-light text-dark': selectedRange() !== 'week'}" 
+              (click)="selectedRange.set('week')">
+        هذا الأسبوع
+      </button>
+      <button class="btn rounded-pill px-4" 
+              [ngClass]="{'btn-primary': selectedRange() === 'month', 'btn-light text-dark': selectedRange() !== 'month'}" 
+              (click)="selectedRange.set('month')">
+        هذا الشهر
+      </button>
+      
+      <button class="btn btn-light rounded-pill px-4 text-dark d-flex align-items-center gap-2"
+              [ngClass]="{'btn-primary': selectedRange() === 'custom', 'btn-light text-dark': selectedRange() !== 'custom'}" 
+              (click)="selectedRange.set('custom')">
+        نطاق مخصص
+        <i class="fas fa-calendar-alt"></i>
+      </button>
+    </div>
+
+    <section class="row g-3 mb-4">
+      @for (stat of stats(); track stat.title) {
+        <div class="col-6">
+          <div class="card shadow-sm rounded-3 h-100 p-3">
+            <p class="text-secondary small fw-medium mb-1">{{ stat.title }}</p>
+            <p class="h3 fw-bold text-dark mb-0">{{ stat.value }}</p>
+            <p class="small fw-medium" [ngClass]="stat.trendClass">{{ stat.trend }}</p>
+          </div>
+        </div>
+      }
+    </section>
+
+    <section class="row g-4">
+      <div class="col-12 col-lg-6">
+        <div class="card shadow-sm rounded-3 p-4">
+          <p class="h6 fw-bold text-dark mb-2">{{ transportationsTitle() }}</p>
+          <div class="d-flex align-items-baseline gap-2 mb-3">
+            <p class="h2 fw-bold text-dark my-0">{{ stats()[0].value }}</p>
+            <p class="small fw-medium text-success my-0">{{ stats()[0].trend }}</p>
+          </div>
+          
+          <div class="d-grid gap-2 pt-3" style="min-height: 160px; grid-auto-flow: column; grid-auto-columns: 1fr; align-items: end;">
+            @for (day of transportations(); track day.day) {
+              <div class="d-flex flex-column align-items-center justify-content-end gap-2 h-100">
+                <div class="w-100 rounded" 
+                     [ngStyle]="{'height': day.countPercentage + '%', 'background-color': day.isPeak ? '#005A9C' : 'rgba(0, 90, 156, 0.2)'}">
+                </div>
+                <p class="small my-0" [ngClass]="{'fw-bold text-dark': day.isPeak, 'text-secondary': !day.isPeak}">{{ day.day }}</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="card shadow-sm rounded-3 p-4">
+          <p class="h6 fw-bold text-dark mb-4">تفاصيل التكاليف</p>
+          
+          <div class="d-flex flex-column align-items-center gap-4 flex-sm-row">
+            <div class="position-relative d-flex align-items-center justify-content-center" style="height: 160px; width: 160px;">
+              <svg class="w-100 h-100" viewBox="0 0 36 36" style="transform: rotate(-90deg);">
+                <circle class="text-secondary opacity-50" cx="18" cy="18" r="15.9155" fill="transparent" stroke="currentColor" stroke-width="4"></circle>
+                
+                @for (item of costBreakdown(); track item.label) {
+                  <circle [attr.class]="'text-' + item.color" 
+                          cx="18" cy="18" r="15.9155" 
+                          fill="transparent" stroke="currentColor" stroke-width="4"
+                          [attr.stroke-dasharray]="item.percentage + ', 100'"
+                          [attr.stroke-dashoffset]="calculateOffset(item.label)">
+                  </circle>
+                }
+              </svg>
+              
+              <div class="position-absolute d-flex flex-column align-items-center">
+                <span class="text-muted small">الإجمالي</span>
+                <span class="h4 fw-bold text-dark">{{ totalCostValue() }}</span>
+              </div>
+            </div>
+
+            <div class="d-flex flex-column gap-3 w-100 w-sm-auto">
+              @for (item of costBreakdown(); track item.label) {
+                <div class="d-flex align-items-center gap-2">
+                  <div class="rounded-circle" [ngClass]="'bg-' + item.color" style="height: 12px; width: 12px;"></div>
+                  <span class="text-dark small me-auto">{{ item.label }}</span>
+                  <span class="small fw-bold text-dark">{{ item.value }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="position-fixed bottom-0 start-0 p-4">
+    <button class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+      <i class="fas fa-download fa-lg"></i>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,151 @@
+/* Card hover effect */
+.hover-lift {
+    transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Status badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.75rem;
+}
+
+/* Empty state icon */
+.fa-search, .fa-inbox {
+    color: #6c757d;
+    opacity: 0.5;
+}
+
+/* Filter section styling */
+.card {
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(17, 147, 212, 0.25);
+    border-color: #1193d4;
+}
+
+/* Primary button custom */
+.btn-primary-custom {
+    background-color: #1193d4;
+    border-color: #1193d4;
+    color: white;
+}
+
+.btn-primary-custom:hover {
+    background-color: #0d7ab8;
+    border-color: #0d7ab8;
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #1193d4;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.fab:hover {
+    background-color: #0d7ab8;
+    transform: scale(1.1);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+/* Modal styling */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    border: none;
+}
+
+/* Card header styling */
+.card-header {
+    background-color: #f8f9fa;
+}
+
+/* Cost display */
+.text-primary {
+    color: #1193d4 !important;
+}
+
+/* RTL adjustments */
+[dir="rtl"] .form-select,
+[dir="rtl"] .form-control {
+    text-align: right;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem !important;
+    }
+    
+    .fab {
+        bottom: 1rem;
+        right: 1rem;
+        width: 48px;
+        height: 48px;
+    }
+}
+
+/* Date selects grid */
+.row.g-2 {
+    --bs-gutter-x: 0.5rem;
+    --bs-gutter-y: 0.5rem;
+}
+
+/* Status icon colors */
+.text-success {
+    color: #34C759 !important;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.text-warning {
+    color: #FF9500 !important;
+}
+
+/* Custom scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

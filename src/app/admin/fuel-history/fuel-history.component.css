@@ -1,0 +1,258 @@
+/* Card hover effect */
+.hover-lift {
+    transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Clickable text effect */
+.cursor-pointer {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cursor-pointer:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.75rem;
+}
+
+/* Empty state icon */
+.fa-search, .fa-inbox {
+    color: #6c757d;
+    opacity: 0.5;
+}
+
+/* Filter section styling */
+.card {
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(17, 147, 212, 0.25);
+    border-color: #1193d4;
+}
+
+/* Primary button custom */
+.btn-primary-custom {
+    background-color: #1193d4;
+    border-color: #1193d4;
+    color: white;
+}
+
+.btn-primary-custom:hover {
+    background-color: #0d7ab8;
+    border-color: #0d7ab8;
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #1193d4;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.fab:hover {
+    background-color: #0d7ab8;
+    transform: scale(1.1);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+/* Modal styling */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    border: none;
+}
+
+/* Card header styling */
+.card-header {
+    background-color: #f8f9fa;
+}
+
+/* Cost display */
+.text-success {
+    color: #28a745 !important;
+}
+
+.text-primary {
+    color: #1193d4 !important;
+}
+
+/* Info alert styling */
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+/* RTL adjustments */
+[dir="rtl"] .form-select,
+[dir="rtl"] .form-control {
+    text-align: right;
+}
+
+/* Search input group */
+.input-group-text {
+    background-color: white;
+}
+
+.input-group .form-control {
+    border-right: 1px solid #ced4da;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem !important;
+    }
+    
+    .fab {
+        bottom: 1rem;
+        right: 1rem;
+        width: 48px;
+        height: 48px;
+    }
+    
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+
+/* Date selects grid */
+.row.g-2 {
+    --bs-gutter-x: 0.5rem;
+    --bs-gutter-y: 0.5rem;
+}
+
+/* Icon colors */
+.fa-truck-medical {
+    color: #dc3545;
+}
+
+.fa-gas-pump {
+    color: #28a745;
+}
+
+.fa-gauge-high {
+    color: #dc3545;
+}
+
+.fa-dollar-sign {
+    color: #28a745;
+}
+
+/* Custom scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Fuel badge styling */
+.badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+/* Modal header colors */
+.modal-header.bg-primary-custom {
+    background-color: #1193d4 !important;
+}
+
+.modal-header.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+/* Card border on hover */
+.hover-lift:hover .card-header {
+    border-bottom-color: #1193d4;
+}
+
+/* Rounded corners for modals */
+.rounded-xl {
+    border-radius: 1rem !important;
+}
+
+.rounded-top-xl {
+    border-top-left-radius: 1rem !important;
+    border-top-right-radius: 1rem !important;
+}
+
+/* Pill buttons */
+.rounded-pill {
+    border-radius: 50rem !important;
+}
+
+/* Small text sizing */
+.small {
+    font-size: 0.875rem;
+}
+
+/* Font weight utilities */
+.fw-medium {
+    font-weight: 500;
+}
+
+.fw-semibold {
+    font-weight: 600;
+}
+
+/* Opacity utilities */
+.opacity-50 {
+    opacity: 0.5;
+}
+
+/* Spacing utilities */
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.gap-3 {
+    gap: 1rem;
+}
+
+/* Direction utilities */
+[style*="direction: ltr"] {
+    direction: ltr;
+    text-align: left;
+}

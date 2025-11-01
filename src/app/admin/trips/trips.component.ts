@@ -6,22 +6,27 @@ import { GlobalVarsService } from '../../global-vars.service';
 // --- Data Structures ---
 interface Trip {
     id: string;
-    date: string; // التاريخ
-    driver: string; // السائق
-    paramedic: string; // ضابط الاسعاف
-    transferFrom: string; // نقل من
-    transferTo: string; // نقل الى
-    start: number; // بدء
-    end: number; // نهاية
-    diesel: number; // سولار (liters)
-    patientName: string; // المريض
-    patientAge: number; // العمر
-    ymd: string; // YMD date
-    transferStatus: TransferStatus; // النقل
-    totalAmount: number; // المبلغ
-    paramedicShare: number; // حصة الضابط
-    driverShare: number; // حصة السائق
-    eqShare: number; // حصة eq
+    day: number;
+    month: number;
+    year: number;
+    driver: string;
+    paramedic: string;
+    transferFrom: string;
+    transferTo: string;
+    start: number;
+    end: number;
+    diesel: number;
+    patientName: string;
+    patientAge: number;
+    ymdDay: number;
+    ymdMonth: number;
+    ymdYear: number;
+    transferStatus: TransferStatus;
+    diagnosis: string;
+    totalAmount: number;
+    paramedicShare: number;
+    driverShare: number;
+    eqShare: number;
 }
 
 type TransferStatus = 'ميداني' | 'تم النقل' | 'بلاغ كاذب' | 'يتقل' | 'لم يتم النقل' | 'صيانة' | 'رفض النقل' | 'اخرى';
@@ -36,26 +41,53 @@ type FilterStatus = 'All' | TransferStatus;
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TripsComponent {
+    // --- Filter Panel Toggle ---
+    isFilterPanelVisible = signal(false);
+
+    today = new Date();
+    thisyear = this.today.getFullYear();
+    thismonth = this.today.getMonth()
+    thisday = this.today.getDate();
+    
     // --- State Initialization (Signals) ---
-    dateFilterValue: string = '';
+    dateFilterType: 'single' | 'range' = 'single';
+    dateFilterDay: number | null = null;
+    dateFilterMonth: number | null = null;
+    dateFilterYear: number | null = null;
+    dateFilterDayFrom: number | null = null;
+    dateFilterMonthFrom: number | null = null;
+    dateFilterYearFrom: number | null = null;
+    dateFilterDayTo: number | null = null;
+    dateFilterMonthTo: number | null = null;
+    dateFilterYearTo: number | null = null;
+    
     driverFilterValue: string = '';
     paramedicFilterValue: string = '';
+    patientFilterValue: string = '';
+    locationFromFilterValue: string = '';
+    locationToFilterValue: string = '';
     selectedStatus: FilterStatus = 'All';
 
     // Filters for computation
     filterStatus = signal<FilterStatus>('All');
-    dateFilter = signal('');
+    dateFilter = signal<{ type: 'single' | 'range', single?: Date, from?: Date, to?: Date }>({ type: 'single' });
     driverNameFilter = signal('');
     paramedicNameFilter = signal('');
+    patientNameFilter = signal('');
+    locationFromFilter = signal('');
+    locationToFilter = signal('');
 
     // Modal Control
     isAddTripModalOpen = signal(false);
     isViewTripModalOpen = signal(false);
+    isEditTripModalOpen = signal(false);
     selectedTrip = signal<Trip | null>(null);
     
-    // Form values for new trip
-    newTrip = {
-        date: '',
+    // Form values for new/edit trip
+    tripForm = {
+        day: this.thisday,
+        month: this.thismonth,
+        year: this.thisyear,
         driver: '',
         paramedic: '',
         transferFrom: '',
@@ -65,20 +97,49 @@ export class TripsComponent {
         diesel: 0,
         patientName: '',
         patientAge: 0,
-        ymd: '',
+        ymdDay: 1,
+        ymdMonth: 1,
+        ymdYear: new Date().getFullYear(),
         transferStatus: 'تم النقل' as TransferStatus,
+        diagnosis: '',
         totalAmount: 0,
         paramedicShare: 0
     };
+
+    // Search filters for dropdowns
+    driverSearchTerm = signal('');
+    paramedicSearchTerm = signal('');
+    driverFilterSearchTerm = signal('');
+    paramedicFilterSearchTerm = signal('');
 
     driversList: { id: string; name: string }[] = [];
     paramedicsList: { id: string; name: string }[] = [];
     transferStatuses: TransferStatus[] = ['ميداني', 'تم النقل', 'بلاغ كاذب', 'يتقل', 'لم يتم النقل', 'صيانة', 'رفض النقل', 'اخرى'];
 
+    // Computed filtered lists
+    filteredDriversList = computed(() => {
+        const term = this.driverSearchTerm().toLowerCase();
+        return this.driversList.filter(d => d.name.toLowerCase().includes(term));
+    });
+
+    filteredParamedicsList = computed(() => {
+        const term = this.paramedicSearchTerm().toLowerCase();
+        return this.paramedicsList.filter(p => p.name.toLowerCase().includes(term));
+    });
+
+    filteredDriversListForFilter = computed(() => {
+        const term = this.driverFilterSearchTerm().toLowerCase();
+        return this.driversList.filter(d => d.name.toLowerCase().includes(term));
+    });
+
+    filteredParamedicsListForFilter = computed(() => {
+        const term = this.paramedicFilterSearchTerm().toLowerCase();
+        return this.paramedicsList.filter(p => p.name.toLowerCase().includes(term));
+    });
+
     constructor(private globalVars: GlobalVarsService) {
         this.globalVars.setGlobalHeader('الرحلات والنقليات');
         this.driversList = this.globalVars.driversList;
-        // Assuming you have a paramedics list in globalVars
         this.paramedicsList = [
             { id: '1', name: 'ضابط أحمد' },
             { id: '2', name: 'ضابط محمد' },
@@ -98,12 +159,19 @@ export class TripsComponent {
         const eqShare = remaining - driverShare;
         return { paramedicShare, driverShare, eqShare };
     }
+
+    // Helper to format date from separate fields
+    private getDateString(day: number, month: number, year: number): string {
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
     
     // Dummy Data
     trips = signal<Trip[]>([
         {
             id: this.generateId(),
-            date: '2023-10-26',
+            day: 26,
+            month: 10,
+            year: 2023,
             driver: 'جين سميث',
             paramedic: 'ضابط أحمد',
             transferFrom: 'مستشفى سانت ماري',
@@ -113,8 +181,11 @@ export class TripsComponent {
             diesel: 25.5,
             patientName: 'إيزابيلا رودريغز',
             patientAge: 65,
-            ymd: '2023-10-26',
+            ymdDay: 26,
+            ymdMonth: 10,
+            ymdYear: 2023,
             transferStatus: 'تم النقل',
+            diagnosis: 'كسر في الورك',
             totalAmount: 250.00,
             paramedicShare: 50,
             driverShare: 66.67,
@@ -122,7 +193,9 @@ export class TripsComponent {
         },
         {
             id: this.generateId(),
-            date: '2023-10-26',
+            day: 26,
+            month: 10,
+            year: 2023,
             driver: 'روبرت براون',
             paramedic: 'ضابط محمد',
             transferFrom: 'عيادة المدينة العامة',
@@ -132,8 +205,11 @@ export class TripsComponent {
             diesel: 15.0,
             patientName: 'مايكل تشين',
             patientAge: 42,
-            ymd: '2023-10-26',
+            ymdDay: 26,
+            ymdMonth: 10,
+            ymdYear: 2023,
             transferStatus: 'ميداني',
+            diagnosis: 'ألم في الصدر',
             totalAmount: 175.50,
             paramedicShare: 40,
             driverShare: 45.17,
@@ -144,16 +220,26 @@ export class TripsComponent {
     // --- Computed Property for Filtering ---
     filteredTrips = computed(() => {
         const status = this.filterStatus();
-        const date = this.dateFilter().trim();
+        const dateFilterData = this.dateFilter();
         const driverName = this.driverNameFilter().toLowerCase().trim();
         const paramedicName = this.paramedicNameFilter().toLowerCase().trim();
+        const patientName = this.patientNameFilter().toLowerCase().trim();
+        const locationFrom = this.locationFromFilter().toLowerCase().trim();
+        const locationTo = this.locationToFilter().toLowerCase().trim();
 
         return this.trips().filter(trip => {
             // Status Filter
             const statusMatch = status === 'All' || trip.transferStatus === status;
             
             // Date Filter
-            const dateMatch = date === '' || trip.date === date;
+            let dateMatch = true;
+            if (dateFilterData.type === 'single' && dateFilterData.single) {
+                const tripDate = new Date(trip.year, trip.month - 1, trip.day);
+                dateMatch = tripDate.getTime() === dateFilterData.single.getTime();
+            } else if (dateFilterData.type === 'range' && dateFilterData.from && dateFilterData.to) {
+                const tripDate = new Date(trip.year, trip.month - 1, trip.day);
+                dateMatch = tripDate >= dateFilterData.from && tripDate <= dateFilterData.to;
+            }
             
             // Driver Filter
             const driverMatch = driverName === '' || trip.driver.toLowerCase().includes(driverName);
@@ -161,11 +247,64 @@ export class TripsComponent {
             // Paramedic Filter
             const paramedicMatch = paramedicName === '' || trip.paramedic.toLowerCase().includes(paramedicName);
             
-            return statusMatch && dateMatch && driverMatch && paramedicMatch;
+            // Patient Filter
+            const patientMatch = patientName === '' || trip.patientName.toLowerCase().includes(patientName);
+            
+            // Location From Filter
+            const locationFromMatch = locationFrom === '' || trip.transferFrom.toLowerCase().includes(locationFrom);
+            
+            // Location To Filter
+            const locationToMatch = locationTo === '' || trip.transferTo.toLowerCase().includes(locationTo);
+            
+            return statusMatch && dateMatch && driverMatch && paramedicMatch && patientMatch && locationFromMatch && locationToMatch;
         });
     });
 
     // --- Component Methods ---
+
+    toggleFilterPanel(): void {
+        this.isFilterPanelVisible.update(v => !v);
+    }
+
+    // Quick filter methods (clickable fields)
+    quickFilterByDriver(driverName: string): void {
+        this.driverFilterValue = driverName;
+        this.driverNameFilter.set(driverName);
+        //this.isFilterPanelVisible.set(false);
+    }
+
+    quickFilterByParamedic(paramedicName: string): void {
+        this.paramedicFilterValue = paramedicName;
+        this.paramedicNameFilter.set(paramedicName);
+        //this.isFilterPanelVisible.set(false);
+    }
+
+    quickFilterByPatient(patientName: string): void {
+        this.patientFilterValue = patientName;
+        this.patientNameFilter.set(patientName);
+        //this.isFilterPanelVisible.set(false);
+    }
+
+    quickFilterByDate(day: number, month: number, year: number): void {
+        this.dateFilterType = 'single';
+        this.dateFilterDay = day;
+        this.dateFilterMonth = month;
+        this.dateFilterYear = year;
+        const singleDate = new Date(year, month - 1, day);
+        this.dateFilter.set({ type: 'single', single: singleDate });
+        //this.isFilterPanelVisible.set(false);
+    }
+
+    quickFilterByLocation(location: string, type: 'from' | 'to'): void {
+        if (type === 'from') {
+            this.locationFromFilterValue = location;
+            this.locationFromFilter.set(location);
+        } else {
+            this.locationToFilterValue = location;
+            this.locationToFilter.set(location);
+        }
+        //this.isFilterPanelVisible.set(false);
+    }
 
     getStatusColor(status: TransferStatus): string {
         switch (status) {
@@ -207,21 +346,56 @@ export class TripsComponent {
 
     applyFilters(): void {
         this.filterStatus.set(this.selectedStatus);
-        this.dateFilter.set(this.dateFilterValue);
+        
+        // Apply date filter
+        if (this.dateFilterType === 'single' && this.dateFilterDay && this.dateFilterMonth && this.dateFilterYear) {
+            const singleDate = new Date(this.dateFilterYear, this.dateFilterMonth - 1, this.dateFilterDay);
+            this.dateFilter.set({ type: 'single', single: singleDate });
+        } else if (this.dateFilterType === 'range' && 
+                   this.dateFilterDayFrom && this.dateFilterMonthFrom && this.dateFilterYearFrom &&
+                   this.dateFilterDayTo && this.dateFilterMonthTo && this.dateFilterYearTo) {
+            const fromDate = new Date(this.dateFilterYearFrom, this.dateFilterMonthFrom - 1, this.dateFilterDayFrom);
+            const toDate = new Date(this.dateFilterYearTo, this.dateFilterMonthTo - 1, this.dateFilterDayTo);
+            this.dateFilter.set({ type: 'range', from: fromDate, to: toDate });
+        } else {
+            this.dateFilter.set({ type: 'single' });
+        }
+        
         this.driverNameFilter.set(this.driverFilterValue);
         this.paramedicNameFilter.set(this.paramedicFilterValue);
+        this.patientNameFilter.set(this.patientFilterValue);
+        this.locationFromFilter.set(this.locationFromFilterValue);
+        this.locationToFilter.set(this.locationToFilterValue);
+        
+        // Hide filter panel after applying
+        //this.isFilterPanelVisible.set(false);
     }
     
     resetFilters(): void {
-        this.dateFilterValue = '';
+        this.dateFilterType = 'single';
+        this.dateFilterDay = null;
+        this.dateFilterMonth = null;
+        this.dateFilterYear = null;
+        this.dateFilterDayFrom = null;
+        this.dateFilterMonthFrom = null;
+        this.dateFilterYearFrom = null;
+        this.dateFilterDayTo = null;
+        this.dateFilterMonthTo = null;
+        this.dateFilterYearTo = null;
         this.driverFilterValue = '';
         this.paramedicFilterValue = '';
+        this.patientFilterValue = '';
+        this.locationFromFilterValue = '';
+        this.locationToFilterValue = '';
         this.selectedStatus = 'All';
         
         this.filterStatus.set('All');
-        this.dateFilter.set('');
+        this.dateFilter.set({ type: 'single' });
         this.driverNameFilter.set('');
         this.paramedicNameFilter.set('');
+        this.patientNameFilter.set('');
+        this.locationFromFilter.set('');
+        this.locationToFilter.set('');
     }
 
     selectStatus(status: FilterStatus): void {
@@ -234,8 +408,10 @@ export class TripsComponent {
     }
 
     openAddTripModal(): void {
-        this.newTrip = {
-            date: '',
+        this.tripForm = {
+            day: this.thisday,
+            month: this.thismonth + 1,
+            year: this.thisyear,
             driver: '',
             paramedic: '',
             transferFrom: '',
@@ -245,37 +421,113 @@ export class TripsComponent {
             diesel: 0,
             patientName: '',
             patientAge: 0,
-            ymd: '',
+            ymdDay: 1,
+            ymdMonth: 1,
+            ymdYear: new Date().getFullYear(),
             transferStatus: 'تم النقل',
+            diagnosis: '',
             totalAmount: 0,
             paramedicShare: 0
         };
+        this.driverSearchTerm.set('');
+        this.paramedicSearchTerm.set('');
         this.isAddTripModalOpen.set(true);
     }
 
     addTrip(): void {
-        const shares = this.calculateShares(this.newTrip.totalAmount, this.newTrip.paramedicShare);
+        const shares = this.calculateShares(this.tripForm.totalAmount, this.tripForm.paramedicShare);
         
         const trip: Trip = {
             id: this.generateId(),
-            date: this.newTrip.date,
-            driver: this.newTrip.driver,
-            paramedic: this.newTrip.paramedic,
-            transferFrom: this.newTrip.transferFrom,
-            transferTo: this.newTrip.transferTo,
-            start: this.newTrip.start,
-            end: this.newTrip.end,
-            diesel: this.newTrip.diesel,
-            patientName: this.newTrip.patientName,
-            patientAge: this.newTrip.patientAge,
-            ymd: this.newTrip.ymd,
-            transferStatus: this.newTrip.transferStatus,
-            totalAmount: this.newTrip.totalAmount,
+            day: this.tripForm.day,
+            month: this.tripForm.month,
+            year: this.tripForm.year,
+            driver: this.tripForm.driver,
+            paramedic: this.tripForm.paramedic,
+            transferFrom: this.tripForm.transferFrom,
+            transferTo: this.tripForm.transferTo,
+            start: this.tripForm.start,
+            end: this.tripForm.end,
+            diesel: this.tripForm.diesel,
+            patientName: this.tripForm.patientName,
+            patientAge: this.tripForm.patientAge,
+            ymdDay: this.tripForm.ymdDay,
+            ymdMonth: this.tripForm.ymdMonth,
+            ymdYear: this.tripForm.ymdYear,
+            transferStatus: this.tripForm.transferStatus,
+            diagnosis: this.tripForm.diagnosis,
+            totalAmount: this.tripForm.totalAmount,
             ...shares
         };
 
         this.trips.update(trips => [...trips, trip]);
         this.isAddTripModalOpen.set(false);
+    }
+
+    openEditTripModal(): void {
+        const trip = this.selectedTrip();
+        if (trip) {
+            this.tripForm = {
+                day: trip.day,
+                month: trip.month,
+                year: trip.year,
+                driver: trip.driver,
+                paramedic: trip.paramedic,
+                transferFrom: trip.transferFrom,
+                transferTo: trip.transferTo,
+                start: trip.start,
+                end: trip.end,
+                diesel: trip.diesel,
+                patientName: trip.patientName,
+                patientAge: trip.patientAge,
+                ymdDay: trip.ymdDay,
+                ymdMonth: trip.ymdMonth,
+                ymdYear: trip.ymdYear,
+                transferStatus: trip.transferStatus,
+                diagnosis: trip.diagnosis,
+                totalAmount: trip.totalAmount,
+                paramedicShare: trip.paramedicShare
+            };
+            this.driverSearchTerm.set('');
+            this.paramedicSearchTerm.set('');
+            this.isViewTripModalOpen.set(false);
+            this.isEditTripModalOpen.set(true);
+        }
+    }
+
+    saveEditTrip(): void {
+        const trip = this.selectedTrip();
+        if (trip) {
+            const shares = this.calculateShares(this.tripForm.totalAmount, this.tripForm.paramedicShare);
+            
+            const updatedTrip: Trip = {
+                ...trip,
+                day: this.tripForm.day,
+                month: this.tripForm.month,
+                year: this.tripForm.year,
+                driver: this.tripForm.driver,
+                paramedic: this.tripForm.paramedic,
+                transferFrom: this.tripForm.transferFrom,
+                transferTo: this.tripForm.transferTo,
+                start: this.tripForm.start,
+                end: this.tripForm.end,
+                diesel: this.tripForm.diesel,
+                patientName: this.tripForm.patientName,
+                patientAge: this.tripForm.patientAge,
+                ymdDay: this.tripForm.ymdDay,
+                ymdMonth: this.tripForm.ymdMonth,
+                ymdYear: this.tripForm.ymdYear,
+                transferStatus: this.tripForm.transferStatus,
+                diagnosis: this.tripForm.diagnosis,
+                totalAmount: this.tripForm.totalAmount,
+                ...shares
+            };
+
+            this.trips.update(trips => trips.map(t => t.id === trip.id ? updatedTrip : t));
+            this.selectedTrip.set(updatedTrip);
+            this.isEditTripModalOpen.set(false);
+            this.isViewTripModalOpen.set(true);
+        }
     }
 
     viewTripDetails(trip: Trip): void {
@@ -286,5 +538,27 @@ export class TripsComponent {
     closeViewTripModal(): void {
         this.isViewTripModalOpen.set(false);
         this.selectedTrip.set(null);
+    }
+
+    closeEditTripModal(): void {
+        this.isEditTripModalOpen.set(false);
+    }
+
+    getFormattedDate(day: number, month: number, year: number): string {
+        return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+    }
+
+    getDaysInMonth(month: number, year: number): number[] {
+        const days = new Date(year, month, 0).getDate();
+        return Array.from({ length: days }, (_, i) => i + 1);
+    }
+
+    getMonths(): number[] {
+        return Array.from({ length: 12 }, (_, i) => i + 1);
+    }
+
+    getYears(): number[] {
+        const currentYear = new Date().getFullYear();
+        return Array.from({ length: 10 }, (_, i) => currentYear - i);
     }
 }

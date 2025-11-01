@@ -1,0 +1,90 @@
+<div class="login-container" dir="rtl">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-sm-10 col-md-6 col-lg-5 col-xl-4">
+        <div class="text-center mb-4">
+          <!-- Logo -->
+          <div class="logo-icon mx-auto mb-4">
+            <i class="fas fa-ambulance"></i>
+          </div>
+          
+          <!-- Title -->
+          <h1 class="h2 fw-bold mb-2">إدارة سيارات الإسعاف</h1>
+          
+          <!-- Subtitle -->
+          <p class="text-muted">تسجيل الدخول إلى حسابك</p>
+        </div>
+
+        <!-- Form -->
+        <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+          <!-- Employee ID -->
+          <div class="mb-3">
+            <label for="employeeId" class="form-label text-end d-block">معرف الموظف</label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control"
+                id="employeeId"
+                name="employeeId"
+                [(ngModel)]="employeeId"
+                placeholder="أدخل المعرف الخاص بك"
+                required
+                dir="ltr"
+              />
+              <span class="input-group-text">
+                <i class="fas fa-user"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="mb-3">
+            <label for="password" class="form-label text-end d-block">كلمة المرور</label>
+            <div class="input-group">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="togglePasswordVisibility()"
+                aria-label="تبديل رؤية كلمة المرور"
+              >
+                <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                class="form-control"
+                id="password"
+                name="password"
+                [(ngModel)]="password"
+                placeholder="أدخل كلمة المرور الخاصة بك"
+                required
+                dir="ltr"
+              />
+              <span class="input-group-text">
+                <i class="fas fa-lock"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- Login Button -->
+          <button 
+            type="submit" 
+            class="btn btn-primary w-100 py-3 fw-bold"
+            [disabled]="!loginForm.valid"
+          >
+            تسجيل الدخول
+          </button>
+
+          <!-- Forgot Password -->
+          <div class="text-center mt-3">
+            <a href="#" class="text-decoration-none">هل نسيت كلمة المرور؟</a>
+          </div>
+        </form>
+
+        <!-- Footer -->
+        <div class="text-center mt-4">
+          <small class="text-muted">v0.8</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

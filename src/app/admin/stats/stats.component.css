@@ -1,0 +1,34 @@
+:host {
+      --bs-primary: #005A9C;
+      --bs-success: #198754; /* Green for positive trend */
+      --bs-danger: #dc3545; /* Red for negative trend */
+      --bs-dark: #212529;
+      --bs-light: #f8f9fa;
+      --bs-secondary: #6c757d;
+      
+      /* Additional colors for the chart */
+      --bs-info: #0d6efd; /* Blue for Fuel */
+      --bs-success: #198754; /* Green for Maintenance */
+      --bs-warning: #ffc107; /* Orange for Salaries */
+      --bs-purple-custom: #6f42c1; /* Purple for Other */
+    }
+
+    /* Override Bootstrap color variables for chart if necessary to match the original feel */
+    .bg-info { background-color: #0d6efd !important; }
+    .bg-success { background-color: #198754 !important; }
+    .bg-warning { background-color: #ffc107 !important; }
+    .bg-secondary { background-color: #6c757d !important; } /* Used for the 'Other' segment in SVG */
+
+    /* Ensure circles take on the stroke color for the doughnut segments */
+    svg circle.text-info { stroke: #0d6efd; }
+    svg circle.text-success { stroke: #198754; }
+    svg circle.text-warning { stroke: #ffc107; }
+    
+    .text-success-up { color: var(--bs-success) !important; }
+    .text-danger-down { color: var(--bs-danger) !important; }
+
+    /* Custom small card shadow matching the original */
+    .card {
+      border: none;
+    }
+  

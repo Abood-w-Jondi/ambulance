@@ -37,6 +37,22 @@
     border-color: #10B981 !important;
 }
 
+/* Edit button styling */
+.btn-outline-primary {
+    border-color: #1193d4 !important;
+    color: #1193d4 !important;
+}
+.btn-outline-primary:hover {
+    background-color: #1193d4 !important;
+    border-color: #1193d4 !important;
+    color: white !important;
+}
+
+/* Deactivated card styling */
+.opacity-75 {
+    opacity: 0.75;
+}
+
 /* Background and Text Colors */
 .bg-light {
     background-color: #f6f7f8 !important;
@@ -66,6 +82,23 @@
     }
 }
 
+/* Form switch (toggle) styling */
+.form-check-input {
+    width: 3em;
+    height: 1.5em;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: #10B981;
+    border-color: #10B981;
+}
+
+/* Password field styling */
+input[type="password"] {
+    letter-spacing: 0.1em;
+}
+
 /* Desktop Optimization: Adjust content width for better viewing on laptops/desktops */
 @media (min-width: 992px) {
     .container-fluid {
@@ -87,4 +120,26 @@
     .mt-auto .mt-3 {
         margin-top: 0.5rem !important;
     }
+}
+
+/* Scrollbar styling for modal */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+.reducedZIndex{
+    z-index: 1049; /* Reduced z-index to be below other modals */
 }

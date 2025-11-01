@@ -1,5 +1,5 @@
 <header class="sticky-top bg-light shadow-sm p-3 mb-2 d-flex align-items-center border-bottom px-4" style="height: 61px;">
-    <i class="fa-solid fa-bars" (click)="toggleSidebar()" style="cursor:pointer;"></i>
+    <i class="fa-solid fa-bars d-md-none" (click)="toggleSidebar()" style="cursor:pointer;"></i>
     <h1 class="h5 fw-bold flex-grow-1 text-center m-0">{{ header$ | async }}</h1>
   <div class="d-flex align-items-center">
     <button class="btn btn-sm p-0 text-dark">
@@ -19,21 +19,45 @@
   <nav class="sidebar-nav">
     <ul class="nav-group">
       <li>
-        <a href="admin-dashboard" class="active">
+        <a (click)="navigateTo('admin-dashboard')" [class.active]="isActive('admin-dashboard')">
           <i class="fa-solid fa-gauge nav-icon"></i>
           <span>الرئيسية</span>
         </a>
       </li>
       <li>
-        <a href="drivers-list">
+        <a (click)="navigateTo('drivers-list')" [class.active]="isActive('drivers-list')">
           <i class="fa-solid fa-users nav-icon"></i>
           <span>السائقون</span>
         </a>
       </li>
       <li>
-        <a href="trips">
-          <i class="fa-solid fa-chart-bar nav-icon"></i>
+        <a (click)="navigateTo('trips')" [class.active]="isActive('trips')">
+          <i class="fa-solid fa-ambulance nav-icon"></i>
           <span>النقليات</span>
+        </a>
+      </li>
+      <li>
+        <a (click)="navigateTo('stats')" [class.active]="isActive('stats')">
+          <i class="fa-solid fa-chart-bar nav-icon"></i>
+          <span>احصائيات</span>
+        </a>
+      </li>
+      <li>
+        <a (click)="navigateTo('vehicles')" [class.active]="isActive('vehicles')">
+          <i class="fa-solid fa-ambulance nav-icon"></i>
+          <span>سجل المركبات</span>
+        </a>
+      </li>
+      <li>
+        <a (click)="navigateTo('maintenance-history')" [class.active]="isActive('maintenance-history')">
+          <i class="fa-solid fa-wrench nav-icon"></i>
+          <span>سجل الصيانة</span>
+        </a>
+      </li>
+      <li>
+        <a (click)="navigateTo('fuel-history')" [class.active]="isActive('fuel-history')">
+          <i class="fa-solid fa-gas-pump nav-icon"></i>
+          <span>سجل الوقود</span>
         </a>
       </li>
     </ul>
