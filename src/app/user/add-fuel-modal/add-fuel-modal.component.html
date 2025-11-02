@@ -1,0 +1,153 @@
+<div class="modal-backdrop fade show"></div>
+<div class="modal fade show d-block" tabindex="-1" dir="rtl">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold">
+          <i class="fas fa-gas-pump me-2"></i>
+          إضافة سجل وقود
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="onSubmit()" #fuelForm="ngForm">
+          <!-- اختيار سيارة الإسعاف -->
+          <div class="mb-3">
+            <label for="ambulance" class="form-label fw-bold">
+              <i class="fas fa-ambulance me-2 text-primary"></i>
+              سيارة الإسعاف
+            </label>
+            <select 
+              class="form-select" 
+              id="ambulance"
+              [(ngModel)]="selectedAmbulance"
+              name="ambulance"
+              (change)="onAmbulanceChange()"
+              required>
+              <option value="">اختر سيارة الإسعاف</option>
+              <option *ngFor="let ambulance of ambulances" [value]="ambulance.number">
+                {{ ambulance.name }} - {{ ambulance.number }}
+              </option>
+            </select>
+          </div>
+
+          <!-- التاريخ -->
+          <div class="mb-3">
+            <label for="date" class="form-label fw-bold">
+              <i class="fas fa-calendar me-2 text-primary"></i>
+              التاريخ
+            </label>
+            <input 
+              type="date" 
+              class="form-control" 
+              id="date"
+              [(ngModel)]="fuelRecord.date"
+              name="date"
+              required>
+          </div>
+
+          <!-- قراءة العداد -->
+          <div class="row mb-3">
+            <div class="col-6">
+              <label for="odometerBefore" class="form-label fw-bold">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                العداد قبل (كم)
+              </label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="odometerBefore"
+                [(ngModel)]="fuelRecord.odometerBefore"
+                name="odometerBefore"
+                min="0"
+                required>
+            </div>
+            <div class="col-6">
+              <label for="odometerAfter" class="form-label fw-bold">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                العداد بعد (كم)
+              </label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="odometerAfter"
+                [(ngModel)]="fuelRecord.odometerAfter"
+                name="odometerAfter"
+                min="0"
+                required>
+            </div>
+          </div>
+
+          <!-- المسافة المقطوعة -->
+          <div class="alert alert-info mb-3" *ngIf="calculateDistance() > 0">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>المسافة المقطوعة:</strong> {{ calculateDistance() }} كم
+          </div>
+
+          <!-- كمية الوقود -->
+          <div class="mb-3">
+            <label for="fuelAmount" class="form-label fw-bold">
+              <i class="fas fa-gas-pump me-2 text-primary"></i>
+              كمية الوقود (لتر)
+            </label>
+            <input 
+              type="number" 
+              class="form-control" 
+              id="fuelAmount"
+              [(ngModel)]="fuelRecord.fuelAmount"
+              name="fuelAmount"
+              step="0.1"
+              min="0"
+              required>
+          </div>
+
+          <!-- التكلفة -->
+          <div class="mb-3">
+            <label for="cost" class="form-label fw-bold">
+              <i class="fas fa-dollar-sign me-2 text-primary"></i>
+              التكلفة ($)
+            </label>
+            <input 
+              type="number" 
+              class="form-control" 
+              id="cost"
+              [(ngModel)]="fuelRecord.cost"
+              name="cost"
+              step="0.01"
+              min="0"
+              required>
+          </div>
+
+          <!-- ملاحظات -->
+          <div class="mb-3">
+            <label for="notes" class="form-label fw-bold">
+              <i class="fas fa-sticky-note me-2 text-primary"></i>
+              ملاحظات (اختياري)
+            </label>
+            <textarea 
+              class="form-control" 
+              id="notes"
+              [(ngModel)]="fuelRecord.notes"
+              name="notes"
+              rows="3"
+              placeholder="أضف أي ملاحظات إضافية..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSubmitting">
+          <i class="fas fa-times me-2"></i>
+          إلغاء
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-primary" 
+          (click)="onSubmit()"
+          [disabled]="!isFormValid() || isSubmitting">
+          <i class="fas fa-save me-2"></i>
+          {{ isSubmitting ? 'جاري الحفظ...' : 'حفظ' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

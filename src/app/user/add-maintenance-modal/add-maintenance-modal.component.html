@@ -1,0 +1,191 @@
+<div class="modal-backdrop fade show"></div>
+<div class="modal fade show d-block" tabindex="-1" dir="rtl">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold">
+          <i class="fas fa-wrench me-2"></i>
+          إضافة سجل صيانة
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="onSubmit()" #maintenanceForm="ngForm">
+          <!-- اختيار المركبة -->
+          <div class="mb-3">
+            <label for="vehicle" class="form-label fw-bold">
+              <i class="fas fa-ambulance me-2 text-primary"></i>
+              المركبة
+            </label>
+            <select 
+              class="form-select" 
+              id="vehicle"
+              [(ngModel)]="selectedVehicle"
+              name="vehicle"
+              (change)="onVehicleChange()"
+              required>
+              <option value="">اختر المركبة</option>
+              <option *ngFor="let ambulance of ambulances" [value]="ambulance.id">
+                {{ ambulance.name }} - {{ ambulance.number }}
+              </option>
+            </select>
+          </div>
+
+          <div class="row">
+            <!-- التاريخ -->
+            <div class="col-md-6 mb-3">
+              <label for="date" class="form-label fw-bold">
+                <i class="fas fa-calendar me-2 text-primary"></i>
+                التاريخ
+              </label>
+              <input 
+                type="date" 
+                class="form-control" 
+                id="date"
+                [(ngModel)]="maintenanceRecord.date"
+                name="date"
+                required>
+            </div>
+
+            <!-- الحالة -->
+            <div class="col-md-6 mb-3">
+              <label for="status" class="form-label fw-bold">
+                <i class="fas fa-info-circle me-2 text-primary"></i>
+                الحالة
+              </label>
+              <select 
+                class="form-select" 
+                id="status"
+                [(ngModel)]="maintenanceRecord.status"
+                name="status"
+                required>
+                <option *ngFor="let status of maintenanceStatuses" [value]="status">
+                  {{ status }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- نوع الصيانة -->
+          <div class="mb-3">
+            <label for="type" class="form-label fw-bold">
+              <i class="fas fa-tools me-2 text-primary"></i>
+              نوع الصيانة
+            </label>
+            <select 
+              class="form-select" 
+              id="type"
+              [(ngModel)]="maintenanceRecord.type"
+              name="type"
+              required>
+              <option value="">اختر نوع الصيانة</option>
+              <option *ngFor="let type of maintenanceTypes" [value]="type">
+                {{ type }}
+              </option>
+            </select>
+          </div>
+
+          <!-- موقع الخدمة -->
+          <div class="mb-3">
+            <label for="serviceLocation" class="form-label fw-bold">
+              <i class="fas fa-map-marker-alt me-2 text-primary"></i>
+              موقع الخدمة
+            </label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="serviceLocation"
+              [(ngModel)]="maintenanceRecord.serviceLocation"
+              name="serviceLocation"
+              placeholder="اسم الورشة أو المركز"
+              required>
+          </div>
+
+          <!-- قراءة العداد -->
+          <div class="row mb-3">
+            <div class="col-6">
+              <label for="odometerBefore" class="form-label fw-bold">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                العداد قبل (كم)
+              </label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="odometerBefore"
+                [(ngModel)]="maintenanceRecord.odometerBefore"
+                name="odometerBefore"
+                min="0"
+                required>
+            </div>
+            <div class="col-6">
+              <label for="odometerAfter" class="form-label fw-bold">
+                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                العداد بعد (كم)
+              </label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="odometerAfter"
+                [(ngModel)]="maintenanceRecord.odometerAfter"
+                name="odometerAfter"
+                min="0"
+                required>
+            </div>
+          </div>
+
+          <!-- المسافة المقطوعة -->
+          <div class="alert alert-info mb-3" *ngIf="calculateDistance() > 0">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>المسافة المقطوعة أثناء الصيانة:</strong> {{ calculateDistance() }} كم
+          </div>
+
+          <!-- التكلفة -->
+          <div class="mb-3">
+            <label for="cost" class="form-label fw-bold">
+              <i class="fas fa-dollar-sign me-2 text-primary"></i>
+              التكلفة ($)
+            </label>
+            <input 
+              type="number" 
+              class="form-control" 
+              id="cost"
+              [(ngModel)]="maintenanceRecord.cost"
+              name="cost"
+              step="0.01"
+              min="0"
+              required>
+          </div>
+
+          <!-- ملاحظات -->
+          <div class="mb-3">
+            <label for="notes" class="form-label fw-bold">
+              <i class="fas fa-sticky-note me-2 text-primary"></i>
+              ملاحظات
+            </label>
+            <textarea 
+              class="form-control" 
+              id="notes"
+              [(ngModel)]="maintenanceRecord.notes"
+              name="notes"
+              rows="4"
+              placeholder="تفاصيل الصيانة والملاحظات..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSubmitting">
+          <i class="fas fa-times me-2"></i>
+          إلغاء
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-primary" 
+          (click)="onSubmit()"
+          [disabled]="!isFormValid() || isSubmitting">
+          <i class="fas fa-save me-2"></i>
+          {{ isSubmitting ? 'جاري الحفظ...' : 'حفظ' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,89 @@
+.table {
+  font-size: 0.95rem;
+}
+
+.table thead th {
+  font-weight: 600;
+  border-bottom: 2px solid #dee2e6;
+  padding: 1rem 0.75rem;
+}
+
+.table tbody td {
+  vertical-align: middle;
+  padding: 0.75rem;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(17, 147, 212, 0.05);
+}
+
+.badge {
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #1193d4;
+  box-shadow: 0 0 0 0.25rem rgba(17, 147, 212, 0.25);
+}
+
+.text-primary {
+  color: #1193d4 !important;
+}
+
+.bg-primary {
+  background-color: #1193d4 !important;
+}
+
+.page-link {
+  color: #1193d4;
+}
+
+.page-link:hover {
+  color: #0d7ab8;
+  background-color: rgba(17, 147, 212, 0.1);
+}
+
+.page-item.active .page-link {
+  background-color: #1193d4;
+  border-color: #1193d4;
+}
+
+/* RTL Support */
+[dir="rtl"] .me-2 {
+  margin-right: 0 !important;
+  margin-left: 0.5rem !important;
+}
+
+[dir="rtl"] .text-end {
+  text-align: left !important;
+}
+
+[dir="rtl"] table {
+  text-align: right;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.85rem;
+  }
+  
+  .table thead th,
+  .table tbody td {
+    padding: 0.5rem;
+  }
+}
+
+@media (min-width: 992px) {
+  .container-fluid {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}

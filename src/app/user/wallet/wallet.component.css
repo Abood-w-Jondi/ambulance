@@ -1,0 +1,125 @@
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #1193d4 0%, #0d7ab8 100%);
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+}
+
+.payment-icon {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(17, 147, 212, 0.1);
+}
+
+.list-group-item {
+  padding: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+  background-color: rgba(17, 147, 212, 0.05);
+}
+
+.badge {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.text-primary {
+  color: #1193d4 !important;
+}
+
+.btn-primary {
+  background-color: #1193d4;
+  border-color: #1193d4;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #0d7ab8;
+  border-color: #0d7ab8;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #1193d4;
+  box-shadow: 0 0 0 0.25rem rgba(17, 147, 212, 0.25);
+}
+
+.form-check-input:checked {
+  background-color: #1193d4;
+  border-color: #1193d4;
+}
+
+.page-link {
+  color: #1193d4;
+}
+
+.page-link:hover {
+  color: #0d7ab8;
+  background-color: rgba(17, 147, 212, 0.1);
+}
+
+.page-item.active .page-link {
+  background-color: #1193d4;
+  border-color: #1193d4;
+}
+
+.modal-backdrop {
+  z-index: 1040;
+}
+
+.modal {
+  z-index: 1050;
+}
+
+/* RTL Support */
+[dir="rtl"] .me-2 {
+  margin-right: 0 !important;
+  margin-left: 0.5rem !important;
+}
+
+[dir="rtl"] .me-1 {
+  margin-right: 0 !important;
+  margin-left: 0.25rem !important;
+}
+
+[dir="rtl"] .text-end {
+  text-align: left !important;
+}
+
+[dir="rtl"] .btn-close {
+  margin: 0 auto 0 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2rem;
+  }
+  
+  .payment-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .payment-icon i {
+    font-size: 1.25rem !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .container-fluid {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}

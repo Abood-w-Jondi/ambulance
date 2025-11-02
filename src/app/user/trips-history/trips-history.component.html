@@ -1,0 +1,212 @@
+<div class="container-fluid py-4" dir="rtl">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="fw-bold mb-0">
+        <i class="fas fa-history me-2 text-primary"></i>
+        سجل الرحلات
+      </h2>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="row mb-4 g-3">
+    <div class="col-12 col-md-4">
+      <div class="card border-0 shadow-sm bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="mb-1 opacity-75">إجمالي الرحلات</p>
+              <h3 class="fw-bold mb-0">{{ totalTrips }}</h3>
+            </div>
+            <i class="fas fa-route fa-2x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card border-0 shadow-sm bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="mb-1 opacity-75">الرحلات المكتملة</p>
+              <h3 class="fw-bold mb-0">{{ completedTrips }}</h3>
+            </div>
+            <i class="fas fa-check-circle fa-2x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card border-0 shadow-sm bg-info text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="mb-1 opacity-75">إجمالي الأرباح</p>
+              <h3 class="fw-bold mb-0">${{ totalEarnings.toFixed(2) }}</h3>
+            </div>
+            <i class="fas fa-dollar-sign fa-2x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Search -->
+        <div class="col-12 col-md-4">
+          <label class="form-label fw-bold">
+            <i class="fas fa-search me-2"></i>
+            بحث
+          </label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="applyFilters(); calculateStatistics()"
+            placeholder="ابحث عن مريض أو موقع...">
+        </div>
+
+        <!-- Month Filter -->
+        <div class="col-6 col-md-2">
+          <label class="form-label fw-bold">
+            <i class="fas fa-calendar-alt me-2"></i>
+            الشهر
+          </label>
+          <select 
+            class="form-select" 
+            [(ngModel)]="selectedMonth"
+            (ngModelChange)="loadTrips()">
+            <option *ngFor="let month of months" [value]="month.value">
+              {{ month.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Year Filter -->
+        <div class="col-6 col-md-2">
+          <label class="form-label fw-bold">
+            <i class="fas fa-calendar me-2"></i>
+            السنة
+          </label>
+          <select 
+            class="form-select" 
+            [(ngModel)]="selectedYear"
+            (ngModelChange)="loadTrips()">
+            <option *ngFor="let year of years" [value]="year">
+              {{ year }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-12 col-md-4">
+          <label class="form-label fw-bold">
+            <i class="fas fa-filter me-2"></i>
+            حالة النقل
+          </label>
+          <select 
+            class="form-select" 
+            [(ngModel)]="selectedStatus"
+            (ngModelChange)="applyFilters(); calculateStatistics()">
+            <option value="All">جميع الحالات</option>
+            <option *ngFor="let status of transferStatuses" [value]="status">
+              {{ status }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trips Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="text-center">#</th>
+              <th>التاريخ</th>
+              <th>اسم المريض</th>
+              <th>من</th>
+              <th>إلى</th>
+              <th class="text-center">الوقت</th>
+              <th class="text-center">الحالة</th>
+              <th class="text-end">نصيب السائق</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let trip of getPaginatedTrips(); let i = index">
+              <td class="text-center">{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+              <td>
+                <i class="fas fa-calendar-day me-2 text-muted"></i>
+                {{ formatDate(trip.day, trip.month, trip.year) }}
+              </td>
+              <td>
+                <i class="fas fa-user-injured me-2 text-muted"></i>
+                {{ trip.patientName }}
+                <small class="text-muted">({{ trip.patientAge }} سنة)</small>
+              </td>
+              <td>
+                <i class="fas fa-map-marker-alt me-2 text-danger"></i>
+                {{ trip.transferFrom }}
+              </td>
+              <td>
+                <i class="fas fa-map-marker-alt me-2 text-success"></i>
+                {{ trip.transferTo }}
+              </td>
+              <td class="text-center">
+                <i class="fas fa-clock me-2 text-muted"></i>
+                {{ formatTime(trip.start) }} - {{ formatTime(trip.end) }}
+              </td>
+              <td class="text-center">
+                <span class="badge {{ getStatusBadgeClass(trip.transferStatus) }}">
+                  {{ trip.transferStatus }}
+                </span>
+              </td>
+              <td class="text-end fw-bold text-success">
+                ${{ trip.driverShare.toFixed(2) }}
+              </td>
+            </tr>
+            <tr *ngIf="filteredTrips.length === 0">
+              <td colspan="8" class="text-center text-muted py-5">
+                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                <p class="mb-0">لا توجد رحلات في هذه الفترة</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="card-footer bg-white" *ngIf="totalPages > 1">
+      <nav aria-label="التنقل بين الصفحات">
+        <ul class="pagination justify-content-center mb-0">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <button class="page-link" (click)="previousPage()">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </li>
+          <li 
+            class="page-item" 
+            *ngFor="let page of [].constructor(totalPages); let i = index"
+            [class.active]="currentPage === i + 1">
+            <button class="page-link" (click)="goToPage(i + 1)">
+              {{ i + 1 }}
+            </button>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <button class="page-link" (click)="nextPage()">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>

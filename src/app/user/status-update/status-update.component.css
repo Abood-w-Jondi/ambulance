@@ -1,0 +1,265 @@
+/*
+  status-update.component.css
+  Custom styles for status update component (RTL)
+  Mobile-first responsive design
+*/
+
+/* --- Base Styles --- */
+
+/* --- Header Styles --- */
+
+.desktop-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--bs-primary);
+  color: var(--bs-primary);
+  background-color: var(--bs-light);
+}
+
+.user-name {
+  min-width: 60px;
+  text-align: left;
+}
+
+/* --- Current Status Card Styles --- */
+
+.status-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Color customization based on Bootstrap alert classes */
+.status-icon-wrapper.alert-warning {
+  background-color: var(--bs-warning);
+  color: var(--bs-dark);
+}
+
+.status-icon-wrapper.alert-success {
+  background-color: var(--bs-success);
+  color: var(--bs-white);
+}
+
+.status-icon-wrapper.alert-info {
+  background-color: var(--bs-info);
+  color: var(--bs-white);
+}
+
+.alert-warning .status-icon-wrapper i {
+  color: var(--bs-dark);
+}
+
+.current-status-alert {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Main Content Styles --- */
+
+.main-content-padding {
+  padding: 1.5rem;
+  /* Bottom padding for mobile to avoid overlap with fixed bottom navigation */
+  padding-bottom: 100px;
+}
+
+/* --- Action Button Styles --- */
+
+.action-btn {
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  text-align: start !important;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+/* --- Mobile Layout (Default) --- */
+
+.desktop-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.status-column,
+.actions-column {
+  width: 100%;
+}
+
+.action-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+
+.card-title {
+  display: none; /* Hide section titles on mobile */
+}
+
+.desktop-only-info {
+  display: none; /* Hide additional info on mobile */
+}
+
+/* --- Tablet Breakpoint (768px and up) --- */
+
+@media (min-width: 768px) {
+  .main-content-padding {
+    padding: 2rem;
+    padding-bottom: 2rem; /* Remove extra bottom padding on tablet+ */
+  }
+
+  .action-buttons-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .desktop-header {
+    position: static; /* Remove sticky on larger screens */
+  }
+}
+
+/* --- Desktop Breakpoint (992px and up) --- */
+
+@media (min-width: 992px) {
+  .main-content-padding {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+
+  .desktop-layout {
+    flex-direction: row;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+
+  /* Left column: 40% width */
+  .status-column {
+    width: 40%;
+    position: sticky;
+    top: 2rem;
+  }
+
+  /* Right column: 60% width */
+  .actions-column {
+    width: 60%;
+  }
+
+  .status-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .actions-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-title {
+    display: block; /* Show section titles on desktop */
+    color: var(--bs-dark);
+    border-bottom: 1px solid var(--bs-primary);
+    padding-bottom: 0.75rem;
+  }
+
+  .desktop-only-info {
+    display: block;
+  }
+
+  .info-card {
+    border: 1px solid #e9ecef;
+  }
+
+  .current-status-alert {
+    font-size: 1.1rem;
+  }
+
+  .action-buttons-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Large Desktop Breakpoint (1200px and up) --- */
+
+@media (min-width: 1200px) {
+  .main-content-padding {
+    padding: 3rem 3rem;
+  }
+
+  .actions-column .action-buttons-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+
+  .status-card,
+  .actions-card {
+    padding: 2.5rem;
+  }
+}
+
+/* --- Extra Large Desktop Breakpoint (1400px and up) --- */
+
+@media (min-width: 1400px) {
+  .main-content-padding {
+    max-width: 1600px;
+  }
+
+  .desktop-layout {
+    gap: 3rem;
+  }
+}
+.btn-info {
+  background-color: #17a2b8;
+  color: white;
+}
+
+/* --- Print Styles --- */
+
+@media print {
+  .desktop-header {
+    position: static;
+  }
+
+  .action-btn {
+    box-shadow: none;
+    border: 1px solid #dee2e6;
+  }
+
+  .desktop-layout {
+    flex-direction: column;
+  }
+
+  .status-column,
+  .actions-column {
+    width: 100%;
+  }
+}

@@ -1,0 +1,310 @@
+<div class="container-fluid py-4" dir="rtl">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="fw-bold mb-0">
+          <i class="fas fa-wallet me-2 text-primary"></i>
+          المحفظة
+        </h2>
+        <button class="btn btn-primary" (click)="openWithdrawModal()">
+          <i class="fas fa-money-bill-wave me-2"></i>
+          طلب سحب
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wallet Summary Cards -->
+  <div class="row mb-4 g-3">
+    <!-- Current Balance -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-lg bg-gradient-primary text-white">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <p class="mb-1 opacity-75">الرصيد المتاح</p>
+              <h2 class="display-4 fw-bold mb-0">${{ walletSummary.currentBalance.toFixed(2) }}</h2>
+            </div>
+            <i class="fas fa-wallet fa-3x opacity-25"></i>
+          </div>
+          <p class="mb-0 small opacity-75">
+            <i class="fas fa-info-circle me-2"></i>
+            يمكنك سحب هذا المبلغ في أي وقت
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Balance -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-lg bg-gradient-warning text-white">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <p class="mb-1 opacity-75">الرصيد المعلق</p>
+              <h2 class="display-4 fw-bold mb-0">${{ walletSummary.pendingBalance.toFixed(2) }}</h2>
+            </div>
+            <i class="fas fa-clock fa-3x opacity-25"></i>
+          </div>
+          <p class="mb-0 small opacity-75">
+            <i class="fas fa-hourglass-half me-2"></i>
+            قيد المراجعة، سيتم إضافته قريباً
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="row mb-4 g-3">
+    <div class="col-6 col-md-3">
+      <div class="card border shadow-sm">
+        <div class="card-body text-center">
+          <i class="fas fa-arrow-up fa-2x text-success mb-2"></i>
+          <p class="text-muted mb-1 small">إجمالي الأرباح</p>
+          <h5 class="fw-bold text-success mb-0">${{ walletSummary.totalEarnings.toFixed(2) }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border shadow-sm">
+        <div class="card-body text-center">
+          <i class="fas fa-arrow-down fa-2x text-danger mb-2"></i>
+          <p class="text-muted mb-1 small">إجمالي المسحوبات</p>
+          <h5 class="fw-bold text-danger mb-0">${{ walletSummary.totalWithdrawals.toFixed(2) }}</h5>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <div class="card border shadow-sm">
+        <div class="card-body text-center">
+          <i class="fas fa-calendar-check fa-2x text-info mb-2"></i>
+          <p class="text-muted mb-1 small">آخر دفعة</p>
+          <h6 class="fw-bold mb-0" *ngIf="walletSummary.lastPaymentDate">
+            {{ formatDate(walletSummary.lastPaymentDate) }}
+          </h6>
+          <h6 class="text-muted mb-0" *ngIf="!walletSummary.lastPaymentDate">
+            لا توجد دفعات بعد
+          </h6>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Type Filter -->
+        <div class="col-12 col-md-6">
+          <label class="form-label fw-bold">
+            <i class="fas fa-filter me-2"></i>
+            نوع العملية
+          </label>
+          <select 
+            class="form-select" 
+            [(ngModel)]="selectedType"
+            (ngModelChange)="applyFilters()">
+            <option *ngFor="let type of paymentTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Month Filter -->
+        <div class="col-6 col-md-3">
+          <label class="form-label fw-bold">
+            <i class="fas fa-calendar-alt me-2"></i>
+            الشهر
+          </label>
+          <select 
+            class="form-select" 
+            [(ngModel)]="selectedMonth"
+            (ngModelChange)="loadPayments()">
+            <option *ngFor="let month of months" [value]="month.value">
+              {{ month.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Year Filter -->
+        <div class="col-6 col-md-3">
+          <label class="form-label fw-bold">
+            <i class="fas fa-calendar me-2"></i>
+            السنة
+          </label>
+          <select 
+            class="form-select" 
+            [(ngModel)]="selectedYear"
+            (ngModelChange)="loadPayments()">
+            <option *ngFor="let year of years" [value]="year">
+              {{ year }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transactions List -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-bottom">
+      <h5 class="mb-0 fw-bold">
+        <i class="fas fa-list me-2 text-primary"></i>
+        سجل المعاملات
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="list-group list-group-flush">
+        <div 
+          *ngFor="let payment of getPaginatedPayments()" 
+          class="list-group-item list-group-item-action">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <div class="payment-icon {{ getPaymentColor(payment.type) }}">
+                <i class="fas {{ getPaymentIcon(payment.type) }} fa-2x"></i>
+              </div>
+            </div>
+            <div class="col">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h6 class="mb-1 fw-bold">{{ payment.description }}</h6>
+                  <p class="mb-0 small text-muted">
+                    <i class="fas fa-calendar me-1"></i>
+                    {{ formatDate(payment.date) }}
+                  </p>
+                </div>
+                <div class="text-end">
+                  <h5 class="mb-1 fw-bold" [class.text-success]="payment.amount > 0" [class.text-danger]="payment.amount < 0">
+                    {{ payment.amount > 0 ? '+' : '' }}${{ Math.abs(payment.amount).toFixed(2) }}
+                  </h5>
+                  <span class="badge {{ getStatusBadgeClass(payment.status) }}">
+                    {{ payment.status }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="filteredPayments.length === 0" class="list-group-item text-center py-5">
+          <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
+          <p class="text-muted mb-0">لا توجد معاملات في هذه الفترة</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="card-footer bg-white" *ngIf="totalPages > 1">
+      <nav aria-label="التنقل بين الصفحات">
+        <ul class="pagination justify-content-center mb-0">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <button class="page-link" (click)="previousPage()">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </li>
+          <li 
+            class="page-item" 
+            *ngFor="let page of [].constructor(totalPages); let i = index"
+            [class.active]="currentPage === i + 1">
+            <button class="page-link" (click)="goToPage(i + 1)">
+              {{ i + 1 }}
+            </button>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <button class="page-link" (click)="nextPage()">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div *ngIf="showWithdrawModal">
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1" dir="rtl">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="fas fa-money-bill-wave me-2"></i>
+            طلب سحب
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeWithdrawModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            الرصيد المتاح للسحب: <strong>${{ walletSummary.currentBalance.toFixed(2) }}</strong>
+          </div>
+
+          <div class="mb-3">
+            <label for="withdrawAmount" class="form-label fw-bold">
+              <i class="fas fa-dollar-sign me-2 text-primary"></i>
+              المبلغ المراد سحبه
+            </label>
+            <input 
+              type="number" 
+              class="form-control form-control-lg" 
+              id="withdrawAmount"
+              [(ngModel)]="withdrawAmount"
+              min="0"
+              [max]="walletSummary.currentBalance"
+              step="0.01"
+              placeholder="0.00">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">
+              <i class="fas fa-university me-2 text-primary"></i>
+              طريقة السحب
+            </label>
+            <div class="form-check mb-2">
+              <input 
+                class="form-check-input" 
+                type="radio" 
+                name="withdrawMethod" 
+                id="bank"
+                value="bank"
+                [(ngModel)]="withdrawMethod">
+              <label class="form-check-label" for="bank">
+                <i class="fas fa-university me-2"></i>
+                تحويل بنكي
+              </label>
+            </div>
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="radio" 
+                name="withdrawMethod" 
+                id="cash"
+                value="cash"
+                [(ngModel)]="withdrawMethod">
+              <label class="form-check-label" for="cash">
+                <i class="fas fa-money-bill me-2"></i>
+                سحب نقدي
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeWithdrawModal()">
+            <i class="fas fa-times me-2"></i>
+            إلغاء
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-primary" 
+            (click)="submitWithdraw()"
+            [disabled]="withdrawAmount <= 0 || withdrawAmount > walletSummary.currentBalance">
+            <i class="fas fa-check me-2"></i>
+            تأكيد الطلب
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

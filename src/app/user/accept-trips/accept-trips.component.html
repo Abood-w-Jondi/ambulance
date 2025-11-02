@@ -1,0 +1,340 @@
+<div class="container-fluid py-4" dir="rtl">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="fw-bold mb-0">
+          <i class="fas fa-ambulance me-2 text-primary"></i>
+          الرحلات المتاحة
+        </h2>
+        <button class="btn btn-outline-primary" (click)="loadTrips()" [disabled]="isLoading">
+          <i class="fas fa-sync-alt me-2" [class.fa-spin]="isLoading"></i>
+          تحديث
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-pills mb-4">
+    <li class="nav-item">
+      <button 
+        class="nav-link" 
+        [class.active]="selectedTab === 'pending'"
+        (click)="selectedTab = 'pending'">
+        <i class="fas fa-clock me-2"></i>
+        الرحلات المعلقة
+        <span class="badge bg-danger ms-2" *ngIf="pendingTrips.length > 0">
+          {{ pendingTrips.length }}
+        </span>
+      </button>
+    </li>
+    <li class="nav-item">
+      <button 
+        class="nav-link" 
+        [class.active]="selectedTab === 'accepted'"
+        (click)="selectedTab = 'accepted'">
+        <i class="fas fa-check-circle me-2"></i>
+        الرحلات المقبولة
+        <span class="badge bg-success ms-2" *ngIf="acceptedTrips.length > 0">
+          {{ acceptedTrips.length }}
+        </span>
+      </button>
+    </li>
+  </ul>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">جاري التحميل...</span>
+    </div>
+    <p class="mt-3 text-muted">جاري تحميل الرحلات...</p>
+  </div>
+
+  <!-- Pending Trips -->
+  <div *ngIf="!isLoading && selectedTab === 'pending'">
+    <div class="row g-3" *ngIf="pendingTrips.length > 0">
+      <div class="col-12 col-lg-6" *ngFor="let trip of pendingTrips">
+        <div class="card border-0 shadow-sm trip-card" [class.trip-urgent]="trip.priority === 'طارئ'">
+          <div class="card-body">
+            <!-- Priority Badge -->
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <span class="badge {{ getPriorityBadgeClass(trip.priority) }} d-flex align-items-center">
+                <i class="fas {{ getPriorityIcon(trip.priority) }} me-2"></i>
+                {{ trip.priority }}
+              </span>
+              <small class="text-muted">{{ getTimeSince(trip.requestedAt) }}</small>
+            </div>
+
+            <!-- Patient Info -->
+            <div class="mb-3">
+              <h5 class="fw-bold mb-2">
+                <i class="fas fa-user-injured me-2 text-primary"></i>
+                {{ trip.patientName }}
+                <small class="text-muted">({{ trip.patientAge }} سنة)</small>
+              </h5>
+              <p class="mb-0 text-muted">
+                <i class="fas fa-stethoscope me-2"></i>
+                {{ trip.diagnosis }}
+              </p>
+            </div>
+
+            <!-- Locations -->
+            <div class="mb-3">
+              <div class="location-item mb-2">
+                <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                <span class="fw-medium">من:</span>
+                <span class="ms-2">{{ trip.pickupLocation }}</span>
+              </div>
+              <div class="location-item">
+                <i class="fas fa-map-marker-alt text-success me-2"></i>
+                <span class="fw-medium">إلى:</span>
+                <span class="ms-2">{{ trip.dropoffLocation }}</span>
+              </div>
+            </div>
+
+            <!-- Trip Info -->
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <div class="info-box">
+                  <i class="fas fa-clock text-primary"></i>
+                  <small class="text-muted">وقت الاستلام</small>
+                  <strong>{{ formatTime(trip.pickupTime) }}</strong>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="info-box">
+                  <i class="fas fa-road text-primary"></i>
+                  <small class="text-muted">المسافة</small>
+                  <strong>{{ trip.estimatedDistance }} كم</strong>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="info-box">
+                  <i class="fas fa-hourglass-half text-primary"></i>
+                  <small class="text-muted">المدة</small>
+                  <strong>{{ trip.estimatedDuration }} دقيقة</strong>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="info-box">
+                  <i class="fas fa-dollar-sign text-success"></i>
+                  <small class="text-muted">الأجرة المتوقعة</small>
+                  <strong>${{ trip.estimatedEarnings }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-grid gap-2">
+              <button class="btn btn-success" (click)="acceptTrip(trip)">
+                <i class="fas fa-check me-2"></i>
+                قبول الرحلة
+              </button>
+              <div class="btn-group">
+                <button class="btn btn-outline-primary" (click)="viewTripDetails(trip)">
+                  <i class="fas fa-info-circle me-2"></i>
+                  التفاصيل
+                </button>
+                <button class="btn btn-outline-danger" (click)="rejectTrip(trip)">
+                  <i class="fas fa-times me-2"></i>
+                  رفض
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="pendingTrips.length === 0" class="text-center py-5">
+      <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+      <h5 class="text-muted">لا توجد رحلات معلقة حالياً</h5>
+      <p class="text-muted">سيتم إشعارك عند توفر رحلات جديدة</p>
+    </div>
+  </div>
+
+  <!-- Accepted Trips -->
+  <div *ngIf="!isLoading && selectedTab === 'accepted'">
+    <div class="row g-3" *ngIf="acceptedTrips.length > 0">
+      <div class="col-12 col-lg-6" *ngFor="let trip of acceptedTrips">
+        <div class="card border-0 shadow-sm bg-light">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <span class="badge bg-success">
+                <i class="fas fa-check-circle me-2"></i>
+                مقبولة
+              </span>
+              <small class="text-muted">{{ getTimeSince(trip.requestedAt) }}</small>
+            </div>
+
+            <!-- Patient Info -->
+            <div class="mb-3">
+              <h5 class="fw-bold mb-2">
+                <i class="fas fa-user-injured me-2 text-primary"></i>
+                {{ trip.patientName }}
+                <small class="text-muted">({{ trip.patientAge }} سنة)</small>
+              </h5>
+              <p class="mb-0 text-muted">
+                <i class="fas fa-stethoscope me-2"></i>
+                {{ trip.diagnosis }}
+              </p>
+            </div>
+
+            <!-- Locations -->
+            <div class="mb-3">
+              <div class="location-item mb-2">
+                <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                <span class="fw-medium">من:</span>
+                <span class="ms-2">{{ trip.pickupLocation }}</span>
+              </div>
+              <div class="location-item">
+                <i class="fas fa-map-marker-alt text-success me-2"></i>
+                <span class="fw-medium">إلى:</span>
+                <span class="ms-2">{{ trip.dropoffLocation }}</span>
+              </div>
+            </div>
+
+            <!-- Trip Info -->
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <div class="info-box">
+                  <i class="fas fa-clock text-primary"></i>
+                  <small class="text-muted">وقت الاستلام</small>
+                  <strong>{{ formatTime(trip.pickupTime) }}</strong>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="info-box">
+                  <i class="fas fa-dollar-sign text-success"></i>
+                  <small class="text-muted">الأجرة المتوقعة</small>
+                  <strong>${{ trip.estimatedEarnings }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action -->
+            <div class="d-grid">
+              <button class="btn btn-primary" (click)="viewTripDetails(trip)">
+                <i class="fas fa-info-circle me-2"></i>
+                عرض التفاصيل الكاملة
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="acceptedTrips.length === 0" class="text-center py-5">
+      <i class="fas fa-check-circle fa-4x text-muted mb-3"></i>
+      <h5 class="text-muted">لم تقبل أي رحلات بعد</h5>
+      <p class="text-muted">الرحلات المقبولة ستظهر هنا</p>
+    </div>
+  </div>
+</div>
+
+<!-- Trip Details Modal -->
+<div *ngIf="showDetailsModal && selectedTrip">
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1" dir="rtl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="fas fa-info-circle me-2"></i>
+            تفاصيل الرحلة
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeDetailsModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="alert {{ getPriorityBadgeClass(selectedTrip.priority) }} text-white">
+                <i class="fas {{ getPriorityIcon(selectedTrip.priority) }} me-2"></i>
+                <strong>الأولوية:</strong> {{ selectedTrip.priority }}
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <h6 class="fw-bold mb-2">معلومات المريض</h6>
+              <ul class="list-unstyled">
+                <li class="mb-2">
+                  <i class="fas fa-user me-2 text-primary"></i>
+                  <strong>الاسم:</strong> {{ selectedTrip.patientName }}
+                </li>
+                <li class="mb-2">
+                  <i class="fas fa-birthday-cake me-2 text-primary"></i>
+                  <strong>العمر:</strong> {{ selectedTrip.patientAge }} سنة
+                </li>
+                <li class="mb-2">
+                  <i class="fas fa-stethoscope me-2 text-primary"></i>
+                  <strong>التشخيص:</strong> {{ selectedTrip.diagnosis }}
+                </li>
+              </ul>
+            </div>
+
+            <div class="col-md-6">
+              <h6 class="fw-bold mb-2">معلومات الرحلة</h6>
+              <ul class="list-unstyled">
+                <li class="mb-2">
+                  <i class="fas fa-clock me-2 text-primary"></i>
+                  <strong>وقت الاستلام:</strong> {{ formatDateTime(selectedTrip.pickupTime) }}
+                </li>
+                <li class="mb-2">
+                  <i class="fas fa-road me-2 text-primary"></i>
+                  <strong>المسافة:</strong> {{ selectedTrip.estimatedDistance }} كم
+                </li>
+                <li class="mb-2">
+                  <i class="fas fa-hourglass-half me-2 text-primary"></i>
+                  <strong>المدة المتوقعة:</strong> {{ selectedTrip.estimatedDuration }} دقيقة
+                </li>
+                <li class="mb-2">
+                  <i class="fas fa-dollar-sign me-2 text-success"></i>
+                  <strong>الأجرة المتوقعة:</strong> ${{ selectedTrip.estimatedEarnings }}
+                </li>
+              </ul>
+            </div>
+
+            <div class="col-12">
+              <h6 class="fw-bold mb-2">المواقع</h6>
+              <div class="card bg-light mb-2">
+                <div class="card-body py-2">
+                  <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                  <strong>من:</strong> {{ selectedTrip.pickupLocation }}
+                </div>
+              </div>
+              <div class="card bg-light">
+                <div class="card-body py-2">
+                  <i class="fas fa-map-marker-alt text-success me-2"></i>
+                  <strong>إلى:</strong> {{ selectedTrip.dropoffLocation }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" *ngIf="selectedTrip.status === 'معلق'">
+          <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">
+            <i class="fas fa-times me-2"></i>
+            إغلاق
+          </button>
+          <button type="button" class="btn btn-danger" (click)="rejectTrip(selectedTrip); closeDetailsModal()">
+            <i class="fas fa-times-circle me-2"></i>
+            رفض الرحلة
+          </button>
+          <button type="button" class="btn btn-success" (click)="acceptTrip(selectedTrip); closeDetailsModal()">
+            <i class="fas fa-check-circle me-2"></i>
+            قبول الرحلة
+          </button>
+        </div>
+        <div class="modal-footer" *ngIf="selectedTrip.status === 'مقبول'">
+          <button type="button" class="btn btn-primary" (click)="closeDetailsModal()">
+            <i class="fas fa-check me-2"></i>
+            حسناً
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

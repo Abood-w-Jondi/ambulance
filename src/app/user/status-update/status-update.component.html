@@ -1,0 +1,84 @@
+<div dir="rtl">
+
+  <main class="container-fluid main-content-padding">
+    
+    <!-- Desktop layout wrapper -->
+    <div class="desktop-layout">
+      
+      <!-- Left column: Current Status (on desktop) -->
+      <div class="status-column">
+        <div class="status-card">
+          <div class="alert {{ currentStatus.alertClass }} d-flex align-items-center current-status-alert" role="alert">
+            
+            <div class="status-icon-wrapper {{ currentStatus.alertClass }} me-3">
+              <i class="{{ currentStatus.icon }} fa-xl"></i>
+            </div>
+            
+            <div>
+              <h3 class="alert-heading fs-6 fw-bold mb-1">{{ currentStatus.title }}</h3>
+              <p class="mb-0">{{ currentStatus.description }}</p>
+            </div>
+          </div>
+
+          <!-- Additional info section for desktop -->
+          <div class="desktop-only-info mt-4">
+            <div class="info-card p-3 bg-light rounded">
+              <h4 class="fs-6 fw-bold mb-2">
+                <i class="fa-solid fa-info-circle me-2"></i>
+                معلومات إضافية
+              </h4>
+              <div class="small text-muted">
+                <p class="mb-2">
+                  <i class="fa-solid fa-clock me-2"></i>
+                  وقت بدء الحالة: 14:30
+                </p>
+                <p class="mb-0">
+                  <i class="fa-solid fa-map-marker-alt me-2"></i>
+                  الموقع الحالي: قيد التحديث
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column: Action Buttons (on desktop) -->
+      <div class="actions-column">
+        
+        <!-- Main actions card -->
+        <div class="actions-card mb-4">
+          <h3 class="fs-5 fw-bold mb-3 card-title">تحديث الحالة</h3>
+          
+          <div class="action-buttons-grid">
+            <button *ngFor="let action of mainActions" 
+                    type="button" 
+                    class="btn {{ action.btnClass }} {{ action.textClass }} action-btn p-3 d-flex align-items-center">
+              
+              <i class="{{ action.icon }} fa-fw fa-lg me-3"></i>
+              <span class="fw-bold fs-6 mx-2">{{ action.label }}</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Off-duty actions card -->
+        <div class="actions-card">
+          <h3 class="fs-5 fw-bold mb-3 card-title">خيارات إضافية</h3>
+          
+          <div class="action-buttons-grid">
+            <button *ngFor="let action of offDutyActions" 
+                    type="button" 
+                    class="btn {{ action.btnClass }} action-btn p-3 d-flex align-items-center">
+              
+              <i class="{{ action.icon }} fa-fw fa-lg me-3"></i>
+              <span class="fw-bold fs-6 mx-2">{{ action.label }}</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+</div>
