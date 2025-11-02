@@ -1,5 +1,15 @@
 @media (min-width: 768px) {
-    .main-content {
+    .with-sidebar {
         margin-right: 285px;
     }
+}
+.main-content{
+    padding-bottom: 70px;
+}
+.main-body{
+    scrollbar-width: none;
+    -ms-overflow-style: none; 
+}
+.main-body::-webkit-scrollbar {
+    display: none; 
 }

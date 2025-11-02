@@ -1,15 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { GlobalVarsService } from '../global-vars.service';
 import { Observable } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-side-bar',
-  imports: [AsyncPipe],
+  imports: [AsyncPipe, CommonModule],
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.css'
 })
 export class SideBarComponent {
+  @Input() showSideBar: boolean = false;
   header$: Observable<string>;
 
   constructor(
@@ -31,11 +33,11 @@ export class SideBarComponent {
   }
 
   navigateTo(path: string) {
-    this.router.navigate([path]);
+    this.router.navigate([`admin/${path}`]);
     this.closeSidebar();
   }
 
   isActive(path: string): boolean {
-    return this.router.isActive(path, false);
+    return this.router.isActive(`admin/${path}`, false);
   }
 }

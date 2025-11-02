@@ -250,6 +250,9 @@
 .gap-3 {
     gap: 1rem;
 }
+.cursor-pointer-cu :hover{
+    cursor: pointer;
+}
 
 /* Direction utilities */
 [style*="direction: ltr"] {

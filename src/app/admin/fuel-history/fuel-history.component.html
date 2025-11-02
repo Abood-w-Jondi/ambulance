@@ -392,12 +392,12 @@
             <div class="row row-cols-1 g-4">
                 @for (record of filteredRecords(); track record.id) {
                 <div class="col">
-                    <div class="card shadow-sm rounded-xl overflow-hidden cursor-pointer hover-lift"
+                    <div class="card shadow-sm rounded-xl overflow-hidden cursor-pointer-cu hover-lift"
                         (click)="viewRecordDetails(record)">
                         <div class="card-header bg-white border-bottom p-3">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="text-end">
-                                    <h5 class="fw-bold mb-1 cursor-pointer text-primary" 
+                                    <h5 class="fw-bold mb-1 cursor-pointer-cu text-primary" 
                                         (click)="$event.stopPropagation(); navigateToFleet('name', record.ambulanceName)">
                                         <i class="fa-solid fa-truck-medical me-2"></i>
                                         {{ record.ambulanceName }}
@@ -414,7 +414,7 @@
                             <div class="row g-3 text-end">
                                 <div class="col-6">
                                     <p class="text-muted small mb-1">رقم الإسعاف</p>
-                                    <p class="fw-semibold mb-0 cursor-pointer text-primary" 
+                                    <p class="fw-semibold mb-0 cursor-pointer-cu text-primary" 
                                         (click)="$event.stopPropagation(); navigateToFleet('number', record.ambulanceNumber)">
                                         <i class="fa-solid fa-hashtag"></i>
                                         {{ record.ambulanceNumber }}
@@ -422,7 +422,7 @@
                                 </div>
                                 <div class="col-6">
                                     <p class="text-muted small mb-1">معرف السائق</p>
-                                    <p class="fw-semibold mb-0 cursor-pointer text-primary" 
+                                    <p class="fw-semibold mb-0 cursor-pointer-cu text-primary" 
                                         (click)="$event.stopPropagation(); navigateToFleet('driverId', record.driverId)">
                                         <i class="fa-solid fa-id-badge"></i>
                                         {{ record.driverId }}
@@ -430,7 +430,7 @@
                                 </div>
                                 <div class="col-6">
                                     <p class="text-muted small mb-1">اسم السائق</p>
-                                    <p class="fw-semibold mb-0 cursor-pointer text-primary" 
+                                    <p class="fw-semibold mb-0 cursor-pointer-cu text-primary" 
                                         (click)="$event.stopPropagation(); navigateToDriver(record.driverName)">
                                         <i class="fa-solid fa-user"></i>
                                         {{ record.driverName }}

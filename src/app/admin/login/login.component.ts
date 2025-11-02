@@ -24,7 +24,7 @@ export class LoginComponent {
     if (this.employeeId && this.password) {
       sessionStorage.setItem('employeeId', this.employeeId);
       sessionStorage.setItem('isAuthenticated', 'true');
-      this.router.navigate(['/admin-dashboard']);
+      this.router.navigate(['/user/status-update']);
     }
   }
 }

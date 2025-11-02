@@ -1,5 +1,9 @@
-<app-side-bar *ngIf="showSideBar"></app-side-bar>
+<div class="main-body">
+<app-side-bar [showSideBar]="showSideBar"></app-side-bar>
 
-<div class="main-content">
+<div class="main-content" [ngClass]="{'with-sidebar': showSideBar}">
   <router-outlet></router-outlet>
+</div>
+<app-bottom-bar></app-bottom-bar>
+
 </div>

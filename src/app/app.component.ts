@@ -3,13 +3,14 @@ import { RouterOutlet, Router, NavigationEnd, ActivatedRoute } from '@angular/ro
 import { SideBarComponent } from './side-bar/side-bar.component';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
+import { BottomBarComponent } from './user/bottom-bar/bottom-bar.component';
 
 @Component({
   selector: 'app-root',
   standalone: true, // This component is standalone based on your 'imports'
-  imports: [CommonModule, RouterOutlet, SideBarComponent], // CommonModule provides *ngIf
+  imports: [CommonModule, RouterOutlet, SideBarComponent, BottomBarComponent], // CommonModule provides *ngIf
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
   title = 'ambulance';
@@ -26,20 +27,13 @@ export class AppComponent implements OnInit {
     this.router.events.pipe(
       // Filter for the NavigationEnd event, which fires after navigation is complete
       filter(event => event instanceof NavigationEnd)
-    ).subscribe(() => {
-      // Get the current activated route snapshot
-      let currentRoute = this.route.snapshot;
-      
-      // Traverse down to the last child route (the one being rendered)
-      while (currentRoute.firstChild) {
-        currentRoute = currentRoute.firstChild;
-      }
+    ).subscribe((event) => {
+      // Use the final URL from the NavigationEnd event which contains the full path
+      const navEnd = event as NavigationEnd;
+      const url = navEnd.urlAfterRedirects || navEnd.url || this.router.url;
 
-      // Get the 'path' property from the route configuration (e.g., 'login', '**')
-      const path = currentRoute.routeConfig?.path;
-
-      // Set the visibility. Show the sidebar UNLESS the path is 'login' or '**'.
-      this.showSideBar = !(path === 'login' || path === '**');
+      // Set the visibility. Show the sidebar ONLY if the URL starts with '/admin'.
+      this.showSideBar = url.startsWith('/admin');
     });
   }
 }

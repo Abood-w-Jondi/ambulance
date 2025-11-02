@@ -1,5 +1,7 @@
 <header class="sticky-top bg-light shadow-sm p-3 mb-2 d-flex align-items-center border-bottom px-4" style="height: 61px;">
-    <i class="fa-solid fa-bars d-md-none" (click)="toggleSidebar()" style="cursor:pointer;"></i>
+    <div *ngIf="showSideBar">
+        <i class="fa-solid fa-bars d-md-none" (click)="toggleSidebar()" style="cursor:pointer;"></i>
+    </div>
     <h1 class="h5 fw-bold flex-grow-1 text-center m-0">{{ header$ | async }}</h1>
   <div class="d-flex align-items-center">
     <button class="btn btn-sm p-0 text-dark">
@@ -7,9 +9,9 @@
     </button>
   </div>
 </header>
-<div class="sidebar-overlay" [class.active]="sidebarOpen" (click)="closeSidebar()"></div>
+<div class="sidebar-overlay" *ngIf="showSideBar" (click)="closeSidebar()"></div>
 
-<aside class="sidebar" [class.active]="sidebarOpen">
+<aside class="sidebar" *ngIf="showSideBar">
   
   <div class="sidebar-header">
     <h2 class="sidebar-title">القائمة</h2>
