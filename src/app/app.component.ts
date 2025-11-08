@@ -1,26 +1,31 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { SideBarComponent } from './side-bar/side-bar.component';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { BottomBarComponent } from './user/bottom-bar/bottom-bar.component';
+import { ToastComponent } from './shared/toast/toast.component';
+import { ToastService } from './shared/services/toast.service';
 
 @Component({
   selector: 'app-root',
   standalone: true, // This component is standalone based on your 'imports'
-  imports: [CommonModule, RouterOutlet, SideBarComponent, BottomBarComponent], // CommonModule provides *ngIf
+  imports: [CommonModule, RouterOutlet, SideBarComponent, BottomBarComponent, ToastComponent], // CommonModule provides *ngIf
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
   title = 'ambulance';
-  
+
   // Use a simple boolean property to control visibility
   public showSideBar: boolean = true;
 
+  @ViewChild(ToastComponent) toastComponent!: ToastComponent;
+
   constructor(
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -34,6 +39,13 @@ export class AppComponent implements OnInit {
 
       // Set the visibility. Show the sidebar ONLY if the URL starts with '/admin'.
       this.showSideBar = url.startsWith('/admin');
+    });
+
+    // Subscribe to toast service
+    this.toastService.toast$.subscribe((toast) => {
+      if (this.toastComponent) {
+        this.toastComponent.show(toast.message, toast.type, toast.duration);
+      }
     });
   }
 }

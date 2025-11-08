@@ -1,0 +1,90 @@
+<div class="pagination-container">
+  <div class="pagination-info">
+    <span>
+      عرض {{ startItem() }} - {{ endItem() }} من {{ totalItemsValue }} عنصر
+    </span>
+  </div>
+
+  <div class="pagination-controls">
+    <button
+      class="pagination-btn"
+      (click)="firstPage()"
+      [disabled]="!canGoPrevious()"
+      type="button"
+      title="الصفحة الأولى">
+      &laquo;
+    </button>
+
+    <button
+      class="pagination-btn"
+      (click)="previousPage()"
+      [disabled]="!canGoPrevious()"
+      type="button"
+      title="السابق">
+      &lsaquo;
+    </button>
+
+    @if (showFirstPage()) {
+      <button
+        class="pagination-btn"
+        (click)="goToPage(1)"
+        type="button">
+        1
+      </button>
+      <span class="pagination-ellipsis">...</span>
+    }
+
+    @for (page of visiblePages(); track page) {
+      <button
+        class="pagination-btn"
+        [class.active]="page === currentPageValue"
+        (click)="goToPage(page)"
+        type="button">
+        {{ page }}
+      </button>
+    }
+
+    @if (showLastPage()) {
+      <span class="pagination-ellipsis">...</span>
+      <button
+        class="pagination-btn"
+        (click)="goToPage(totalPages())"
+        type="button">
+        {{ totalPages() }}
+      </button>
+    }
+
+    <button
+      class="pagination-btn"
+      (click)="nextPage()"
+      [disabled]="!canGoNext()"
+      type="button"
+      title="التالي">
+      &rsaquo;
+    </button>
+
+    <button
+      class="pagination-btn"
+      (click)="lastPage()"
+      [disabled]="!canGoNext()"
+      type="button"
+      title="الصفحة الأخيرة">
+      &raquo;
+    </button>
+  </div>
+
+  <div class="pagination-size">
+    <label for="itemsPerPage">عدد العناصر:</label>
+    <select
+      id="itemsPerPage"
+      [value]="itemsPerPageValue"
+      (change)="changeItemsPerPage(+$any($event.target).value)"
+      class="pagination-select">
+      <option [value]="5">5</option>
+      <option [value]="10">10</option>
+      <option [value]="20">20</option>
+      <option [value]="50">50</option>
+      <option [value]="100">100</option>
+    </select>
+  </div>
+</div>

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
-type TransferStatus = 'ميداني' | 'تم النقل' | 'بلاغ كاذب' | 'يتقل' | 'لم يتم النقل' | 'صيانة' | 'رفض النقل' | 'اخرى';
+type TransferStatus = 'ميداني' | 'تم النقل' | 'بلاغ كاذب' | 'ينقل' | 'لم يتم النقل' | 'صيانة' | 'رفض النقل' | 'اخرى';
 type FilterStatus = 'All' | TransferStatus;
 
 interface Trip {
@@ -58,7 +58,7 @@ export class TripsHistoryComponent implements OnInit {
     'ميداني',
     'تم النقل',
     'بلاغ كاذب',
-    'يتقل',
+    'ينقل',
     'لم يتم النقل',
     'صيانة',
     'رفض النقل',
@@ -153,7 +153,7 @@ export class TripsHistoryComponent implements OnInit {
     const statusClasses: { [key in TransferStatus]: string } = {
       'تم النقل': 'bg-success',
       'ميداني': 'bg-primary',
-      'يتقل': 'bg-info',
+      'ينقل': 'bg-info',
       'بلاغ كاذب': 'bg-warning',
       'لم يتم النقل': 'bg-danger',
       'صيانة': 'bg-secondary',

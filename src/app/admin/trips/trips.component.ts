@@ -29,7 +29,7 @@ interface Trip {
     eqShare: number;
 }
 
-type TransferStatus = 'ميداني' | 'تم النقل' | 'بلاغ كاذب' | 'يتقل' | 'لم يتم النقل' | 'صيانة' | 'رفض النقل' | 'اخرى';
+type TransferStatus = 'ميداني' | 'تم النقل' | 'بلاغ كاذب' | 'ينقل' | 'لم يتم النقل' | 'صيانة' | 'رفض النقل' | 'اخرى';
 type FilterStatus = 'All' | TransferStatus;
 
 @Component({
@@ -114,7 +114,7 @@ export class TripsComponent {
 
     driversList: { id: string; name: string }[] = [];
     paramedicsList: { id: string; name: string }[] = [];
-    transferStatuses: TransferStatus[] = ['ميداني', 'تم النقل', 'بلاغ كاذب', 'يتقل', 'لم يتم النقل', 'صيانة', 'رفض النقل', 'اخرى'];
+    transferStatuses: TransferStatus[] = ['ميداني', 'تم النقل', 'بلاغ كاذب', 'ينقل', 'لم يتم النقل', 'صيانة', 'رفض النقل', 'اخرى'];
 
     // Computed filtered lists
     filteredDriversList = computed(() => {
@@ -318,7 +318,7 @@ export class TripsComponent {
                 return '#DC3545';
             case 'صيانة':
                 return '#6C757D';
-            case 'يتقل':
+            case 'ينقل':
                 return '#FFC107';
             default:
                 return '#6C757D';
@@ -337,7 +337,7 @@ export class TripsComponent {
                 return 'text-bg-danger';
             case 'صيانة':
                 return 'text-bg-secondary';
-            case 'يتقل':
+            case 'ينقل':
                 return 'text-bg-warning';
             default:
                 return 'text-bg-secondary';
