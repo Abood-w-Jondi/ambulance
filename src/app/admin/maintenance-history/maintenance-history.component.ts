@@ -2,6 +2,11 @@ import { Component, signal, ChangeDetectionStrategy, computed } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlobalVarsService } from '../../global-vars.service';
+import { ToastService } from '../../shared/services/toast.service';
+import { ValidationService } from '../../shared/services/validation.service';
+import { PaginationComponent } from '../../shared/pagination/pagination.component';
+import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
+import { MAINTENANCE_STATUS } from '../../shared/constants/status.constants';
 
 // --- Data Structures ---
 interface MaintenanceRecord {
@@ -22,7 +27,7 @@ type MaintenanceStatus = 'مكتملة' | 'مجدولة' | 'قيد التنفي�
 @Component({
     selector: 'app-maintenance-history',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent],
     templateUrl: './maintenance-history.component.html',
     styleUrl: './maintenance-history.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -81,7 +86,15 @@ export class MaintenanceHistoryComponent {
     ];
     maintenanceStatuses: MaintenanceStatus[] = ['مكتملة', 'مجدولة', 'قيد التنفيذ'];
 
-    constructor(private globalVars: GlobalVarsService) {
+    // Pagination
+    currentPage = 1;
+    itemsPerPage = 10;
+
+    constructor(
+        private globalVars: GlobalVarsService,
+        private toastService: ToastService,
+        private validationService: ValidationService
+    ) {
         this.globalVars.setGlobalHeader('سجل الصيانة');
     }
     
@@ -145,26 +158,42 @@ export class MaintenanceHistoryComponent {
             if (fromDate && toDate) {
                 dateMatch = record.date >= fromDate && record.date <= toDate;
             }
-            
+
             // Vehicle Filter
             const vehicleMatch = vehicle === 'جميع المركبات' || record.vehicleId === vehicle;
-            
+
             // Service Location Filter
             const locationMatch = serviceLocation === '' || record.serviceLocation.toLowerCase().includes(serviceLocation);
-            
+
             // Search Filter (searches in vehicle ID, service location, and notes)
-            const searchMatch = search === '' || 
+            const searchMatch = search === '' ||
                 record.vehicleId.toLowerCase().includes(search) ||
                 record.serviceLocation.toLowerCase().includes(search) ||
                 record.notes.toLowerCase().includes(search) ||
                 record.type.toLowerCase().includes(search);
-            
+
             // Maintenance Type Filter
             const typeMatch = maintenanceType === '' || maintenanceType === 'جميع الأنواع' || record.type === maintenanceType;
-            
+
             return dateMatch && vehicleMatch && locationMatch && searchMatch && typeMatch;
         });
     });
+
+    // --- Pagination Methods ---
+    getPaginatedMaintenanceRecords() {
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        return this.filteredRecords().slice(startIndex, endIndex);
+    }
+
+    onPageChange(page: number): void {
+        this.currentPage = page;
+    }
+
+    onItemsPerPageChange(itemsPerPage: number): void {
+        this.itemsPerPage = itemsPerPage;
+        this.currentPage = 1;
+    }
 
     // --- Component Methods ---
 
@@ -257,6 +286,25 @@ export class MaintenanceHistoryComponent {
     }
 
     addRecord(): void {
+        // Validate the maintenance record
+        const validationData = {
+            ambulanceId: this.recordForm.vehicleId,
+            type: this.recordForm.type,
+            description: this.recordForm.notes,
+            cost: this.recordForm.cost,
+            date: new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day)
+        };
+
+        const validationResult = this.validationService.validateMaintenanceRecord(validationData);
+
+        if (!validationResult.valid) {
+            // Show validation errors
+            validationResult.errors.forEach(error => {
+                this.toastService.error(error);
+            });
+            return;
+        }
+
         const record: MaintenanceRecord = {
             id: this.generateId(),
             vehicleId: this.recordForm.vehicleId,
@@ -272,6 +320,7 @@ export class MaintenanceHistoryComponent {
 
         this.records.update(records => [...records, record]);
         this.isAddRecordModalOpen.set(false);
+        this.toastService.success('تم إضافة سجل الصيانة بنجاح');
     }
 
     openEditRecordModal(): void {
@@ -298,6 +347,25 @@ export class MaintenanceHistoryComponent {
     saveEditRecord(): void {
         const record = this.selectedRecord();
         if (record) {
+            // Validate the maintenance record
+            const validationData = {
+                ambulanceId: this.recordForm.vehicleId,
+                type: this.recordForm.type,
+                description: this.recordForm.notes,
+                cost: this.recordForm.cost,
+                date: new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day)
+            };
+
+            const validationResult = this.validationService.validateMaintenanceRecord(validationData);
+
+            if (!validationResult.valid) {
+                // Show validation errors
+                validationResult.errors.forEach(error => {
+                    this.toastService.error(error);
+                });
+                return;
+            }
+
             const updatedRecord: MaintenanceRecord = {
                 ...record,
                 vehicleId: this.recordForm.vehicleId,
@@ -315,6 +383,7 @@ export class MaintenanceHistoryComponent {
             this.selectedRecord.set(updatedRecord);
             this.isEditRecordModalOpen.set(false);
             this.isViewRecordModalOpen.set(true);
+            this.toastService.success('تم تحديث سجل الصيانة بنجاح');
         }
     }
 
@@ -336,6 +405,7 @@ export class MaintenanceHistoryComponent {
         if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
             this.records.update(records => records.filter(r => r.id !== recordId));
             this.closeViewRecordModal();
+            this.toastService.success('تم حذف سجل الصيانة بنجاح');
         }
     }
 

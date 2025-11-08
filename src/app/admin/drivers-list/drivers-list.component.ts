@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { GlobalVarsService } from '../../global-vars.service';
 import { ActivatedRoute } from '@angular/router';
 import { ToastService } from '../../shared/services/toast.service';
+import { ValidationService } from '../../shared/services/validation.service';
+import { PaginationComponent } from '../../shared/pagination/pagination.component';
+import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
+import { DRIVER_STATUS } from '../../shared/constants/status.constants';
 
 // Define the Driver data structure
 interface Driver {
@@ -26,13 +30,22 @@ type FilterStatus = 'all' | 'متاح' | 'في رحلة' | 'غير متصل';
 
 @Component({
     selector: 'app-drivers-list',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent],
     templateUrl: './drivers-list.component.html',
     styleUrl: './drivers-list.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DriversListComponent implements OnInit {
-    constructor(private globalVarsService: GlobalVarsService, private route: ActivatedRoute, private toastService: ToastService) {
+    // Pagination
+    currentPage = 1;
+    itemsPerPage = 10;
+
+    constructor(
+        private globalVarsService: GlobalVarsService,
+        private route: ActivatedRoute,
+        private toastService: ToastService,
+        private validationService: ValidationService
+    ) {
         this.globalVarsService.setGlobalHeader('سائقي الإسعاف');
     }
     
@@ -134,6 +147,51 @@ export class DriversListComponent implements OnInit {
         },
         {
             id: this.generateId(),
+            name: 'Wade Warren',
+            arabicName: 'ويد وارين',
+            username: 'wwarren',
+            email: '',
+            arabicStatus: 'في رحلة',
+            statusColor: '#3B82F6',
+            tripsToday: 5,
+            amountOwed: 150.00,
+            isAccountCleared: false,
+            isActive: true,
+            imageUrl: 'https://placehold.co/56x56/3B82F6/ffffff?text=WW',
+            imageAlt: 'صورة ملف تعريف ويد وارين',
+        },
+        {
+            id: this.generateId(),
+            name: 'Wade Warren',
+            arabicName: 'ويد وارين',
+            username: 'wwarren',
+            email: '',
+            arabicStatus: 'في رحلة',
+            statusColor: '#3B82F6',
+            tripsToday: 5,
+            amountOwed: 150.00,
+            isAccountCleared: false,
+            isActive: true,
+            imageUrl: 'https://placehold.co/56x56/3B82F6/ffffff?text=WW',
+            imageAlt: 'صورة ملف تعريف ويد وارين',
+        },
+        {
+            id: this.generateId(),
+            name: 'Wade Warren',
+            arabicName: 'ويد وارين',
+            username: 'wwarren',
+            email: '',
+            arabicStatus: 'في رحلة',
+            statusColor: '#3B82F6',
+            tripsToday: 5,
+            amountOwed: 150.00,
+            isAccountCleared: false,
+            isActive: true,
+            imageUrl: 'https://placehold.co/56x56/3B82F6/ffffff?text=WW',
+            imageAlt: 'صورة ملف تعريف ويد وارين',
+        },
+        {
+            id: this.generateId(),
             name: 'Jacob Jones',
             arabicName: 'جاكوب جونز',
             username: '',
@@ -194,15 +252,30 @@ export class DriversListComponent implements OnInit {
         return driversList;
     });
 
+    // Paginated drivers
+    getPaginatedDrivers(): Driver[] {
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        return this.filteredDrivers().slice(startIndex, endIndex);
+    }
+
+    onPageChange(page: number): void {
+        this.currentPage = page;
+    }
+
+    onItemsPerPageChange(itemsPerPage: number): void {
+        this.itemsPerPage = itemsPerPage;
+        this.currentPage = 1;
+    }
+
     addNewDriver() {
-        // Validation: Must have either username or email
-        if ((!this.newDriver.username && !this.newDriver.email) || 
-            !this.newDriver.arabicName || 
-            !this.newDriver.name || 
-            !this.newDriver.password ||
-            this.newDriver.amountOwed < 0 || 
-            this.newDriver.tripsToday < 0) {
-            console.error('Please fill in all required fields correctly. Username or email is required, and password is required.');
+        // Use validation service
+        const validation = this.validationService.validateDriver(this.newDriver);
+
+        if (!validation.valid) {
+            validation.errors.forEach(error => {
+                this.toastService.error(error);
+            });
             return;
         }
 
@@ -264,11 +337,13 @@ export class DriversListComponent implements OnInit {
         const driver = this.driverToEdit();
         if (!driver) return;
 
-        // Validation: Must have either username or email
-        if ((!this.editDriver.username && !this.editDriver.email) ||
-            !this.editDriver.arabicName || 
-            !this.editDriver.name) {
-            console.error('Please fill in all required fields correctly. Username or email is required.');
+        // Use validation service
+        const validation = this.validationService.validateDriver(this.editDriver);
+
+        if (!validation.valid) {
+            validation.errors.forEach(error => {
+                this.toastService.error(error);
+            });
             return;
         }
 
@@ -366,8 +441,13 @@ export class DriversListComponent implements OnInit {
     }
 
     reduceBalance(driver: Driver, amount: number) {
-        if (!amount || amount <= 0 || amount > driver.amountOwed) {
-            console.error('Invalid reduction amount or amount exceeds what is owed.');
+        // Use validation service
+        const validation = this.validationService.validateBalanceReduction(amount, driver.amountOwed);
+
+        if (!validation.valid) {
+            validation.errors.forEach(error => {
+                this.toastService.error(error);
+            });
             return;
         }
 

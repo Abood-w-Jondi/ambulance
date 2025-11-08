@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { GlobalVarsService } from '../../global-vars.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { ValidationService } from '../../shared/services/validation.service';
+import { PaginationComponent } from '../../shared/pagination/pagination.component';
 
 // --- Data Structures ---
 interface FuelRecord {
@@ -23,7 +25,7 @@ interface FuelRecord {
 @Component({
     selector: 'app-fuel-history',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PaginationComponent],
     templateUrl: './fuel-history.component.html',
     styleUrl: './fuel-history.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -75,11 +77,16 @@ export class FuelHistoryComponent implements OnInit {
         'إسعاف 25'
     ];
 
+    // Pagination
+    currentPage = 1;
+    itemsPerPage = 10;
+
     constructor(
         private globalVars: GlobalVarsService,
         private router: Router,
         private route: ActivatedRoute,
-        private toastService: ToastService
+        private toastService: ToastService,
+        private validationService: ValidationService
     ) {
         this.globalVars.setGlobalHeader('سجل الوقود');
     }
@@ -183,12 +190,12 @@ export class FuelHistoryComponent implements OnInit {
                 // If day is selected, match exact date
                 if (typeof this.filterDay === 'number') {
                     dateMatch = record.date.getDate() === filterDate.getDate() &&
-                               record.date.getMonth() === filterDate.getMonth() && 
+                               record.date.getMonth() === filterDate.getMonth() &&
                                record.date.getFullYear() === filterDate.getFullYear();
                 }
                 // If only month/year selected, match month and year
                 else if (typeof this.filterMonth === 'number' && typeof this.filterYear === 'number') {
-                    dateMatch = record.date.getMonth() === filterDate.getMonth() && 
+                    dateMatch = record.date.getMonth() === filterDate.getMonth() &&
                                record.date.getFullYear() === filterDate.getFullYear();
                 }
                 // If only year selected, match year
@@ -196,22 +203,38 @@ export class FuelHistoryComponent implements OnInit {
                     dateMatch = record.date.getFullYear() === filterDate.getFullYear();
                 }
             }
-            
+
             // Ambulance Filter
-            const ambulanceMatch = ambulance === 'جميع المركبات' || 
+            const ambulanceMatch = ambulance === 'جميع المركبات' ||
                                   record.ambulanceName === ambulance;
-            
+
             // Search Filter (searches through all ambulance properties)
-            const searchMatch = search === '' || 
+            const searchMatch = search === '' ||
                 record.ambulanceName.toLowerCase().includes(search) ||
                 record.ambulanceNumber.toLowerCase().includes(search) ||
                 record.driverId.toLowerCase().includes(search) ||
                 record.driverName.toLowerCase().includes(search) ||
                 (record.notes && record.notes.toLowerCase().includes(search));
-            
+
             return dateMatch && ambulanceMatch && searchMatch;
         });
     });
+
+    // --- Pagination Methods ---
+    getPaginatedFuelRecords() {
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        return this.filteredRecords().slice(startIndex, endIndex);
+    }
+
+    onPageChange(page: number): void {
+        this.currentPage = page;
+    }
+
+    onItemsPerPageChange(itemsPerPage: number): void {
+        this.itemsPerPage = itemsPerPage;
+        this.currentPage = 1;
+    }
 
     // --- Component Methods ---
 
@@ -272,6 +295,31 @@ export class FuelHistoryComponent implements OnInit {
     }
 
     addRecord(): void {
+        // Validate fuel record using ValidationService
+        const validationData = {
+            ambulanceId: this.recordForm.ambulanceName,
+            liters: this.recordForm.fuelAmount,
+            cost: this.recordForm.cost,
+            date: new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day),
+            mileage: this.recordForm.odometerAfter
+        };
+
+        const validationResult = this.validationService.validateFuelRecord(validationData);
+
+        if (!validationResult.valid) {
+            // Show validation errors using toast
+            validationResult.errors.forEach(error => {
+                this.toastService.error(error, 3000);
+            });
+            return;
+        }
+
+        // Additional validation for odometer readings
+        if (this.recordForm.odometerAfter <= this.recordForm.odometerBefore) {
+            this.toastService.error('عداد المسافات (بعد) يجب أن يكون أكبر من عداد المسافات (قبل)', 3000);
+            return;
+        }
+
         const record: FuelRecord = {
             id: this.generateId(),
             ambulanceName: this.recordForm.ambulanceName,
@@ -316,6 +364,31 @@ export class FuelHistoryComponent implements OnInit {
     saveEditRecord(): void {
         const record = this.selectedRecord();
         if (record) {
+            // Validate fuel record using ValidationService
+            const validationData = {
+                ambulanceId: this.recordForm.ambulanceName,
+                liters: this.recordForm.fuelAmount,
+                cost: this.recordForm.cost,
+                date: new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day),
+                mileage: this.recordForm.odometerAfter
+            };
+
+            const validationResult = this.validationService.validateFuelRecord(validationData);
+
+            if (!validationResult.valid) {
+                // Show validation errors using toast
+                validationResult.errors.forEach(error => {
+                    this.toastService.error(error, 3000);
+                });
+                return;
+            }
+
+            // Additional validation for odometer readings
+            if (this.recordForm.odometerAfter <= this.recordForm.odometerBefore) {
+                this.toastService.error('عداد المسافات (بعد) يجب أن يكون أكبر من عداد المسافات (قبل)', 3000);
+                return;
+            }
+
             const updatedRecord: FuelRecord = {
                 ...record,
                 ambulanceName: this.recordForm.ambulanceName,
@@ -334,7 +407,7 @@ export class FuelHistoryComponent implements OnInit {
             this.selectedRecord.set(updatedRecord);
             this.isEditRecordModalOpen.set(false);
             this.isViewRecordModalOpen.set(true);
-                this.toastService.info(`تم تعديل سجل الوقود (${updatedRecord.ambulanceNumber}) للسائق ${updatedRecord.driverName}`, 3000);
+            this.toastService.info(`تم تعديل سجل الوقود (${updatedRecord.ambulanceNumber}) للسائق ${updatedRecord.driverName}`, 3000);
         }
     }
 
@@ -368,7 +441,7 @@ export class FuelHistoryComponent implements OnInit {
     // Navigation methods for clicking on ambulance properties
     navigateToFleet(filterType: 'name' | 'number' | 'driver' | 'driverId', value: string): void {
         // Navigate to fleet component with query params
-        this.router.navigate(['/vehicles'], { 
+        this.router.navigate(['admin/vehicles'], { 
             queryParams: { 
                 filterType: filterType,
                 filterValue: value 
@@ -376,7 +449,7 @@ export class FuelHistoryComponent implements OnInit {
         });
     }
     navigateToDriver(value: string): void {
-        this.router.navigate(['/drivers-list'], { 
+        this.router.navigate(['admin/drivers-list'], { 
             queryParams: { 
                 filterValue: value 
             } 

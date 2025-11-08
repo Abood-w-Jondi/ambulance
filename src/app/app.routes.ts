@@ -12,31 +12,44 @@ import { AcceptTripsComponent } from './user/accept-trips/accept-trips.component
 import { TripsHistoryComponent } from './user/trips-history/trips-history.component';
 import { WalletComponent } from './user/wallet/wallet.component';
 import { DriverDashboardComponent } from './user/driver-dashboard/driver-dashboard.component';
+import { Component } from '@angular/core';
 
 export const routes = [
-	{
-		path: 'admin',
-		children: [
-			{ path: 'admin-dashboard', component: AdminDashboardComponent },
-			{ path: 'drivers-list', component: DriversListComponent },
-			{ path: 'trips', component: TripsComponent },
-			{ path: 'stats', component: StatsComponent },
-			{ path: 'vehicles', component: FleetComponent },
-			{ path: 'maintenance-history', component: MaintenanceHistoryComponent },
-			{ path: 'fuel-history', component: FuelHistoryComponent },
-			{ path: '**', component: AdminDashboardComponent },
-		],
-	},
-	{
-		path: 'user',
-		children: [
-			{ path: 'status-update', component: StatusUpdateComponent },
-			{ path: 'accept-trips', component: AcceptTripsComponent },
-			{ path: 'trips-history', component: TripsHistoryComponent },
-			{ path: 'wallet', component: WalletComponent },
-			{ path: 'driver-dashboard', component: DriverDashboardComponent },
-		],
-	},
+	// Default redirect to login
+	{ path: '', redirectTo: 'login', pathMatch: 'full' as const },
 
-	{ path: '**', component: LoginComponent },
+	// Login route
+		{ path: 'login', component: LoginComponent },
+
+	// Admin routes
+		{
+			path: 'admin',
+			children: [
+				{ path: '', redirectTo: 'admin-dashboard', pathMatch: 'full' as const },
+				{ path: 'admin-dashboard', component: AdminDashboardComponent },
+				{ path: 'drivers-list', component: DriversListComponent },
+				{ path: 'trips', component: TripsComponent },
+				{ path: 'stats', component: StatsComponent },
+				{ path: 'vehicles', component: FleetComponent },
+				{ path: 'maintenance-history', component: MaintenanceHistoryComponent },
+				{ path: 'fuel-history', component: FuelHistoryComponent },
+			],
+		},
+
+	// User/Driver routes
+		{
+			path: 'user',
+			children: [
+				{ path: '', redirectTo: 'driver-dashboard', pathMatch: 'full' as const },
+				{ path: 'driver-dashboard', component: DriverDashboardComponent },
+				{ path: 'status-update', component: StatusUpdateComponent },
+				{ path: 'accept-trips', component: AcceptTripsComponent },
+				{ path: 'trips-history', component: TripsHistoryComponent },
+				{ path: 'wallet', component: WalletComponent },
+			],
+		},
+
+	// Wildcard route - redirect to login for any unknown paths
+	//{ path: '**', redirectTo: 'login' },
+	{path: '**',  component: LoginComponent}
 ];

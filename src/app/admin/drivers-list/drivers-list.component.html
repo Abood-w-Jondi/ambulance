@@ -341,7 +341,7 @@
                     </div>
                     
                     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-                        @for (driver of filteredDrivers(); track driver.id) {
+                        @for (driver of getPaginatedDrivers(); track driver.id) {
                         <div class="col">
                             <div class="card shadow-sm rounded-xl h-100 position-relative"
                                 [ngClass]="{'opacity-75': !driver.isActive}">
@@ -462,6 +462,20 @@
                         </div>
                         }
                     </div>
+
+                    <!-- Pagination -->
+                    @if (filteredDrivers().length > 0) {
+                    <div class="mt-4">
+                        <app-pagination
+                            [currentPage]="currentPage"
+                            [totalItems]="filteredDrivers().length"
+                            [itemsPerPage]="itemsPerPage"
+                            [maxVisiblePages]="5"
+                            (pageChange)="onPageChange($event)"
+                            (itemsPerPageChange)="onItemsPerPageChange($event)">
+                        </app-pagination>
+                    </div>
+                    }
                 </div>
 
             </div>

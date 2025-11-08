@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlobalVarsService } from '../../global-vars.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { ValidationService } from '../../shared/services/validation.service';
+import { PaginationComponent } from '../../shared/pagination/pagination.component';
+import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
+import { TRANSFER_STATUS } from '../../shared/constants/status.constants';
 
 // --- Data Structures ---
 interface Trip {
@@ -36,7 +40,7 @@ type FilterStatus = 'All' | TransferStatus;
 @Component({
     selector: 'app-trips',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent],
     templateUrl: './trips.component.html',
     styleUrl: './trips.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -138,7 +142,7 @@ export class TripsComponent {
         return this.paramedicsList.filter(p => p.name.toLowerCase().includes(term));
     });
 
-    constructor(private globalVars: GlobalVarsService, private toastService: ToastService) {
+    constructor(private globalVars: GlobalVarsService, private toastService: ToastService, private validationService: ValidationService) {
         this.globalVars.setGlobalHeader('الرحلات والنقليات');
         this.driversList = this.globalVars.driversList;
         this.paramedicsList = [
@@ -147,6 +151,10 @@ export class TripsComponent {
             { id: '3', name: 'ضابط علي' }
         ];
     }
+
+    // Pagination
+    currentPage = 1;
+    itemsPerPage = 10;
     
     // Helper to generate IDs
     private generateId(): string {
@@ -231,7 +239,7 @@ export class TripsComponent {
         return this.trips().filter(trip => {
             // Status Filter
             const statusMatch = status === 'All' || trip.transferStatus === status;
-            
+
             // Date Filter
             let dateMatch = true;
             if (dateFilterData.type === 'single' && dateFilterData.single) {
@@ -241,25 +249,40 @@ export class TripsComponent {
                 const tripDate = new Date(trip.year, trip.month - 1, trip.day);
                 dateMatch = tripDate >= dateFilterData.from && tripDate <= dateFilterData.to;
             }
-            
+
             // Driver Filter
             const driverMatch = driverName === '' || trip.driver.toLowerCase().includes(driverName);
-            
+
             // Paramedic Filter
             const paramedicMatch = paramedicName === '' || trip.paramedic.toLowerCase().includes(paramedicName);
-            
+
             // Patient Filter
             const patientMatch = patientName === '' || trip.patientName.toLowerCase().includes(patientName);
-            
+
             // Location From Filter
             const locationFromMatch = locationFrom === '' || trip.transferFrom.toLowerCase().includes(locationFrom);
-            
+
             // Location To Filter
             const locationToMatch = locationTo === '' || trip.transferTo.toLowerCase().includes(locationTo);
-            
+
             return statusMatch && dateMatch && driverMatch && paramedicMatch && patientMatch && locationFromMatch && locationToMatch;
         });
     });
+
+    getPaginatedTrips(): Trip[] {
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        return this.filteredTrips().slice(startIndex, endIndex);
+    }
+
+    onPageChange(page: number): void {
+        this.currentPage = page;
+    }
+
+    onItemsPerPageChange(itemsPerPage: number): void {
+        this.itemsPerPage = itemsPerPage;
+        this.currentPage = 1;
+    }
 
     // --- Component Methods ---
 
@@ -437,7 +460,7 @@ export class TripsComponent {
 
     addTrip(): void {
         const shares = this.calculateShares(this.tripForm.totalAmount, this.tripForm.paramedicShare);
-        
+
         const trip: Trip = {
             id: this.generateId(),
             day: this.tripForm.day,
@@ -463,6 +486,7 @@ export class TripsComponent {
 
         this.trips.update(trips => [...trips, trip]);
         this.isAddTripModalOpen.set(false);
+        this.toastService.success('تمت إضافة الرحلة بنجاح');
     }
 
     openEditTripModal(): void {
@@ -500,7 +524,7 @@ export class TripsComponent {
         const trip = this.selectedTrip();
         if (trip) {
             const shares = this.calculateShares(this.tripForm.totalAmount, this.tripForm.paramedicShare);
-            
+
             const updatedTrip: Trip = {
                 ...trip,
                 day: this.tripForm.day,
@@ -528,6 +552,7 @@ export class TripsComponent {
             this.selectedTrip.set(updatedTrip);
             this.isEditTripModalOpen.set(false);
             this.isViewTripModalOpen.set(true);
+            this.toastService.success('تم تحديث الرحلة بنجاح');
         }
     }
 

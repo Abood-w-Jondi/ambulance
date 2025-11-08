@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { GlobalVarsService } from '../../global-vars.service';
+import { ToastService } from '../../shared/services/toast.service';
+import { ValidationService } from '../../shared/services/validation.service';
+import { PaginationComponent } from '../../shared/pagination/pagination.component';
+import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
+import { VEHICLE_STATUS } from '../../shared/constants/status.constants';
 
 // --- Data Structures ---
 interface Vehicle {
@@ -21,7 +26,7 @@ type FilterStatus = 'All' | VehicleStatus;
 @Component({
   selector: 'app-fleet',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent],
   templateUrl: './fleet.component.html',
   styleUrls: ['./fleet.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -55,6 +60,10 @@ export class FleetComponent implements OnInit {
     // Search for driver assignment
     driverSearchTerm = signal('');
 
+    // Pagination
+    currentPage = 1;
+    itemsPerPage = 10;
+
     vehicleStatuses: VehicleStatus[] = ['متاحة', 'في الخدمة', 'صيانة'];
     vehicleTypes: string[] = ['Type I Truck', 'Type II Van', 'Type III Cutaway'];
     colors: string[] = ['White', 'Red', 'Yellow', 'Silver', 'Blue'];
@@ -69,7 +78,9 @@ export class FleetComponent implements OnInit {
 
     constructor(
         private globalVars: GlobalVarsService,
-        private route: ActivatedRoute
+        private route: ActivatedRoute,
+        private toastService: ToastService,
+        private validationService: ValidationService
     ) {
         this.globalVars.setGlobalHeader('أسطول المركبات');
         this.driversList = this.globalVars.driversList;
@@ -142,16 +153,31 @@ export class FleetComponent implements OnInit {
         return this.vehicles().filter(vehicle => {
             // Status Filter
             const statusMatch = status === 'All' || vehicle.status === status;
-            
+
             // Search Filter - now includes all vehicle properties
-            const searchMatch = search === '' || 
+            const searchMatch = search === '' ||
                 vehicle.vehicleId.toLowerCase().includes(search) ||
                 vehicle.vehicleName.toLowerCase().includes(search) ||
                 (vehicle.currentDriver && vehicle.currentDriver.toLowerCase().includes(search));
-            
+
             return statusMatch && searchMatch;
         });
     });
+
+    getPaginatedAmbulances() {
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        return this.filteredVehicles().slice(startIndex, endIndex);
+    }
+
+    onPageChange(page: number): void {
+        this.currentPage = page;
+    }
+
+    onItemsPerPageChange(itemsPerPage: number): void {
+        this.itemsPerPage = itemsPerPage;
+        this.currentPage = 1;
+    }
 
     // --- Component Methods ---
 
@@ -217,6 +243,19 @@ export class FleetComponent implements OnInit {
     }
 
     addVehicle(): void {
+        // Validate the vehicle form
+        const validation = this.validationService.validateVehicle({
+            vehicleId: this.vehicleForm.vehicleId,
+            vehicleName: this.vehicleForm.vehicleName,
+            type: this.vehicleForm.type,
+            status: this.vehicleForm.status
+        });
+
+        if (!validation.valid) {
+            this.toastService.error(validation.errors.join(', '));
+            return;
+        }
+
         const vehicle: Vehicle = {
             id: this.generateId(),
             vehicleId: this.vehicleForm.vehicleId,
@@ -229,6 +268,7 @@ export class FleetComponent implements OnInit {
 
         this.vehicles.update(vehicles => [...vehicles, vehicle]);
         this.isAddVehicleModalOpen.set(false);
+        this.toastService.success('تم إضافة المركبة بنجاح');
     }
 
     openEditVehicleModal(): void {
@@ -251,6 +291,19 @@ export class FleetComponent implements OnInit {
     saveEditVehicle(): void {
         const vehicle = this.selectedVehicle();
         if (vehicle) {
+            // Validate the vehicle form
+            const validation = this.validationService.validateVehicle({
+                vehicleId: this.vehicleForm.vehicleId,
+                vehicleName: this.vehicleForm.vehicleName,
+                type: this.vehicleForm.type,
+                status: this.vehicleForm.status
+            });
+
+            if (!validation.valid) {
+                this.toastService.error(validation.errors.join(', '));
+                return;
+            }
+
             const updatedVehicle: Vehicle = {
                 ...vehicle,
                 vehicleId: this.vehicleForm.vehicleId,
@@ -265,6 +318,7 @@ export class FleetComponent implements OnInit {
             this.selectedVehicle.set(updatedVehicle);
             this.isEditVehicleModalOpen.set(false);
             this.isViewVehicleModalOpen.set(true);
+            this.toastService.success('تم تحديث المركبة بنجاح');
         }
     }
 

@@ -662,7 +662,7 @@
                     </div>
                     
                     <div class="row row-cols-1 g-3">
-                        @for (trip of filteredTrips(); track trip.id) {
+                        @for (trip of getPaginatedTrips(); track trip.id) {
                         <div class="col">
                             <div class="card shadow-sm rounded-xl overflow-hidden cursor-pointer" dir="rtl">
                                 <div class="d-flex">
@@ -671,7 +671,7 @@
 
                                     <div class="card-body p-4 flex-grow-1 text-end">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <p class="h6 fw-bold m-0 text-dark clickable-field" 
+                                            <p class="h6 fw-bold m-0 text-dark clickable-field"
                                                 (click)="quickFilterByPatient(trip.patientName)"
                                                 title="انقر للبحث عن هذا المريض">
                                                 {{ trip.patientName }}
@@ -681,14 +681,14 @@
 
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <p class="text-muted small m-0">
-                                                السائق: 
-                                                <span class="clickable-field" 
+                                                السائق:
+                                                <span class="clickable-field"
                                                     (click)="quickFilterByDriver(trip.driver)"
                                                     title="انقر للتصفية حسب هذا السائق">
                                                     {{ trip.driver }}
                                                 </span>
                                             </p>
-                                            <p class="text-muted small m-0 clickable-field" 
+                                            <p class="text-muted small m-0 clickable-field"
                                                 (click)="quickFilterByDate(trip.day, trip.month, trip.year)"
                                                 title="انقر للتصفية حسب هذا التاريخ">
                                                 {{ getFormattedDate(trip.day, trip.month, trip.year) }}
@@ -696,8 +696,8 @@
                                         </div>
 
                                         <p class="text-muted small mb-2">
-                                            الضابط: 
-                                            <span class="clickable-field" 
+                                            الضابط:
+                                            <span class="clickable-field"
                                                 (click)="quickFilterByParamedic(trip.paramedic)"
                                                 title="انقر للتصفية حسب هذا الضابط">
                                                 {{ trip.paramedic }}
@@ -709,13 +709,13 @@
                                         </p>
 
                                         <div class="d-flex align-items-center gap-2 small fw-medium text-dark justify-content-end mb-3">
-                                            <span class="clickable-field" 
+                                            <span class="clickable-field"
                                                 (click)="quickFilterByLocation(trip.transferFrom, 'from')"
                                                 title="انقر للتصفية حسب موقع الانطلاق">
                                                 {{ trip.transferFrom }}
                                             </span>
                                             <i class="fa-solid fa-arrow-left"></i>
-                                            <span class="clickable-field" 
+                                            <span class="clickable-field"
                                                 (click)="quickFilterByLocation(trip.transferTo, 'to')"
                                                 title="انقر للتصفية حسب موقع الوصول">
                                                 {{ trip.transferTo }}
@@ -742,6 +742,20 @@
                         </div>
                         }
                     </div>
+
+                    <!-- Pagination -->
+                    @if (filteredTrips().length > 0) {
+                    <div class="mt-4">
+                        <app-pagination
+                            [currentPage]="currentPage"
+                            [totalItems]="filteredTrips().length"
+                            [itemsPerPage]="itemsPerPage"
+                            [maxVisiblePages]="5"
+                            (pageChange)="onPageChange($event)"
+                            (itemsPerPageChange)="onItemsPerPageChange($event)">
+                        </app-pagination>
+                    </div>
+                    }
                 </div>
             </div>
         </div>

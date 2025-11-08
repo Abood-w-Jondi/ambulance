@@ -239,14 +239,14 @@
 
             <!-- Vehicle Cards -->
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                @for (vehicle of filteredVehicles(); track vehicle.id) {
+                @for (vehicle of getPaginatedAmbulances(); track vehicle.id) {
                 <div class="col">
                     <div class="card shadow-sm rounded-xl overflow-hidden h-100 cursor-pointer hover-lift"
                         (click)="viewVehicleDetails(vehicle)">
                         <div class="d-flex">
                             <div class="flex-shrink-0" style="width: 6px;"
                                 [ngStyle]="{'background-color': getStatusColor(vehicle.status)}"></div>
-                            
+
                             <div class="card-body p-4 flex-grow-1 text-end">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                     <div>
@@ -294,6 +294,15 @@
                 </div>
                 }
             </div>
+
+            <!-- Pagination -->
+            <app-pagination
+                [totalItems]="filteredVehicles().length"
+                [currentPage]="currentPage"
+                [itemsPerPage]="itemsPerPage"
+                (pageChange)="onPageChange($event)"
+                (itemsPerPageChange)="onItemsPerPageChange($event)">
+            </app-pagination>
         </div>
     </main>
 </div>
