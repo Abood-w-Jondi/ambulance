@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ToastService } from '../../shared/services/toast.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -77,7 +78,7 @@ export class WalletComponent implements OnInit {
   withdrawAmount: number = 0;
   withdrawMethod: string = 'bank';
 
-  constructor() { }
+  constructor(private toastService: ToastService) { }
 
   ngOnInit(): void {
     this.generateYears();
@@ -187,6 +188,7 @@ export class WalletComponent implements OnInit {
         amount: this.withdrawAmount,
         method: this.withdrawMethod
       });
+      this.toastService.success(`تم طلب سحب مبلغ ₪${this.withdrawAmount} (${this.withdrawMethod === 'bank' ? 'تحويل بنكي' : 'سحب نقدي'})`, 3000);
       this.closeWithdrawModal();
     }
   }

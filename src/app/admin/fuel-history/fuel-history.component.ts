@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { GlobalVarsService } from '../../global-vars.service';
+import { ToastService } from '../../shared/services/toast.service';
 
 // --- Data Structures ---
 interface FuelRecord {
@@ -77,7 +78,8 @@ export class FuelHistoryComponent implements OnInit {
     constructor(
         private globalVars: GlobalVarsService,
         private router: Router,
-        private route: ActivatedRoute
+        private route: ActivatedRoute,
+        private toastService: ToastService
     ) {
         this.globalVars.setGlobalHeader('سجل الوقود');
     }
@@ -91,6 +93,7 @@ export class FuelHistoryComponent implements OnInit {
                 this.searchTerm.set(params['filterValue']);
             }
         });
+        this.toastService.info('يمكنك النقر على أسماء المركبات أو أرقامها أو معرفات السائقين للتنقل إلى المكونات ذات الصلة.', 3000);
     }
     
     // Helper to generate IDs
@@ -285,6 +288,7 @@ export class FuelHistoryComponent implements OnInit {
 
         this.records.update(records => [...records, record]);
         this.isAddRecordModalOpen.set(false);
+        this.toastService.success(`سجل وقود جديد (${record.ambulanceNumber}) تمت إضافته بنجاح`, 3000);
     }
 
     openEditRecordModal(): void {
@@ -330,6 +334,7 @@ export class FuelHistoryComponent implements OnInit {
             this.selectedRecord.set(updatedRecord);
             this.isEditRecordModalOpen.set(false);
             this.isViewRecordModalOpen.set(true);
+                this.toastService.info(`تم تعديل سجل الوقود (${updatedRecord.ambulanceNumber}) للسائق ${updatedRecord.driverName}`, 3000);
         }
     }
 
@@ -349,8 +354,14 @@ export class FuelHistoryComponent implements OnInit {
 
     deleteRecord(recordId: string): void {
         if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
+            const deleted = this.records().find(r => r.id === recordId);
             this.records.update(records => records.filter(r => r.id !== recordId));
             this.closeViewRecordModal();
+            if (deleted) {
+                this.toastService.success(`تم حذف سجل الوقود (${deleted.ambulanceNumber}) للسائق ${deleted.driverName}`, 3000);
+            } else {
+                this.toastService.success('تم حذف سجل وقود', 3000);
+            }
         }
     }
 

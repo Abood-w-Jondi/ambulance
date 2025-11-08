@@ -25,7 +25,10 @@ export class SideBarComponent {
   sidebarOpen = false;
 
   toggleSidebar() {
+    console.log("Toggling sidebar");
     this.sidebarOpen = !this.sidebarOpen;
+    console.log("Sidebar open:", this.sidebarOpen);
+    console.log("show sidebar:", this.showSideBar);
   }
 
   closeSidebar() {

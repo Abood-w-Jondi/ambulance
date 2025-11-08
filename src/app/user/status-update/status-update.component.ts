@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ToastService } from '../../shared/services/toast.service';
 import { CommonModule } from '@angular/common';
 import { GlobalVarsService } from '../../global-vars.service';
 
@@ -44,14 +45,13 @@ export class StatusUpdateComponent {
     { label: 'إنهاء المناوبة', icon: 'fa-solid fa-right-from-bracket', btnClass: 'btn-danger' }
   ];
 
-  constructor(private globalVarsService: GlobalVarsService) {
+  constructor(private globalVarsService: GlobalVarsService, private toastService: ToastService) {
     this.globalVarsService.setGlobalHeader('الحالة الحالية');
    }
 
-  // You can add functions here to change status when buttons are clicked
-  // Example:
-  // updateStatus(status: StatusAction) {
-  //   console.log('Updating status to:', status.label);
-  //   // ... you can update currentStatus here
-  // }
+  // تحديث الحالة مع إشعار Toast
+  updateStatus(status: StatusAction) {
+    this.currentStatus.title = status.label;
+    this.toastService.info(`تم تحديث الحالة إلى: ${status.label}`, 3000);
+  }
 }

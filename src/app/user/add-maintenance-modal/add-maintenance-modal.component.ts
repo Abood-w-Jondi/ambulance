@@ -1,4 +1,5 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { ToastService } from '../../shared/services/toast.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -61,7 +62,7 @@ export class AddMaintenanceModalComponent implements OnInit {
   selectedVehicle: string = '';
   isSubmitting: boolean = false;
 
-  constructor() { }
+  constructor(private toastService: ToastService) { }
 
   ngOnInit(): void {
     // TODO: Load ambulances from service
@@ -80,7 +81,6 @@ export class AddMaintenanceModalComponent implements OnInit {
   onSubmit(): void {
     if (this.isFormValid()) {
       this.isSubmitting = true;
-      
       const newMaintenanceRecord: MaintenanceRecord = {
         id: this.generateId(),
         vehicleId: this.maintenanceRecord.vehicleId!,
@@ -96,7 +96,7 @@ export class AddMaintenanceModalComponent implements OnInit {
 
       // TODO: Call service to save maintenance record
       console.log('إضافة سجل صيانة:', newMaintenanceRecord);
-      
+      this.toastService.success(`تمت إضافة سجل صيانة (${newMaintenanceRecord.type}) للمركبة ${newMaintenanceRecord.vehicleId}`, 3000);
       setTimeout(() => {
         this.isSubmitting = false;
         this.maintenanceAdded.emit(newMaintenanceRecord);

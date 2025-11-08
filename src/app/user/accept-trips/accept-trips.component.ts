@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ToastService } from '../../shared/services/toast.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -37,7 +38,7 @@ export class AcceptTripsComponent implements OnInit {
   // Sound notification
   notificationSound: HTMLAudioElement | null = null;
 
-  constructor() { }
+  constructor(private toastService: ToastService) { }
 
   ngOnInit(): void {
     this.loadTrips();
@@ -78,26 +79,20 @@ export class AcceptTripsComponent implements OnInit {
   }
 
   acceptTrip(trip: PendingTrip): void {
-    // TODO: Call service to accept trip
-    console.log('قبول الرحلة:', trip.id);
-    
-    trip.status = 'مقبول';
-    this.pendingTrips = this.pendingTrips.filter(t => t.id !== trip.id);
-    this.acceptedTrips.unshift(trip);
-    
-    // Show success message
-    alert('تم قبول الرحلة بنجاح!');
+  // TODO: Call service to accept trip
+  console.log('قبول الرحلة:', trip.id);
+  trip.status = 'مقبول';
+  this.pendingTrips = this.pendingTrips.filter(t => t.id !== trip.id);
+  this.acceptedTrips.unshift(trip);
+  this.toastService.success(`تم قبول الرحلة للمريض ${trip.patientName} (${trip.pickupLocation} → ${trip.dropoffLocation})`, 3000);
   }
 
   rejectTrip(trip: PendingTrip): void {
-    // TODO: Call service to reject trip
-    console.log('رفض الرحلة:', trip.id);
-    
-    trip.status = 'مرفوض';
-    this.pendingTrips = this.pendingTrips.filter(t => t.id !== trip.id);
-    
-    // Show info message
-    alert('تم رفض الرحلة.');
+  // TODO: Call service to reject trip
+  console.log('رفض الرحلة:', trip.id);
+  trip.status = 'مرفوض';
+  this.pendingTrips = this.pendingTrips.filter(t => t.id !== trip.id);
+  this.toastService.info(`تم رفض الرحلة للمريض ${trip.patientName} (${trip.pickupLocation} → ${trip.dropoffLocation})`, 3000);
   }
 
   viewTripDetails(trip: PendingTrip): void {

@@ -2,6 +2,7 @@ import { Component, signal, ChangeDetectionStrategy, computed } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlobalVarsService } from '../../global-vars.service';
+import { ToastService } from '../../shared/services/toast.service';
 
 // --- Data Structures ---
 interface Trip {
@@ -137,7 +138,7 @@ export class TripsComponent {
         return this.paramedicsList.filter(p => p.name.toLowerCase().includes(term));
     });
 
-    constructor(private globalVars: GlobalVarsService) {
+    constructor(private globalVars: GlobalVarsService, private toastService: ToastService) {
         this.globalVars.setGlobalHeader('الرحلات والنقليات');
         this.driversList = this.globalVars.driversList;
         this.paramedicsList = [

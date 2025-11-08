@@ -9,10 +9,10 @@
     </button>
   </div>
 </header>
-<div class="sidebar-overlay" *ngIf="showSideBar" (click)="closeSidebar()"></div>
+<div class="sidebar-overlay" *ngIf="showSideBar" [class.active]="sidebarOpen" (click)="closeSidebar()"></div>
 
-<aside class="sidebar" *ngIf="showSideBar">
-  
+<aside class="sidebar" *ngIf="showSideBar" [class.active]="sidebarOpen">
+
   <div class="sidebar-header">
     <h2 class="sidebar-title">القائمة</h2>
     <button class="close-btn" (click)="closeSidebar()">&times;</button>

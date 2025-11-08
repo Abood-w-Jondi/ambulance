@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlobalVarsService } from '../../global-vars.service';
 import { ActivatedRoute } from '@angular/router';
+import { ToastService } from '../../shared/services/toast.service';
 
 // Define the Driver data structure
 interface Driver {
@@ -31,7 +32,7 @@ type FilterStatus = 'all' | 'متاح' | 'في رحلة' | 'غير متصل';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DriversListComponent implements OnInit {
-    constructor(private globalVarsService: GlobalVarsService, private route: ActivatedRoute) {
+    constructor(private globalVarsService: GlobalVarsService, private route: ActivatedRoute, private toastService: ToastService) {
         this.globalVarsService.setGlobalHeader('سائقي الإسعاف');
     }
     
@@ -221,10 +222,10 @@ export class DriversListComponent implements OnInit {
             imageAlt: `صورة ملف تعريف ${this.newDriver.arabicName}`,
         };
 
-        this.drivers.update(list => [...list, newDriver]);
-        console.log(`Action: Added new driver: ${newDriver.arabicName} with password: ${this.newDriver.password}`);
-        this.isAddModalOpen.set(false);
-        this.newDriver = { arabicName: '', name: '', username: '', email: '', password: '', amountOwed: 0, tripsToday: 0 };
+    this.drivers.update(list => [...list, newDriver]);
+    this.toastService.success(`تمت إضافة سائق جديد: ${newDriver.arabicName} (${newDriver.name})`, 3000);
+    this.isAddModalOpen.set(false);
+    this.newDriver = { arabicName: '', name: '', username: '', email: '', password: '', amountOwed: 0, tripsToday: 0 };
     }
 
     openEditModal(driver: Driver) {
@@ -298,10 +299,10 @@ export class DriversListComponent implements OnInit {
         }));
 
         if (this.editDriver.newPassword && this.editDriver.newPassword.trim() !== '') {
-            console.log(`Action: Password reset for ${this.editDriver.arabicName} to: ${this.editDriver.newPassword}`);
+            this.toastService.info(`تم تغيير كلمة مرور السائق: ${this.editDriver.arabicName}`, 3000);
         }
 
-        console.log(`Action: Updated driver: ${this.editDriver.arabicName}`);
+        this.toastService.info(`تم تعديل بيانات السائق: ${this.editDriver.arabicName} (${this.editDriver.name})`, 3000);
         this.closeEditModal();
     }
 
@@ -319,7 +320,7 @@ export class DriversListComponent implements OnInit {
         const driver = this.driverToDelete();
         if (driver) {
             this.drivers.update(list => list.filter(d => d.id !== driver.id));
-            console.log(`Action: Deleted driver: ${driver.arabicName}`);
+            this.toastService.success(`تم حذف السائق: ${driver.arabicName} (${driver.name})`, 3000);
             this.closeDeleteConfirmation();
         }
         this.isEditModalOpen.set(false);
@@ -329,7 +330,7 @@ export class DriversListComponent implements OnInit {
         this.drivers.update(list => list.map(d => {
             if (d.id === driver.id) {
                 const newIsActive = !d.isActive;
-                console.log(`Action: ${newIsActive ? 'Activated' : 'Deactivated'} account for ${d.arabicName}`);
+                this.toastService.info(`تم ${newIsActive ? 'تفعيل' : 'تعطيل'} حساب السائق: ${d.arabicName}`, 3000);
                 return {
                     ...d,
                     isActive: newIsActive
@@ -351,7 +352,7 @@ export class DriversListComponent implements OnInit {
             return d;
         }));
         delete this.reductionAmounts[driver.id];
-        console.log(`Action: Cleared balance for ${driver.arabicName}`);
+        this.toastService.success(`تم تصفير الرصيد للسائق: ${driver.arabicName}`, 3000);
     }
 
     ngOnInit(): void {
@@ -382,9 +383,9 @@ export class DriversListComponent implements OnInit {
             return d;
         });
 
-        this.drivers.set(updatedDrivers);
-        delete this.reductionAmounts[driver.id];
-        console.log(`Successfully reduced ${driver.arabicName}'s balance by ₪${amount}`);
+    this.drivers.set(updatedDrivers);
+    delete this.reductionAmounts[driver.id];
+    this.toastService.info(`تم خصم ₪${amount} من رصيد السائق: ${driver.arabicName}`, 3000);
     }
 
     toggleMobileFilters() {
@@ -392,18 +393,18 @@ export class DriversListComponent implements OnInit {
     }
 
     resetFilters() {
-        this.searchTerm.set('');
-        this.filterStatus.set('all');
-        this.minOwed.set(null);
-        this.maxOwed.set(null);
+    this.searchTerm.set('');
+    this.filterStatus.set('all');
+    this.minOwed.set(null);
+    this.maxOwed.set(null);
         
-        this.searchTermValue = '';
-        this.filterStatusValue = 'all';
-        this.minOwedValue = null;
-        this.maxOwedValue = null;
+    this.searchTermValue = '';
+    this.filterStatusValue = 'all';
+    this.minOwedValue = null;
+    this.maxOwedValue = null;
 
-        this.showFiltersOnMobile.set(false);
-        console.log('Action: Filters reset.');
+    this.showFiltersOnMobile.set(false);
+    this.toastService.info('تمت إعادة تعيين الفلاتر', 3000);
     }
 
     getStatusOptions(): Array<'متاح' | 'في رحلة' | 'غير متصل'> {
