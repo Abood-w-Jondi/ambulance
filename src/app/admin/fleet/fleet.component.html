@@ -177,10 +177,11 @@
                         }
                         <div class="col-12">
                             <p class="text-muted small mb-1">الحالة</p>
-                            <span class="badge rounded-pill fw-bold" [ngClass]="getStatusBadgeClass(vehicle.status)">
-                                <i class="fa-solid me-1" [ngClass]="getStatusIcon(vehicle.status)"></i>
-                                {{ vehicle.status }}
-                            </span>
+                            <app-status-badge
+                                [status]="vehicle.status"
+                                [type]="'vehicle'"
+                                [size]="'medium'">
+                            </app-status-badge>
                         </div>
                     </div>
                     <div class="d-flex justify-content-end gap-2 mt-4">

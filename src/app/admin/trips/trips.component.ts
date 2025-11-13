@@ -7,35 +7,7 @@ import { ValidationService } from '../../shared/services/validation.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { TRANSFER_STATUS } from '../../shared/constants/status.constants';
-
-// --- Data Structures ---
-interface Trip {
-    id: string;
-    day: number;
-    month: number;
-    year: number;
-    driver: string;
-    paramedic: string;
-    transferFrom: string;
-    transferTo: string;
-    start: number;
-    end: number;
-    diesel: number;
-    patientName: string;
-    patientAge: number;
-    ymdDay: number;
-    ymdMonth: number;
-    ymdYear: number;
-    transferStatus: TransferStatus;
-    diagnosis: string;
-    totalAmount: number;
-    paramedicShare: number;
-    driverShare: number;
-    eqShare: number;
-}
-
-type TransferStatus = 'ميداني' | 'تم النقل' | 'بلاغ كاذب' | 'ينقل' | 'لم يتم النقل' | 'صيانة' | 'رفض النقل' | 'اخرى';
-type FilterStatus = 'All' | TransferStatus;
+import { Trip, TransferStatus, FilterStatus, DriverReference, ParamedicReference } from '../../shared/models';
 
 @Component({
     selector: 'app-trips',
@@ -117,8 +89,8 @@ export class TripsComponent {
     driverFilterSearchTerm = signal('');
     paramedicFilterSearchTerm = signal('');
 
-    driversList: { id: string; name: string }[] = [];
-    paramedicsList: { id: string; name: string }[] = [];
+    driversList: DriverReference[] = [];
+    paramedicsList: ParamedicReference[] = [];
     transferStatuses: TransferStatus[] = ['ميداني', 'تم النقل', 'بلاغ كاذب', 'ينقل', 'لم يتم النقل', 'صيانة', 'رفض النقل', 'اخرى'];
 
     // Computed filtered lists

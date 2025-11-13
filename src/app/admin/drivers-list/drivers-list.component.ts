@@ -8,25 +8,9 @@ import { ValidationService } from '../../shared/services/validation.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { DRIVER_STATUS } from '../../shared/constants/status.constants';
+import { Driver, DriverFilterStatus } from '../../shared/models';
 
-// Define the Driver data structure
-interface Driver {
-    id: string;
-    name: string;
-    arabicName: string;
-    username?: string;
-    email?: string;
-    arabicStatus: 'متاح' | 'في رحلة' | 'غير متصل';
-    statusColor: string;
-    tripsToday: number;
-    amountOwed: number;
-    isAccountCleared: boolean;
-    isActive: boolean;
-    imageUrl: string;
-    imageAlt: string;
-}
-
-type FilterStatus = 'all' | 'متاح' | 'في رحلة' | 'غير متصل';
+type FilterStatus = DriverFilterStatus;
 
 @Component({
     selector: 'app-drivers-list',
@@ -47,6 +31,12 @@ export class DriversListComponent implements OnInit {
         private validationService: ValidationService
     ) {
         this.globalVarsService.setGlobalHeader('سائقي الإسعاف');
+    }
+
+    viewUserProfile(driver: Driver) {
+        // Navigate to user profile or open profile modal
+        this.toastService.info(`عرض الملف الشخصي للسائق: ${driver.arabicName}`, 3000);
+        // TODO: Implement navigation to user profile page or open profile modal
     }
     
     queryFilterValue = signal<string | null>(null);

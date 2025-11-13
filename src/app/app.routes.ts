@@ -12,7 +12,11 @@ import { AcceptTripsComponent } from './user/accept-trips/accept-trips.component
 import { TripsHistoryComponent } from './user/trips-history/trips-history.component';
 import { WalletComponent } from './user/wallet/wallet.component';
 import { DriverDashboardComponent } from './user/driver-dashboard/driver-dashboard.component';
-import { Component } from '@angular/core';
+import { MaintenanceTypesComponent } from './admin/settings/maintenance-types/maintenance-types.component';
+import { TransportationTypesComponent } from './admin/settings/transportation-types/transportation-types.component';
+import { CommonLocationsComponent } from './admin/settings/common-locations/common-locations.component';
+import { UsersManagementComponent } from './admin/settings/users-management/users-management.component';
+import { ProfileComponent } from './admin/settings/profile/profile.component';
 
 export const routes = [
 	// Default redirect to login
@@ -33,10 +37,15 @@ export const routes = [
 				{ path: 'vehicles', component: FleetComponent },
 				{ path: 'maintenance-history', component: MaintenanceHistoryComponent },
 				{ path: 'fuel-history', component: FuelHistoryComponent },
+				{ path: 'transportation-types', component: TransportationTypesComponent },
+				{ path: 'maintenance-types', component: MaintenanceTypesComponent },
+				{ path: 'common-locations', component: CommonLocationsComponent },
+				{ path: 'users-management', component: UsersManagementComponent },
+				{ path: 'profile', component: ProfileComponent },
 			],
 		},
-
-	// User/Driver routes
+		
+		// User/Driver routes
 		{
 			path: 'user',
 			children: [
@@ -46,6 +55,7 @@ export const routes = [
 				{ path: 'accept-trips', component: AcceptTripsComponent },
 				{ path: 'trips-history', component: TripsHistoryComponent },
 				{ path: 'wallet', component: WalletComponent },
+				{ path: 'profile', component: ProfileComponent },
 			],
 		},
 

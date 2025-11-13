@@ -4,8 +4,8 @@
     </div>
     <h1 class="h5 fw-bold flex-grow-1 text-center m-0">{{ header$ | async }}</h1>
   <div class="d-flex align-items-center">
-    <button class="btn btn-sm p-0 text-dark">
-      <i class="fa-solid fa-circle-user fs-3"></i>
+    <button class="btn btn-sm p-0 text-dark" (click)="navigateTo('profile')">
+      <img src="geminiBroNotPro.png" alt="صورة الملف الشخصي" class="rounded-circle" width="35" height="35">
     </button>
   </div>
 </header>
@@ -62,17 +62,41 @@
           <span>سجل الوقود</span>
         </a>
       </li>
-    </ul>
-    
-    <ul class="nav-group nav-group-footer">
       <li>
-        <a href="#">
-          <i class="fa-solid fa-gear nav-icon"></i>
-          <span>الإعدادات</span>
+        <a (click)="navigateTo('transportation-types')" [class.active]="isActive('transportation-types')">
+          <i class="fa-solid fa-list nav-icon"></i>
+          <span>أنواع النقليات</span>
         </a>
       </li>
       <li>
-        <a href="#">
+        <a (click)="navigateTo('maintenance-types')" [class.active]="isActive('maintenance-types')">
+          <i class="fa-solid fa-tools nav-icon"></i>
+          <span>أنواع الصيانة</span>
+        </a>
+      </li>
+      <li>
+        <a (click)="navigateTo('common-locations')" [class.active]="isActive('common-locations')">
+          <i class="fa-solid fa-location-dot nav-icon"></i>
+          <span>المواقع الشائعة</span>
+        </a>
+      </li>
+    </ul>
+
+    <ul class="nav-group nav-group-footer">
+      <li>
+        <a (click)="navigateTo('users-management')" [class.active]="isActive('users-management')">
+          <i class="fa-solid fa-users-gear nav-icon"></i>
+          <span>إدارة المستخدمين</span>
+        </a>
+      </li>
+      <li>
+        <a (click)="navigateTo('profile')" [class.active]="isActive('profile')">
+          <i class="fa-solid fa-user nav-icon"></i>
+          <span>معلومات الحساب</span>
+        </a>
+      </li>
+      <li>
+        <a (click)="logout()">
           <i class="fa-solid fa-right-from-bracket nav-icon"></i>
           <span>تسجيل الخروج</span>
         </a>

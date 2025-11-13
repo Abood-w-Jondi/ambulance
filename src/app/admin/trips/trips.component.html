@@ -404,9 +404,11 @@
                         </div>
                         <div class="col-12">
                             <p class="text-muted small mb-1">النقل</p>
-                            <span class="badge rounded-pill fw-bold" [ngClass]="getStatusBadgeClass(trip.transferStatus)">
-                                {{ trip.transferStatus }}
-                            </span>
+                            <app-status-badge
+                                [status]="trip.transferStatus"
+                                [type]="'transfer'"
+                                [size]="'medium'">
+                            </app-status-badge>
                         </div>
                         <div class="col-12">
                             <hr class="my-3">

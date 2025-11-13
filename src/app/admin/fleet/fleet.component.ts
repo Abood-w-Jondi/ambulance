@@ -8,20 +8,9 @@ import { ValidationService } from '../../shared/services/validation.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { VEHICLE_STATUS } from '../../shared/constants/status.constants';
+import { Vehicle, VehicleStatus, VehicleFilterStatus, VehicleType, DriverReference } from '../../shared/models';
 
-// --- Data Structures ---
-interface Vehicle {
-    id: string;
-    vehicleId: string;
-    vehicleName: string;
-    type: string;
-    currentDriver: string | null;
-    notes: string;
-    status: VehicleStatus;
-}
-
-type VehicleStatus = 'متاحة' | 'في الخدمة' | 'صيانة';
-type FilterStatus = 'All' | VehicleStatus;
+type FilterStatus = VehicleFilterStatus;
 
 @Component({
   selector: 'app-fleet',
@@ -51,7 +40,7 @@ export class FleetComponent implements OnInit {
     vehicleForm = {
         vehicleId: '',
         vehicleName: '',
-        type: '',
+        type: '' as VehicleType | '',
         currentDriver: '',
         notes: '',
         status: 'متاحة' as VehicleStatus
@@ -65,7 +54,7 @@ export class FleetComponent implements OnInit {
     itemsPerPage = 10;
 
     vehicleStatuses: VehicleStatus[] = ['متاحة', 'في الخدمة', 'صيانة'];
-    vehicleTypes: string[] = ['Type I Truck', 'Type II Van', 'Type III Cutaway'];
+    vehicleTypes: VehicleType[] = ['Type I Truck', 'Type II Van', 'Type III Cutaway'];
     colors: string[] = ['White', 'Red', 'Yellow', 'Silver', 'Blue'];
 
     // Computed filtered drivers list
@@ -74,7 +63,7 @@ export class FleetComponent implements OnInit {
         return this.driversList.filter(d => d.name.toLowerCase().includes(term));
     });
 
-    driversList: { id: string; name: string }[] = [];
+    driversList: DriverReference[] = [];
 
     constructor(
         private globalVars: GlobalVarsService,
@@ -260,7 +249,7 @@ export class FleetComponent implements OnInit {
             id: this.generateId(),
             vehicleId: this.vehicleForm.vehicleId,
             vehicleName: this.vehicleForm.vehicleName,
-            type: this.vehicleForm.type,
+            type: this.vehicleForm.type as VehicleType,
             currentDriver: this.vehicleForm.currentDriver || null,
             notes: this.vehicleForm.notes,
             status: this.vehicleForm.status
@@ -308,7 +297,7 @@ export class FleetComponent implements OnInit {
                 ...vehicle,
                 vehicleId: this.vehicleForm.vehicleId,
                 vehicleName: this.vehicleForm.vehicleName,
-                type: this.vehicleForm.type,
+                type: this.vehicleForm.type as VehicleType,
                 currentDriver: this.vehicleForm.currentDriver || null,
                 notes: this.vehicleForm.notes,
                 status: this.vehicleForm.status

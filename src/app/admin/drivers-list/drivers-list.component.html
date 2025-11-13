@@ -346,14 +346,23 @@
                             <div class="card shadow-sm rounded-xl h-100 position-relative"
                                 [ngClass]="{'opacity-75': !driver.isActive}">
 
-                                <!-- Edit Button (Pen Icon) -->
-                                <button
-                                    class="btn btn-sm btn-outline-primary position-absolute top-0 start-0 m-3 rounded-circle"
-                                    style="width: 32px; height: 32px; padding: 0;"
-                                    (click)="openEditModal(driver)"
-                                    title="تعديل معلومات السائق">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
+                                <!-- Action Buttons -->
+                                <div class="position-absolute top-0 start-0 m-3 d-flex gap-2">
+                                    <button
+                                        class="btn btn-sm btn-outline-primary rounded-circle"
+                                        style="width: 32px; height: 32px; padding: 0;"
+                                        (click)="openEditModal(driver)"
+                                        title="تعديل معلومات السائق">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button
+                                        class="btn btn-sm btn-outline-success rounded-circle"
+                                        style="width: 32px; height: 32px; padding: 0;"
+                                        (click)="viewUserProfile(driver)"
+                                        title="عرض/تعديل الملف الشخصي">
+                                        <i class="fa-solid fa-user"></i>
+                                    </button>
+                                </div>
 
                                 <!-- Deactivated Badge -->
                                 @if (!driver.isActive) {
@@ -372,11 +381,11 @@
                                         <div class="flex-grow-1">
                                             <p class="h6 fw-bold m-0 text-dark">{{ driver.arabicName }}</p>
                                             <div class="d-flex align-items-center gap-2 mt-1">
-                                                <span class="driver-status-dot"
-                                                    [ngStyle]="{'background-color': driver.statusColor}"></span>
-                                                <p class="small fw-medium m-0"
-                                                    [ngStyle]="{'color': driver.statusColor}">{{ driver.arabicStatus }}
-                                                </p>
+                                                <app-status-badge
+                                                    [status]="driver.arabicStatus"
+                                                    [type]="'driver'"
+                                                    [size]="'small'">
+                                                </app-status-badge>
                                             </div>
                                             @if (driver.email || driver.username) {
                                             <p class="small text-muted m-0 mt-1">

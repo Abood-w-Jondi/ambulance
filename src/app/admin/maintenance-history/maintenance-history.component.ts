@@ -7,22 +7,7 @@ import { ValidationService } from '../../shared/services/validation.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { MAINTENANCE_STATUS } from '../../shared/constants/status.constants';
-
-// --- Data Structures ---
-interface MaintenanceRecord {
-    id: string;
-    vehicleId: string;
-    date: Date;
-    type: string;
-    cost: number;
-    serviceLocation: string;
-    odometerBefore: number;
-    odometerAfter: number;
-    notes: string;
-    status: MaintenanceStatus;
-}
-
-type MaintenanceStatus = 'مكتملة' | 'مجدولة' | 'قيد التنفيذ';
+import { MaintenanceRecord, MaintenanceStatus } from '../../shared/models';
 
 @Component({
     selector: 'app-maintenance-history',
@@ -69,10 +54,11 @@ export class MaintenanceHistoryComponent {
         odometerBefore: 0,
         odometerAfter: 0,
         notes: '',
-        status: 'Completed' as MaintenanceStatus
+        status: 'مجدولة' as MaintenanceStatus
     };
 
     vehiclesList: string[] = ['جميع المركبات', 'الوحدة 05', 'إسعاف 01', 'الوحدة 02', 'AMB-012', 'AMB-025'];
+    // Maintenance types will come from database/API in the future
     maintenanceTypes: string[] = [
         'تغيير الزيت',
         'تدوير الإطارات',

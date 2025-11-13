@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(npx ng generate:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm start)",
+      "Bash(c:Userscu_abOneDriveDesktopamblance-systemambulancesrcappadmindrivers-listdrivers-list.component.ts)",
+      "Bash(npx ng build:*)",
+      "Bash(c:Userscu_abOneDriveDesktopamblance-systemambulancesrcappadminsettingsusers-managementusers-management.component.ts)",
+      "Bash(npm install:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

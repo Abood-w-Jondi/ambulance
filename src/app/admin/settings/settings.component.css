@@ -1,0 +1,17 @@
+.list-group-item {
+  border: none;
+  transition: background-color 0.15s ease;
+}
+
+.list-group-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.card {
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+hr.ms-5 {
+  margin-right: 80px !important;
+}

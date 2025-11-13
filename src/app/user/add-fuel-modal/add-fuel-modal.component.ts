@@ -82,7 +82,6 @@ export class AddFuelModalComponent implements OnInit {
       };
 
       // TODO: Call service to save fuel record
-      console.log('إضافة سجل وقود:', newFuelRecord);
       
       setTimeout(() => {
         this.isSubmitting = false;

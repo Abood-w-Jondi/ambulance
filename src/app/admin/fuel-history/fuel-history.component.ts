@@ -6,21 +6,7 @@ import { GlobalVarsService } from '../../global-vars.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { ValidationService } from '../../shared/services/validation.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
-
-// --- Data Structures ---
-interface FuelRecord {
-    id: string;
-    ambulanceName: string;
-    ambulanceNumber: string;
-    driverId: string;
-    driverName: string;
-    date: Date;
-    odometerBefore: number;
-    odometerAfter: number;
-    fuelAmount: number; // in liters
-    cost: number;
-    notes?: string;
-}
+import { FuelRecord } from '../../shared/models';
 
 @Component({
     selector: 'app-fuel-history',
