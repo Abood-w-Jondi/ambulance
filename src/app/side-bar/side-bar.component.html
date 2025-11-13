@@ -33,6 +33,12 @@
         </a>
       </li>
       <li>
+        <a (click)="navigateTo('paramedics-list')" [class.active]="isActive('paramedics-list')">
+          <i class="fa-solid fa-users nav-icon"></i>
+          <span>المسعفون</span>
+        </a>
+      </li>
+      <li>
         <a (click)="navigateTo('trips')" [class.active]="isActive('trips')">
           <i class="fa-solid fa-ambulance nav-icon"></i>
           <span>النقليات</span>

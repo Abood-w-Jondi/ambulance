@@ -1,5 +1,13 @@
 <div class="d-flex flex-column min-vh-100 bg-light">
 
+    <!-- Confirmation Modal -->
+    <app-confirmation-modal
+        [isOpen]="isDeleteVehicleModalOpen()"
+        [config]="confirmationModalConfig()"
+        (confirmed)="confirmDeleteVehicle()"
+        (cancelled)="closeDeleteConfirmation()">
+    </app-confirmation-modal>
+
     <!-- Add Vehicle Modal -->
     @if (isAddVehicleModalOpen()) {
     <div class="modal-backdrop fade show"></div>
@@ -184,14 +192,21 @@
                             </app-status-badge>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
-                            (click)="closeViewVehicleModal()">إغلاق</button>
-                        <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold"
-                            (click)="openEditVehicleModal()">
-                            <i class="fa-solid fa-edit me-1"></i>
-                            تعديل
+                    <div class="d-flex justify-content-between gap-2 mt-4">
+                        <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold"
+                            (click)="showDeleteConfirmation(vehicle)">
+                            <i class="fa-solid fa-trash me-1"></i>
+                            حذف
                         </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
+                                (click)="closeViewVehicleModal()">إغلاق</button>
+                            <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold"
+                                (click)="openEditVehicleModal()">
+                                <i class="fa-solid fa-edit me-1"></i>
+                                تعديل
+                            </button>
+                        </div>
                     </div>
                     }
                 </div>

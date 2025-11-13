@@ -6,13 +6,14 @@ import { ToastService } from '../../shared/services/toast.service';
 import { ValidationService } from '../../shared/services/validation.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
+import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 import { TRANSFER_STATUS } from '../../shared/constants/status.constants';
 import { Trip, TransferStatus, FilterStatus, DriverReference, ParamedicReference } from '../../shared/models';
 
 @Component({
     selector: 'app-trips',
     standalone: true,
-    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent],
+    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, ConfirmationModalComponent],
     templateUrl: './trips.component.html',
     styleUrl: './trips.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,7 +59,18 @@ export class TripsComponent {
     isAddTripModalOpen = signal(false);
     isViewTripModalOpen = signal(false);
     isEditTripModalOpen = signal(false);
+    isDeleteTripModalOpen = signal(false);
     selectedTrip = signal<Trip | null>(null);
+    tripToDelete = signal<Trip | null>(null);
+
+    // Confirmation modal state
+    confirmationModalConfig = signal<ConfirmationModalConfig>({
+        type: 'delete',
+        title: '',
+        message: '',
+        confirmButtonText: '',
+        cancelButtonText: 'إلغاء'
+    });
     
     // Form values for new/edit trip
     tripForm = {
@@ -540,6 +552,37 @@ export class TripsComponent {
 
     closeEditTripModal(): void {
         this.isEditTripModalOpen.set(false);
+    }
+
+    showDeleteConfirmation(trip: Trip): void {
+        this.tripToDelete.set(trip);
+        this.confirmationModalConfig.set({
+            type: 'delete',
+            title: 'تأكيد حذف الرحلة',
+            message: `هل أنت متأكد من أنك تريد حذف رحلة المريض ${trip.patientName}؟<br>لا يمكن التراجع عن هذا الإجراء.`,
+            confirmButtonText: 'حذف',
+            cancelButtonText: 'إلغاء',
+            highlightedText: trip.patientName
+        });
+        this.isDeleteTripModalOpen.set(true);
+    }
+
+    closeDeleteConfirmation(): void {
+        this.tripToDelete.set(null);
+        this.isDeleteTripModalOpen.set(false);
+    }
+
+    confirmDeleteTrip(): void {
+        const trip = this.tripToDelete();
+        if (trip) {
+            this.trips.update(trips => trips.filter(t => t.id !== trip.id));
+            this.toastService.success(`تم حذف رحلة المريض: ${trip.patientName}`);
+            this.closeDeleteConfirmation();
+            // Close view modal if it's open
+            if (this.selectedTrip()?.id === trip.id) {
+                this.closeViewTripModal();
+            }
+        }
     }
 
     getFormattedDate(day: number, month: number, year: number): string {

@@ -163,6 +163,20 @@ export class TripsHistoryComponent implements OnInit {
     return statusClasses[status] || 'bg-secondary';
   }
 
+  getStatusColor(status: TransferStatus): string {
+    const statusColors: { [key in TransferStatus]: string } = {
+      'تم النقل': '#28A745',
+      'ميداني': '#007BFF',
+      'ينقل': '#17A2B8',
+      'بلاغ كاذب': '#FFC107',
+      'لم يتم النقل': '#DC3545',
+      'صيانة': '#6C757D',
+      'رفض النقل': '#343A40',
+      'اخرى': '#6C757D'
+    };
+    return statusColors[status] || '#6C757D';
+  }
+
   formatTime(minutes: number): string {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;

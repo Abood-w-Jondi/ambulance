@@ -4,24 +4,24 @@
     <app-confirmation-modal
         [isOpen]="isDeleteModalOpen()"
         [config]="confirmationModalConfig()"
-        (confirmed)="confirmDeleteDriver()"
+        (confirmed)="confirmDeleteParamedic()"
         (cancelled)="closeDeleteConfirmation()">
     </app-confirmation-modal>
 
-    <!-- Add Driver Modal -->
+    <!-- Add Paramedic Modal -->
     @if (isAddModalOpen()) {
     <div class="modal-backdrop fade show"></div>
     <div class="modal fade show d-block" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content rounded-xl shadow-lg border-0">
                 <div class="modal-header bg-primary-custom rounded-top-xl border-0 justify-content-between">
-                    <h5 class="modal-title fw-bold text-white">إضافة سائق جديد</h5>
+                    <h5 class="modal-title fw-bold text-white">إضافة مسعف جديد</h5>
                     <button type="button" style="background-color: transparent; border: none; color: white;" (click)="isAddModalOpen.set(false)">
                         <i class="fa-solid fa-xmark" style="font-size: 20px;"></i>
                     </button>
                 </div>
                 <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
-                    <form (ngSubmit)="addNewDriver()">
+                    <form (ngSubmit)="addNewParamedic()">
                         <div class="row g-3 text-end">
                             <!-- Basic Information -->
                             <div class="col-12">
@@ -29,15 +29,15 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label for="newArabicName" class="form-label small fw-medium">الاسم العربي للسائق <span class="text-danger">*</span></label>
-                                <input id="newArabicName" type="text" class="form-control" placeholder="مثال: خالد العلي"
-                                    [(ngModel)]="newDriver.arabicName" name="arabicName" required>
+                                <label for="newArabicName" class="form-label small fw-medium">الاسم العربي للمسعف <span class="text-danger">*</span></label>
+                                <input id="newArabicName" type="text" class="form-control" placeholder="مثال: أحمد حسن"
+                                    [(ngModel)]="newParamedic.arabicName" name="arabicName" required>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="newName" class="form-label small fw-medium">الاسم الإنجليزي <span class="text-danger">*</span></label>
-                                <input id="newName" type="text" class="form-control" placeholder="Example: Khalid Alali"
-                                    [(ngModel)]="newDriver.name" name="name" required>
+                                <input id="newName" type="text" class="form-control" placeholder="Example: Ahmad Hassan"
+                                    [(ngModel)]="newParamedic.name" name="name" required>
                             </div>
 
                             <!-- Login Credentials -->
@@ -48,23 +48,23 @@
                                     يجب إدخال اسم المستخدم أو البريد الإلكتروني (أو كليهما)
                                 </small>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="newUsername" class="form-label small fw-medium">اسم المستخدم</label>
                                 <input id="newUsername" type="text" class="form-control" placeholder="username"
-                                    [(ngModel)]="newDriver.username" name="username">
+                                    [(ngModel)]="newParamedic.username" name="username">
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="newEmail" class="form-label small fw-medium">البريد الإلكتروني</label>
                                 <input id="newEmail" type="email" class="form-control" placeholder="example@email.com"
-                                    [(ngModel)]="newDriver.email" name="email">
+                                    [(ngModel)]="newParamedic.email" name="email">
                             </div>
 
                             <div class="col-12">
                                 <label for="newPassword" class="form-label small fw-medium">كلمة المرور الأولية <span class="text-danger">*</span></label>
                                 <input id="newPassword" type="password" class="form-control" placeholder="كلمة المرور"
-                                    [(ngModel)]="newDriver.password" name="password" required>
+                                    [(ngModel)]="newParamedic.password" name="password" required>
                             </div>
 
                             <!-- Financial Information -->
@@ -75,19 +75,19 @@
                             <div class="col-md-6">
                                 <label for="newInitialOwed" class="form-label small fw-medium">المبلغ المستحق الأولي (₪)</label>
                                 <input id="newInitialOwed" type="number" class="form-control" min="0" step="0.01"
-                                    [(ngModel)]="newDriver.amountOwed" name="amountOwed" required>
+                                    [(ngModel)]="newParamedic.amountOwed" name="amountOwed" required>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="newTrips" class="form-label small fw-medium">عدد الرحلات اليوم</label>
                                 <input id="newTrips" type="number" class="form-control" min="0"
-                                    [(ngModel)]="newDriver.tripsToday" name="tripsToday" required>
+                                    [(ngModel)]="newParamedic.tripsToday" name="tripsToday" required>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end mt-4">
-                            <button type="submit" class="btn btn-primary-custom rounded-pill px-4 fw-bold" 
+                            <button type="submit" class="btn btn-primary-custom rounded-pill px-4 fw-bold"
                                 [disabled]="!isAddFormValid()">
-                                إضافة السائق
+                                إضافة المسعف
                             </button>
                         </div>
                     </form>
@@ -97,36 +97,36 @@
     </div>
     }
 
-    <!-- Edit Driver Modal -->
-    @if (isEditModalOpen() && driverToEdit()) {
-    <div class="modal-backdrop fade show reducedZIndex" ></div>
+    <!-- Edit Paramedic Modal -->
+    @if (isEditModalOpen() && paramedicToEdit()) {
+    <div class="modal-backdrop fade show reducedZIndex"></div>
     <div class="modal fade show d-block reducedZIndex" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content rounded-xl shadow-lg border-0">
                 <div class="modal-header bg-warning rounded-top-xl border-0 justify-content-between">
-                    <h5 class="modal-title fw-bold text-dark">تعديل معلومات السائق</h5>
+                    <h5 class="modal-title fw-bold text-dark">تعديل معلومات المسعف</h5>
                     <button type="button" style="background-color: transparent; border: none;" (click)="closeEditModal()">
                         <i class="fa-solid fa-xmark" style="font-size: 20px;"></i>
                     </button>
                 </div>
                 <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
-                    <form (ngSubmit)="saveEditDriver()">
+                    <form (ngSubmit)="saveEditParamedic()">
                         <div class="row g-3 text-end">
                             <!-- Basic Information -->
                             <div class="col-12">
                                 <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">المعلومات الأساسية</h6>
                             </div>
-                            
+
                             <div class="col-md-6">
-                                <label for="editArabicName" class="form-label small fw-medium">الاسم العربي للسائق <span class="text-danger">*</span></label>
-                                <input id="editArabicName" type="text" class="form-control" placeholder="مثال: خالد العلي"
-                                    [(ngModel)]="editDriver.arabicName" name="arabicName" required>
+                                <label for="editArabicName" class="form-label small fw-medium">الاسم العربي للمسعف <span class="text-danger">*</span></label>
+                                <input id="editArabicName" type="text" class="form-control" placeholder="مثال: أحمد حسن"
+                                    [(ngModel)]="editParamedic.arabicName" name="arabicName" required>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="editName" class="form-label small fw-medium">الاسم الإنجليزي <span class="text-danger">*</span></label>
-                                <input id="editName" type="text" class="form-control" placeholder="Example: Khalid Alali"
-                                    [(ngModel)]="editDriver.name" name="name" required>
+                                <input id="editName" type="text" class="form-control" placeholder="Example: Ahmad Hassan"
+                                    [(ngModel)]="editParamedic.name" name="name" required>
                             </div>
 
                             <!-- Login Credentials -->
@@ -137,43 +137,43 @@
                                     يجب إدخال اسم المستخدم أو البريد الإلكتروني (أو كليهما)
                                 </small>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="editUsername" class="form-label small fw-medium">اسم المستخدم</label>
                                 <input id="editUsername" type="text" class="form-control" placeholder="username"
-                                    [(ngModel)]="editDriver.username" name="username">
+                                    [(ngModel)]="editParamedic.username" name="username">
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="editEmail" class="form-label small fw-medium">البريد الإلكتروني</label>
                                 <input id="editEmail" type="email" class="form-control" placeholder="example@email.com"
-                                    [(ngModel)]="editDriver.email" name="email">
+                                    [(ngModel)]="editParamedic.email" name="email">
                             </div>
 
-                            <!-- Driver Status -->
+                            <!-- Paramedic Status -->
                             <div class="col-12 mt-4">
-                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">حالة السائق</h6>
+                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">حالة المسعف</h6>
                             </div>
-                            
+
                             <div class="col-md-6">
-                                <label for="editStatus" class="form-label small fw-medium">حالة السائق</label>
-                                <select id="editStatus" class="form-select" [(ngModel)]="editDriver.arabicStatus" name="arabicStatus" required>
+                                <label for="editStatus" class="form-label small fw-medium">حالة المسعف</label>
+                                <select id="editStatus" class="form-select" [(ngModel)]="editParamedic.arabicStatus" name="arabicStatus" required>
                                     @for (status of getStatusOptions(); track status) {
                                     <option [value]="status">{{ status }}</option>
                                     }
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="editTrips" class="form-label small fw-medium">عدد الرحلات اليوم</label>
                                 <input id="editTrips" type="number" class="form-control" min="0"
-                                    [(ngModel)]="editDriver.tripsToday" name="tripsToday" required>
+                                    [(ngModel)]="editParamedic.tripsToday" name="tripsToday" required>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="editAmountOwed" class="form-label small fw-medium">المبلغ المستحق (₪)</label>
                                 <input id="editAmountOwed" type="number" class="form-control" min="0" step="0.01"
-                                    [(ngModel)]="editDriver.amountOwed" name="amountOwed" required>
+                                    [(ngModel)]="editParamedic.amountOwed" name="amountOwed" required>
                             </div>
 
                             <!-- Account Status -->
@@ -187,15 +187,15 @@
                                         الحساب نشط (يمكن تسجيل الدخول)
                                     </label>
                                     <input class="form-check-input" type="checkbox" role="switch" id="editIsActive"
-                                        [(ngModel)]="editDriver.isActive" name="isActive">
+                                        [(ngModel)]="editParamedic.isActive" name="isActive">
                                 </div>
                                 <small class="text-muted d-block mt-2 text-end">
-                                    @if (editDriver.isActive) {
+                                    @if (editParamedic.isActive) {
                                         <i class="fa-solid fa-circle-check text-success me-1"></i>
-                                        الحساب نشط - يمكن للسائق تسجيل الدخول
+                                        الحساب نشط - يمكن للمسعف تسجيل الدخول
                                     } @else {
                                         <i class="fa-solid fa-circle-xmark text-danger me-1"></i>
-                                        الحساب معطل - لا يمكن للسائق تسجيل الدخول
+                                        الحساب معطل - لا يمكن للمسعف تسجيل الدخول
                                     }
                                 </small>
                             </div>
@@ -204,34 +204,34 @@
                             <div class="col-12 mt-4">
                                 <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">إعادة تعيين كلمة المرور</h6>
                             </div>
-                            
+
                             <div class="col-12">
                                 <label for="editNewPassword" class="form-label small fw-medium">كلمة المرور الجديدة (اختياري)</label>
-                                <input id="editNewPassword" type="password" class="form-control" 
+                                <input id="editNewPassword" type="password" class="form-control"
                                     placeholder="اتركه فارغًا إذا كنت لا تريد تغيير كلمة المرور"
-                                    [(ngModel)]="editDriver.newPassword" name="newPassword" suggest="off" autocomplete="off">
+                                    [(ngModel)]="editParamedic.newPassword" name="newPassword" suggest="off" autocomplete="off">
                                 <small class="text-muted d-block mt-2">
                                     <i class="fa-solid fa-info-circle me-1"></i>
                                     يمكنك إعادة تعيين كلمة المرور دون معرفة كلمة المرور القديمة
                                 </small>
                             </div>
                         </div>
-                        
+
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-between gap-2 mt-4 pt-3 border-top">
                             <div class="d-flex gap-2">
                                 <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold"
                                     [disabled]="!isEditFormValid()">
                                     <i class="fa-solid fa-floppy-disk me-1"></i>
-                             حفظ
+                                    حفظ
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
                                     (click)="closeEditModal()">إلغاء</button>
                             </div>
                             <button type="button" class="btn btn-danger rounded-pill px-4"
-                                (click)="showDeleteConfirmation(driverToEdit()!)">
+                                (click)="showDeleteConfirmation(paramedicToEdit()!)">
                                 <i class="fa-solid fa-trash me-1"></i>
-حذف
+                                حذف
                             </button>
                         </div>
                     </form>
@@ -248,7 +248,7 @@
                 <button class="btn btn-primary-custom rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
                     (click)="isAddModalOpen.set(true)">
                     <i class="fa-solid fa-user-plus fs-6"></i>
-                    <span class="fw-bold">سائق جديد</span>
+                    <span class="fw-bold">مسعف جديد</span>
                 </button>
 
                 <button class="btn rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
@@ -266,7 +266,7 @@
                 <div class="col-12 col-lg-4">
                     <div id="filter-sidebar" class="card shadow-sm rounded-xl p-4 mt-lg-5 sticky-lg-top awayFromTop"
                         [ngClass]="{'d-block': showFiltersOnMobile(), 'd-none': !showFiltersOnMobile(), 'd-lg-block': true}">
-                        
+
                         <h6 class="fw-bold mb-3 text-dark border-bottom pb-2">خيارات البحث والتصفية</h6>
 
                         <div class="mb-3">
@@ -276,13 +276,14 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="filterStatus" class="form-label small fw-medium">حالة السائق</label>
+                            <label for="filterStatus" class="form-label small fw-medium">حالة المسعف</label>
                             <select id="filterStatus" class="form-select" [(ngModel)]="filterStatusValue"
                                 (ngModelChange)="filterStatus.set($event)">
                                 <option value="all">الكل</option>
                                 <option value="متاح">متاح</option>
                                 <option value="في رحلة">في رحلة</option>
                                 <option value="غير متصل">غير متصل</option>
+                                <option value="في إجازة">في إجازة</option>
                             </select>
                         </div>
 
@@ -313,36 +314,36 @@
                         <button class="btn btn-primary-custom rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
                             (click)="isAddModalOpen.set(true)">
                             <i class="fa-solid fa-user-plus fs-6"></i>
-                            <span class="fw-bold">سائق جديد</span>
+                            <span class="fw-bold">مسعف جديد</span>
                         </button>
                     </div>
-                    
+
                     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-                        @for (driver of getPaginatedDrivers(); track driver.id) {
+                        @for (paramedic of getPaginatedParamedics(); track paramedic.id) {
                         <div class="col">
                             <div class="card shadow-sm rounded-xl h-100 position-relative"
-                                [ngClass]="{'opacity-75': !driver.isActive}">
+                                [ngClass]="{'opacity-75': !paramedic.isActive}">
 
                                 <!-- Action Buttons -->
                                 <div class="position-absolute top-0 start-0 m-3 d-flex gap-2">
                                     <button
                                         class="btn btn-sm btn-outline-primary rounded-circle"
                                         style="width: 32px; height: 32px; padding: 0;"
-                                        (click)="openEditModal(driver)"
-                                        title="تعديل معلومات السائق">
+                                        (click)="openEditModal(paramedic)"
+                                        title="تعديل معلومات المسعف">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
                                     <button
                                         class="btn btn-sm btn-outline-success rounded-circle"
                                         style="width: 32px; height: 32px; padding: 0;"
-                                        (click)="viewUserProfile(driver)"
+                                        (click)="viewUserProfile(paramedic)"
                                         title="عرض/تعديل الملف الشخصي">
                                         <i class="fa-solid fa-user"></i>
                                     </button>
                                 </div>
 
                                 <!-- Deactivated Badge -->
-                                @if (!driver.isActive) {
+                                @if (!paramedic.isActive) {
                                 <span class="badge bg-danger position-absolute top-0 end-0 m-3">
                                     <i class="fa-solid fa-ban me-1"></i>
                                     معطل
@@ -353,21 +354,21 @@
 
                                     <div class="d-flex align-items-center gap-3 mb-4">
                                         <img class="rounded-circle object-fit-cover flex-shrink-0"
-                                            style="width: 56px; height: 56px;" [alt]="driver.imageAlt"
-                                            [src]="driver.imageUrl" />
+                                            style="width: 56px; height: 56px;" [alt]="paramedic.imageAlt"
+                                            [src]="paramedic.imageUrl" />
                                         <div class="flex-grow-1">
-                                            <p class="h6 fw-bold m-0 text-dark">{{ driver.arabicName }}</p>
+                                            <p class="h6 fw-bold m-0 text-dark">{{ paramedic.arabicName }}</p>
                                             <div class="d-flex align-items-center gap-2 mt-1">
                                                 <app-status-badge
-                                                    [status]="driver.arabicStatus"
-                                                    [type]="'driver'"
+                                                    [status]="paramedic.arabicStatus"
+                                                    [type]="'paramedic'"
                                                     [size]="'small'">
                                                 </app-status-badge>
                                             </div>
-                                            @if (driver.email || driver.username) {
+                                            @if (paramedic.email || paramedic.username) {
                                             <p class="small text-muted m-0 mt-1">
-                                                @if (driver.username) {
-                                                <i class="fa-solid fa-user me-1"></i>{{ driver.username }}
+                                                @if (paramedic.username) {
+                                                <i class="fa-solid fa-user me-1"></i>{{ paramedic.username }}
                                                 }
                                             </p>
                                             }
@@ -377,36 +378,36 @@
                                     <div class="row pt-4 border-top border-light-subtle g-3 mb-4">
                                         <div class="col-6">
                                             <p class="text-muted small m-0">عدد الرحلات اليوم</p>
-                                            <p class="h5 fw-semibold m-0 text-dark">{{ driver.tripsToday }}</p>
+                                            <p class="h5 fw-semibold m-0 text-dark">{{ paramedic.tripsToday }}</p>
                                         </div>
                                         <div class="col-6">
                                             <p class="text-muted small m-0">المبلغ المستحق</p>
                                             <p class="h5 fw-semibold m-0"
-                                                [class]="{'text-warning': driver.amountOwed > 0, 'text-success': driver.amountOwed === 0}">
-                                                ₪{{ driver.amountOwed.toFixed(2) }}
+                                                [class]="{'text-warning': paramedic.amountOwed > 0, 'text-success': paramedic.amountOwed === 0}">
+                                                ₪{{ paramedic.amountOwed.toFixed(2) }}
                                             </p>
                                         </div>
                                     </div>
 
-                                    @if (driver.amountOwed > 0) {
+                                    @if (paramedic.amountOwed > 0) {
                                     <div class="mt-auto pt-3">
                                         <div class="input-group mb-2 mt-3">
                                             <input type="number" class="form-control text-end"
-                                                placeholder="مبلغ التخفيض" min="0.01" [max]="driver.amountOwed"
-                                                [ngModel]="reductionAmounts[driver.id] || null"
-                                                (ngModelChange)="reductionAmounts[driver.id] = $event"
+                                                placeholder="مبلغ التخفيض" min="0.01" [max]="paramedic.amountOwed"
+                                                [ngModel]="reductionAmounts[paramedic.id] || null"
+                                                (ngModelChange)="reductionAmounts[paramedic.id] = $event"
                                                 style="direction: ltr;">
                                             <span class="input-group-text">₪</span>
                                         </div>
-                                        
+
                                         <button class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
-                                            [disabled]="!reductionAmounts[driver.id] || reductionAmounts[driver.id] <= 0 || reductionAmounts[driver.id] > driver.amountOwed"
-                                            (click)="reduceBalance(driver, reductionAmounts[driver.id])">
+                                            [disabled]="!reductionAmounts[paramedic.id] || reductionAmounts[paramedic.id] <= 0 || reductionAmounts[paramedic.id] > paramedic.amountOwed"
+                                            (click)="reduceBalance(paramedic, reductionAmounts[paramedic.id])">
                                             تخفيض الرصيد المحدد
                                         </button>
 
                                         <button class="btn btn-success fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small"
-                                            (click)="clearIndividualBalance(driver)">
+                                            (click)="clearIndividualBalance(paramedic)">
                                             تصفية الحساب بالكامل
                                         </button>
                                     </div>
@@ -414,9 +415,9 @@
                                     <div class="mt-auto pt-3">
                                         <div class="input-group mb-2 mt-3">
                                             <input type="number" class="form-control text-end"
-                                                placeholder="مبلغ التخفيض" min="0.01" [max]="driver.amountOwed"
-                                                [ngModel]="reductionAmounts[driver.id] || null"
-                                                (ngModelChange)="reductionAmounts[driver.id] = $event"
+                                                placeholder="مبلغ التخفيض" min="0.01" [max]="paramedic.amountOwed"
+                                                [ngModel]="reductionAmounts[paramedic.id] || null"
+                                                (ngModelChange)="reductionAmounts[paramedic.id] = $event"
                                                 style="direction: ltr;" disabled>
                                             <span class="input-group-text">₪</span>
                                         </div>
@@ -424,7 +425,7 @@
                                             disabled>
                                             تخفيض الرصيد المحدد
                                         </button>
-                                        <button class="btn btn-secondary fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small" 
+                                        <button class="btn btn-secondary fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small"
                                             disabled>
                                             تم تصفية الحساب
                                         </button>
@@ -435,20 +436,20 @@
                         </div>
                         }
 
-                        @if (filteredDrivers().length === 0) {
+                        @if (filteredParamedics().length === 0) {
                         <div class="col-12 text-center text-muted p-5">
                             <i class="fa-solid fa-face-frown fs-2 mb-3"></i>
-                            <p class="h5">لا يوجد سائقون يطابقون معايير التصفية المحددة.</p>
+                            <p class="h5">لا يوجد مسعفون يطابقون معايير التصفية المحددة.</p>
                         </div>
                         }
                     </div>
 
                     <!-- Pagination -->
-                    @if (filteredDrivers().length > 0) {
+                    @if (filteredParamedics().length > 0) {
                     <div class="mt-4">
                         <app-pagination
                             [currentPage]="currentPage"
-                            [totalItems]="filteredDrivers().length"
+                            [totalItems]="filteredParamedics().length"
                             [itemsPerPage]="itemsPerPage"
                             [maxVisiblePages]="5"
                             (pageChange)="onPageChange($event)"

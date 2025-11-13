@@ -2,11 +2,12 @@ import { Component, signal, ChangeDetectionStrategy, computed, OnInit } from '@a
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlobalVarsService } from '../../global-vars.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ToastService } from '../../shared/services/toast.service';
 import { ValidationService } from '../../shared/services/validation.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
+import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 import { DRIVER_STATUS } from '../../shared/constants/status.constants';
 import { Driver, DriverFilterStatus } from '../../shared/models';
 
@@ -14,7 +15,7 @@ type FilterStatus = DriverFilterStatus;
 
 @Component({
     selector: 'app-drivers-list',
-    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent],
+    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, ConfirmationModalComponent],
     templateUrl: './drivers-list.component.html',
     styleUrl: './drivers-list.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +28,7 @@ export class DriversListComponent implements OnInit {
     constructor(
         private globalVarsService: GlobalVarsService,
         private route: ActivatedRoute,
+        private router: Router,
         private toastService: ToastService,
         private validationService: ValidationService
     ) {
@@ -34,9 +36,8 @@ export class DriversListComponent implements OnInit {
     }
 
     viewUserProfile(driver: Driver) {
-        // Navigate to user profile or open profile modal
-        this.toastService.info(`عرض الملف الشخصي للسائق: ${driver.arabicName}`, 3000);
-        // TODO: Implement navigation to user profile page or open profile modal
+        // Navigate to the profile page with the driver's ID
+        this.router.navigate(['/admin/profile', driver.id]);
     }
     
     queryFilterValue = signal<string | null>(null);
@@ -57,6 +58,15 @@ export class DriversListComponent implements OnInit {
     isDeleteModalOpen = signal(false);
     driverToEdit = signal<Driver | null>(null);
     driverToDelete = signal<Driver | null>(null);
+
+    // Confirmation modal state
+    confirmationModalConfig = signal<ConfirmationModalConfig>({
+        type: 'delete',
+        title: '',
+        message: '',
+        confirmButtonText: '',
+        cancelButtonText: 'إلغاء'
+    });
 
     newDriver: {
         arabicName: string;
@@ -373,6 +383,14 @@ export class DriversListComponent implements OnInit {
 
     showDeleteConfirmation(driver: Driver) {
         this.driverToDelete.set(driver);
+        this.confirmationModalConfig.set({
+            type: 'delete',
+            title: 'تأكيد حذف السائق',
+            message: `هل أنت متأكد من أنك تريد حذف حساب السائق ${driver.arabicName}؟<br>لا يمكن التراجع عن هذا الإجراء.`,
+            confirmButtonText: 'حذف',
+            cancelButtonText: 'إلغاء',
+            highlightedText: driver.arabicName
+        });
         this.isDeleteModalOpen.set(true);
     }
 

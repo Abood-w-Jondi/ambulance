@@ -5,6 +5,7 @@ import {
   TRANSFER_STATUS_COLORS,
   VEHICLE_STATUS_COLORS,
   DRIVER_STATUS_COLORS,
+  PARAMEDIC_STATUS_COLORS,
   MAINTENANCE_STATUS_COLORS
 } from '../constants/status.constants';
 
@@ -19,13 +20,13 @@ export class StatusBadgeComponent {
   @Input() set status(value: string) {
     this._status.set(value);
   }
-  @Input() set type(value: 'transfer' | 'vehicle' | 'driver' | 'maintenance') {
+  @Input() set type(value: 'transfer' | 'vehicle' | 'driver' | 'maintenance' | 'paramedic') {
     this._type.set(value);
   }
   @Input() size: 'small' | 'medium' | 'large' = 'medium';
 
   private _status = signal('');
-  private _type = signal<'transfer' | 'vehicle' | 'driver' | 'maintenance'>('transfer');
+  private _type = signal<'transfer' | 'vehicle' | 'driver' | 'maintenance' | 'paramedic'>('transfer');
 
   statusColor = computed(() => {
     return getStatusColor(this._status(), this._type());

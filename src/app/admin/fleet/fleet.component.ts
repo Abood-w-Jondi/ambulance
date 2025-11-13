@@ -7,6 +7,7 @@ import { ToastService } from '../../shared/services/toast.service';
 import { ValidationService } from '../../shared/services/validation.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
+import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 import { VEHICLE_STATUS } from '../../shared/constants/status.constants';
 import { Vehicle, VehicleStatus, VehicleFilterStatus, VehicleType, DriverReference } from '../../shared/models';
 
@@ -15,7 +16,7 @@ type FilterStatus = VehicleFilterStatus;
 @Component({
   selector: 'app-fleet',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, ConfirmationModalComponent],
   templateUrl: './fleet.component.html',
   styleUrls: ['./fleet.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,7 +35,18 @@ export class FleetComponent implements OnInit {
     isAddVehicleModalOpen = signal(false);
     isViewVehicleModalOpen = signal(false);
     isEditVehicleModalOpen = signal(false);
+    isDeleteVehicleModalOpen = signal(false);
     selectedVehicle = signal<Vehicle | null>(null);
+    vehicleToDelete = signal<Vehicle | null>(null);
+
+    // Confirmation modal state
+    confirmationModalConfig = signal<ConfirmationModalConfig>({
+        type: 'delete',
+        title: '',
+        message: '',
+        confirmButtonText: '',
+        cancelButtonText: 'إلغاء'
+    });
     
     // Form values for new/edit vehicle
     vehicleForm = {
@@ -323,5 +335,35 @@ export class FleetComponent implements OnInit {
 
     closeEditVehicleModal(): void {
         this.isEditVehicleModalOpen.set(false);
+    }
+
+    showDeleteConfirmation(vehicle: Vehicle): void {
+        this.vehicleToDelete.set(vehicle);
+        this.confirmationModalConfig.set({
+            type: 'delete',
+            title: 'تأكيد حذف المركبة',
+            message: `هل أنت متأكد من أنك تريد حذف المركبة ${vehicle.vehicleName} (${vehicle.vehicleId})؟<br>لا يمكن التراجع عن هذا الإجراء.`,
+            confirmButtonText: 'حذف',
+            cancelButtonText: 'إلغاء',
+            highlightedText: vehicle.vehicleName
+        });
+        this.isDeleteVehicleModalOpen.set(true);
+    }
+
+    closeDeleteConfirmation(): void {
+        this.vehicleToDelete.set(null);
+        this.isDeleteVehicleModalOpen.set(false);
+    }
+
+    confirmDeleteVehicle(): void {
+        const vehicle = this.vehicleToDelete();
+        if (vehicle) {
+            this.vehicles.update(vehicles => vehicles.filter(v => v.id !== vehicle.id));
+            this.toastService.success(`تم حذف المركبة: ${vehicle.vehicleName}`);
+            this.closeDeleteConfirmation();
+            if (this.selectedVehicle()?.id === vehicle.id) {
+                this.closeViewVehicleModal();
+            }
+        }
     }
 }

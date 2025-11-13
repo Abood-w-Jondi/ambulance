@@ -1,6 +1,7 @@
 
 import { AdminDashboardComponent } from './admin/admin-dashboard/admin-dashboard.component';
 import { DriversListComponent } from './admin/drivers-list/drivers-list.component';
+import { ParamedicsListComponent } from './admin/paramedics-list/paramedics-list.component';
 import { TripsComponent } from './admin/trips/trips.component';
 import { StatsComponent } from './admin/stats/stats.component';
 import { FleetComponent } from './admin/fleet/fleet.component';
@@ -17,7 +18,6 @@ import { TransportationTypesComponent } from './admin/settings/transportation-ty
 import { CommonLocationsComponent } from './admin/settings/common-locations/common-locations.component';
 import { UsersManagementComponent } from './admin/settings/users-management/users-management.component';
 import { ProfileComponent } from './admin/settings/profile/profile.component';
-
 export const routes = [
 	// Default redirect to login
 	{ path: '', redirectTo: 'login', pathMatch: 'full' as const },
@@ -32,6 +32,7 @@ export const routes = [
 				{ path: '', redirectTo: 'admin-dashboard', pathMatch: 'full' as const },
 				{ path: 'admin-dashboard', component: AdminDashboardComponent },
 				{ path: 'drivers-list', component: DriversListComponent },
+				{ path: 'paramedics-list', component: ParamedicsListComponent },
 				{ path: 'trips', component: TripsComponent },
 				{ path: 'stats', component: StatsComponent },
 				{ path: 'vehicles', component: FleetComponent },

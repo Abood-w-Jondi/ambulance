@@ -4,18 +4,32 @@
 export interface Paramedic {
     // Basic Identification
     id: string;
-    name: string;              // Display name (can be English or Arabic)
-    arabicName?: string;       // Arabic name if needed
+    name: string;              // English name
+    arabicName: string;        // Arabic name
+
+    // Authentication
+    username?: string;
+    email?: string;
 
     // Status Information
-    status?: ParamedicStatus;
-    isActive?: boolean;        // Account active/disabled
+    arabicStatus: 'متاح' | 'في رحلة' | 'غير متصل' | 'في إجازة';
+    statusColor: string;
+    isActive: boolean;        // Account active/disabled
 
     // Work Information
-    tripsToday?: number;
+    tripsToday: number;
+
+    // Financial Information
+    amountOwed: number;
+    isAccountCleared: boolean;
+
+    // Display Information
+    imageUrl: string;
+    imageAlt: string;
 }
 
 export type ParamedicStatus = 'متاح' | 'في رحلة' | 'غير متصل' | 'في إجازة';
+export type ParamedicFilterStatus = ParamedicStatus | 'all';
 
 /**
  * Simplified paramedic reference for use in dropdowns and references

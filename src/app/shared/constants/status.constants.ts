@@ -56,6 +56,24 @@ export const DRIVER_STATUS_COLORS: Record<string, string> = {
   [DRIVER_STATUS.OFFLINE]: '#6B7280'
 };
 
+// Paramedic Status Constants
+export const PARAMEDIC_STATUS = {
+  AVAILABLE: 'متاح',
+  ON_TRIP: 'في رحلة',
+  OFFLINE: 'غير متصل',
+  ON_LEAVE: 'في إجازة'
+} as const;
+
+export type ParamedicStatus = typeof PARAMEDIC_STATUS[keyof typeof PARAMEDIC_STATUS];
+
+// Paramedic Status Colors
+export const PARAMEDIC_STATUS_COLORS: Record<string, string> = {
+  [PARAMEDIC_STATUS.AVAILABLE]: '#10B981',
+  [PARAMEDIC_STATUS.ON_TRIP]: '#3B82F6',
+  [PARAMEDIC_STATUS.OFFLINE]: '#6B7280',
+  [PARAMEDIC_STATUS.ON_LEAVE]: '#F59E0B'
+};
+
 // Maintenance Status Constants
 export const MAINTENANCE_STATUS = {
   COMPLETED: 'مكتملة',
@@ -114,7 +132,7 @@ export const TRIP_PRIORITY_CLASSES: Record<string, string> = {
 };
 
 // Helper Functions
-export function getStatusColor(status: string, type: 'transfer' | 'vehicle' | 'driver' | 'maintenance'): string {
+export function getStatusColor(status: string, type: 'transfer' | 'vehicle' | 'driver' | 'maintenance' | 'paramedic'): string {
   switch (type) {
     case 'transfer':
       return TRANSFER_STATUS_COLORS[status] || '#6C757D';
@@ -122,6 +140,8 @@ export function getStatusColor(status: string, type: 'transfer' | 'vehicle' | 'd
       return VEHICLE_STATUS_COLORS[status] || '#6C757D';
     case 'driver':
       return DRIVER_STATUS_COLORS[status] || '#6B7280';
+    case 'paramedic':
+      return PARAMEDIC_STATUS_COLORS[status] || '#6B7280';
     case 'maintenance':
       return MAINTENANCE_STATUS_COLORS[status] || '#6C757D';
     default:
