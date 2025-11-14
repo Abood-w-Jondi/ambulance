@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ToastService } from '../../shared/services/toast.service';
 import { Router } from '@angular/router';
 import { AddMaintenanceModalComponent } from '../add-maintenance-modal/add-maintenance-modal.component';
 import { AddFuelModalComponent } from '../add-fuel-modal/add-fuel-modal.component';
@@ -19,7 +20,7 @@ export class DriverDashboardComponent implements OnInit {
   showFuelModal: boolean = false;
   showMaintenanceModal: boolean = false;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router, private toastService: ToastService) { }
 
   ngOnInit(): void {
     // Load driver data from service
@@ -40,19 +41,23 @@ export class DriverDashboardComponent implements OnInit {
   }
 
   openFuelModal(): void {
-    this.showFuelModal = true;
+  this.showFuelModal = true;
+  this.toastService.info('فتح نافذة إضافة وقود', 3000);
   }
 
   closeFuelModal(): void {
-    this.showFuelModal = false;
+  this.showFuelModal = false;
+  this.toastService.info('تم إغلاق نافذة إضافة الوقود', 3000);
   }
 
   openMaintenanceModal(): void {
-    this.showMaintenanceModal = true;
+  this.showMaintenanceModal = true;
+  this.toastService.info('فتح نافذة إضافة صيانة', 3000);
   }
 
   closeMaintenanceModal(): void {
-    this.showMaintenanceModal = false;
+  this.showMaintenanceModal = false;
+  this.toastService.info('تم إغلاق نافذة إضافة الصيانة', 3000);
   }
 
   viewTrips(): void {
@@ -69,12 +74,14 @@ export class DriverDashboardComponent implements OnInit {
   }
 
   onFuelAdded(): void {
-    this.closeFuelModal();
-    // Reload data if needed
+  this.closeFuelModal();
+  this.toastService.success('تمت إضافة سجل وقود جديد', 3000);
+  // Reload data if needed
   }
 
   onMaintenanceAdded(): void {
-    this.closeMaintenanceModal();
-    // Reload data if needed
+  this.closeMaintenanceModal();
+  this.toastService.success('تمت إضافة سجل صيانة جديد', 3000);
+  // Reload data if needed
   }
 }

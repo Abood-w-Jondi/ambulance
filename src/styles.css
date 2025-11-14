@@ -3,3 +3,12 @@ ul{margin: 0;padding: 0;}
 a:hover{
     text-decoration: none;
 }
+.btn-primary-custom{
+    background-color: rgba(7, 173, 245, 0.838);
+    color: white;
+    border-radius: 10px;
+}
+.btn-primary-custom:hover{
+    background-color: rgba(7, 174, 245, 0.588);
+    color: white;
+}

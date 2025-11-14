@@ -1,0 +1,196 @@
+<div class="container-fluid p-4">
+  <!-- Header Actions -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <button class="btn btn-outline-secondary" (click)="goBack()">
+      <i class="fa-solid fa-arrow-right me-2"></i>
+      رجوع
+    </button>
+    <button class="btn btn-primary" (click)="openAddModal()">
+      <i class="fa-solid fa-plus me-2"></i>
+      إضافة نوع جديد
+    </button>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="mb-4">
+    <div class="input-group">
+      <span class="input-group-text bg-white">
+        <i class="fa-solid fa-search text-muted"></i>
+      </span>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="بحث عن نوع نقل..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Transportation Types List -->
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>اسم النوع</th>
+              <th>الوصف</th>
+              <th>تاريخ الإضافة</th>
+              <th>الحالة</th>
+              <th class="text-center">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let type of filteredTypes()">
+              <td class="fw-medium">{{ type.name }}</td>
+              <td class="text-muted">{{ type.description }}</td>
+              <td>{{ type.createdAt | date: 'dd/MM/yyyy' }}</td>
+              <td>
+                <span class="badge" [class.bg-success]="type.isActive" [class.bg-secondary]="!type.isActive">
+                  {{ type.isActive ? 'نشط' : 'غير نشط' }}
+                </span>
+              </td>
+              <td>
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-sm btn-outline-primary" (click)="openEditModal(type)" title="تعديل">
+                    <i class="fa-solid fa-edit"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm"
+                    [class.btn-outline-success]="!type.isActive"
+                    [class.btn-outline-warning]="type.isActive"
+                    (click)="toggleStatus(type)"
+                    [title]="type.isActive ? 'تعطيل' : 'تفعيل'">
+                    <i class="fa-solid" [class.fa-check]="!type.isActive" [class.fa-ban]="type.isActive"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="deleteType(type)" title="حذف">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filteredTypes().length === 0">
+              <td colspan="5" class="text-center text-muted py-4">
+                <i class="fa-solid fa-inbox fa-2x mb-2 d-block"></i>
+                لا توجد أنواع نقل
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal fade" [class.show]="isAddModalOpen()" [style.display]="isAddModalOpen() ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">إضافة نوع نقل جديد</h5>
+        <button type="button" class="btn-close" (click)="closeAddModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">اسم نوع النقل <span class="text-danger">*</span></label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="typeForm.name"
+              name="name"
+              placeholder="مثال: نقل طوارئ"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">الوصف <span class="text-danger">*</span></label>
+            <textarea
+              class="form-control"
+              [(ngModel)]="typeForm.description"
+              name="description"
+              rows="3"
+              placeholder="وصف نوع النقل..."
+            ></textarea>
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              [(ngModel)]="typeForm.isActive"
+              name="isActive"
+              id="addIsActive"
+            />
+            <label class="form-check-label" for="addIsActive">
+              نشط
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeAddModal()">إلغاء</button>
+        <button type="button" class="btn btn-primary" (click)="addType()">
+          <i class="fa-solid fa-plus me-2"></i>
+          إضافة
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="isAddModalOpen()" *ngIf="isAddModalOpen()"></div>
+
+<!-- Edit Modal -->
+<div class="modal fade" [class.show]="isEditModalOpen()" [style.display]="isEditModalOpen() ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">تعديل نوع النقل</h5>
+        <button type="button" class="btn-close" (click)="closeEditModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">اسم نوع النقل <span class="text-danger">*</span></label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="typeForm.name"
+              name="name"
+              placeholder="مثال: نقل طوارئ"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">الوصف <span class="text-danger">*</span></label>
+            <textarea
+              class="form-control"
+              [(ngModel)]="typeForm.description"
+              name="description"
+              rows="3"
+              placeholder="وصف نوع النقل..."
+            ></textarea>
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              [(ngModel)]="typeForm.isActive"
+              name="isActive"
+              id="editIsActive"
+            />
+            <label class="form-check-label" for="editIsActive">
+              نشط
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()">إلغاء</button>
+        <button type="button" class="btn btn-primary" (click)="updateType()">
+          <i class="fa-solid fa-save me-2"></i>
+          حفظ التغييرات
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="isEditModalOpen()" *ngIf="isEditModalOpen()"></div>

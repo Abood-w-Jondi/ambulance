@@ -1,5 +1,13 @@
 <div class="d-flex flex-column min-vh-100 bg-light">
 
+    <!-- Confirmation Modal -->
+    <app-confirmation-modal
+        [isOpen]="isDeleteVehicleModalOpen()"
+        [config]="confirmationModalConfig()"
+        (confirmed)="confirmDeleteVehicle()"
+        (cancelled)="closeDeleteConfirmation()">
+    </app-confirmation-modal>
+
     <!-- Add Vehicle Modal -->
     @if (isAddVehicleModalOpen()) {
     <div class="modal-backdrop fade show"></div>
@@ -177,20 +185,28 @@
                         }
                         <div class="col-12">
                             <p class="text-muted small mb-1">الحالة</p>
-                            <span class="badge rounded-pill fw-bold" [ngClass]="getStatusBadgeClass(vehicle.status)">
-                                <i class="fa-solid me-1" [ngClass]="getStatusIcon(vehicle.status)"></i>
-                                {{ vehicle.status }}
-                            </span>
+                            <app-status-badge
+                                [status]="vehicle.status"
+                                [type]="'vehicle'"
+                                [size]="'medium'">
+                            </app-status-badge>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
-                            (click)="closeViewVehicleModal()">إغلاق</button>
-                        <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold"
-                            (click)="openEditVehicleModal()">
-                            <i class="fa-solid fa-edit me-1"></i>
-                            تعديل
+                    <div class="d-flex justify-content-between gap-2 mt-4">
+                        <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold"
+                            (click)="showDeleteConfirmation(vehicle)">
+                            <i class="fa-solid fa-trash me-1"></i>
+                            حذف
                         </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
+                                (click)="closeViewVehicleModal()">إغلاق</button>
+                            <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold"
+                                (click)="openEditVehicleModal()">
+                                <i class="fa-solid fa-edit me-1"></i>
+                                تعديل
+                            </button>
+                        </div>
                     </div>
                     }
                 </div>
@@ -239,14 +255,14 @@
 
             <!-- Vehicle Cards -->
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                @for (vehicle of filteredVehicles(); track vehicle.id) {
+                @for (vehicle of getPaginatedAmbulances(); track vehicle.id) {
                 <div class="col">
                     <div class="card shadow-sm rounded-xl overflow-hidden h-100 cursor-pointer hover-lift"
                         (click)="viewVehicleDetails(vehicle)">
                         <div class="d-flex">
                             <div class="flex-shrink-0" style="width: 6px;"
                                 [ngStyle]="{'background-color': getStatusColor(vehicle.status)}"></div>
-                            
+
                             <div class="card-body p-4 flex-grow-1 text-end">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                     <div>
@@ -294,6 +310,15 @@
                 </div>
                 }
             </div>
+
+            <!-- Pagination -->
+            <app-pagination
+                [totalItems]="filteredVehicles().length"
+                [currentPage]="currentPage"
+                [itemsPerPage]="itemsPerPage"
+                (pageChange)="onPageChange($event)"
+                (itemsPerPageChange)="onItemsPerPageChange($event)">
+            </app-pagination>
         </div>
     </main>
 </div>

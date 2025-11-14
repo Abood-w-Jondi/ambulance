@@ -1,5 +1,13 @@
 <div class="d-flex flex-column min-vh-100 bg-light">
 
+    <!-- Confirmation Modal -->
+    <app-confirmation-modal
+        [isOpen]="isDeleteTripModalOpen()"
+        [config]="confirmationModalConfig()"
+        (confirmed)="confirmDeleteTrip()"
+        (cancelled)="closeDeleteConfirmation()">
+    </app-confirmation-modal>
+
     <!-- Add Trip Modal -->
     @if (isAddTripModalOpen()) {
     <div class="modal-backdrop fade show"></div>
@@ -404,9 +412,11 @@
                         </div>
                         <div class="col-12">
                             <p class="text-muted small mb-1">النقل</p>
-                            <span class="badge rounded-pill fw-bold" [ngClass]="getStatusBadgeClass(trip.transferStatus)">
-                                {{ trip.transferStatus }}
-                            </span>
+                            <app-status-badge
+                                [status]="trip.transferStatus"
+                                [type]="'transfer'"
+                                [size]="'medium'">
+                            </app-status-badge>
                         </div>
                         <div class="col-12">
                             <hr class="my-3">
@@ -429,14 +439,21 @@
                             <p class="fw-bold" dir="ltr">₪{{ trip.eqShare.toFixed(2) }}</p>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
-                            (click)="closeViewTripModal()">إغلاق</button>
-                        <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold"
-                            (click)="openEditTripModal()">
-                            <i class="fa-solid fa-edit me-1"></i>
-                            تعديل
+                    <div class="d-flex justify-content-between gap-2 mt-4">
+                        <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold"
+                            (click)="showDeleteConfirmation(trip)">
+                            <i class="fa-solid fa-trash me-1"></i>
+                            حذف
                         </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
+                                (click)="closeViewTripModal()">إغلاق</button>
+                            <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold"
+                                (click)="openEditTripModal()">
+                                <i class="fa-solid fa-edit me-1"></i>
+                                تعديل
+                            </button>
+                        </div>
                     </div>
                     }
                 </div>
@@ -662,7 +679,7 @@
                     </div>
                     
                     <div class="row row-cols-1 g-3">
-                        @for (trip of filteredTrips(); track trip.id) {
+                        @for (trip of getPaginatedTrips(); track trip.id) {
                         <div class="col">
                             <div class="card shadow-sm rounded-xl overflow-hidden cursor-pointer" dir="rtl">
                                 <div class="d-flex">
@@ -671,7 +688,7 @@
 
                                     <div class="card-body p-4 flex-grow-1 text-end">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <p class="h6 fw-bold m-0 text-dark clickable-field" 
+                                            <p class="h6 fw-bold m-0 text-dark clickable-field"
                                                 (click)="quickFilterByPatient(trip.patientName)"
                                                 title="انقر للبحث عن هذا المريض">
                                                 {{ trip.patientName }}
@@ -681,14 +698,14 @@
 
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <p class="text-muted small m-0">
-                                                السائق: 
-                                                <span class="clickable-field" 
+                                                السائق:
+                                                <span class="clickable-field"
                                                     (click)="quickFilterByDriver(trip.driver)"
                                                     title="انقر للتصفية حسب هذا السائق">
                                                     {{ trip.driver }}
                                                 </span>
                                             </p>
-                                            <p class="text-muted small m-0 clickable-field" 
+                                            <p class="text-muted small m-0 clickable-field"
                                                 (click)="quickFilterByDate(trip.day, trip.month, trip.year)"
                                                 title="انقر للتصفية حسب هذا التاريخ">
                                                 {{ getFormattedDate(trip.day, trip.month, trip.year) }}
@@ -696,8 +713,8 @@
                                         </div>
 
                                         <p class="text-muted small mb-2">
-                                            الضابط: 
-                                            <span class="clickable-field" 
+                                            الضابط:
+                                            <span class="clickable-field"
                                                 (click)="quickFilterByParamedic(trip.paramedic)"
                                                 title="انقر للتصفية حسب هذا الضابط">
                                                 {{ trip.paramedic }}
@@ -709,13 +726,13 @@
                                         </p>
 
                                         <div class="d-flex align-items-center gap-2 small fw-medium text-dark justify-content-end mb-3">
-                                            <span class="clickable-field" 
+                                            <span class="clickable-field"
                                                 (click)="quickFilterByLocation(trip.transferFrom, 'from')"
                                                 title="انقر للتصفية حسب موقع الانطلاق">
                                                 {{ trip.transferFrom }}
                                             </span>
                                             <i class="fa-solid fa-arrow-left"></i>
-                                            <span class="clickable-field" 
+                                            <span class="clickable-field"
                                                 (click)="quickFilterByLocation(trip.transferTo, 'to')"
                                                 title="انقر للتصفية حسب موقع الوصول">
                                                 {{ trip.transferTo }}
@@ -742,6 +759,20 @@
                         </div>
                         }
                     </div>
+
+                    <!-- Pagination -->
+                    @if (filteredTrips().length > 0) {
+                    <div class="mt-4">
+                        <app-pagination
+                            [currentPage]="currentPage"
+                            [totalItems]="filteredTrips().length"
+                            [itemsPerPage]="itemsPerPage"
+                            [maxVisiblePages]="5"
+                            (pageChange)="onPageChange($event)"
+                            (itemsPerPageChange)="onItemsPerPageChange($event)">
+                        </app-pagination>
+                    </div>
+                    }
                 </div>
             </div>
         </div>

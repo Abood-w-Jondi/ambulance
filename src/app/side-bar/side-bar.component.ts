@@ -19,7 +19,7 @@ export class SideBarComponent {
     private router: Router
   ) {
     this.header$ = this.globalVarsService.globalHeader$;
-    console.log(this.header$);
+    
   }
 
   sidebarOpen = false;
@@ -39,5 +39,11 @@ export class SideBarComponent {
 
   isActive(path: string): boolean {
     return this.router.isActive(`admin/${path}`, false);
+  }
+
+  logout() {
+    // TODO: Implement logout logic (clear auth tokens, session, etc.)
+    this.router.navigate(['/login']);
+    this.closeSidebar();
   }
 }

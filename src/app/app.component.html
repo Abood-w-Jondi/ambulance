@@ -4,6 +4,7 @@
 <div class="main-content" [ngClass]="{'with-sidebar': showSideBar}">
   <router-outlet></router-outlet>
 </div>
-<app-bottom-bar></app-bottom-bar>
+<app-bottom-bar *ngIf="!showSideBar"></app-bottom-bar>
 
+<app-toast></app-toast>
 </div>

@@ -3,25 +3,20 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { GlobalVarsService } from '../../global-vars.service';
+import { ToastService } from '../../shared/services/toast.service';
+import { ValidationService } from '../../shared/services/validation.service';
+import { PaginationComponent } from '../../shared/pagination/pagination.component';
+import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
+import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
+import { VEHICLE_STATUS } from '../../shared/constants/status.constants';
+import { Vehicle, VehicleStatus, VehicleFilterStatus, VehicleType, DriverReference } from '../../shared/models';
 
-// --- Data Structures ---
-interface Vehicle {
-    id: string;
-    vehicleId: string;
-    vehicleName: string;
-    type: string;
-    currentDriver: string | null;
-    notes: string;
-    status: VehicleStatus;
-}
-
-type VehicleStatus = 'متاحة' | 'في الخدمة' | 'صيانة';
-type FilterStatus = 'All' | VehicleStatus;
+type FilterStatus = VehicleFilterStatus;
 
 @Component({
   selector: 'app-fleet',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, ConfirmationModalComponent],
   templateUrl: './fleet.component.html',
   styleUrls: ['./fleet.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,13 +35,24 @@ export class FleetComponent implements OnInit {
     isAddVehicleModalOpen = signal(false);
     isViewVehicleModalOpen = signal(false);
     isEditVehicleModalOpen = signal(false);
+    isDeleteVehicleModalOpen = signal(false);
     selectedVehicle = signal<Vehicle | null>(null);
+    vehicleToDelete = signal<Vehicle | null>(null);
+
+    // Confirmation modal state
+    confirmationModalConfig = signal<ConfirmationModalConfig>({
+        type: 'delete',
+        title: '',
+        message: '',
+        confirmButtonText: '',
+        cancelButtonText: 'إلغاء'
+    });
     
     // Form values for new/edit vehicle
     vehicleForm = {
         vehicleId: '',
         vehicleName: '',
-        type: '',
+        type: '' as VehicleType | '',
         currentDriver: '',
         notes: '',
         status: 'متاحة' as VehicleStatus
@@ -55,8 +61,12 @@ export class FleetComponent implements OnInit {
     // Search for driver assignment
     driverSearchTerm = signal('');
 
+    // Pagination
+    currentPage = 1;
+    itemsPerPage = 10;
+
     vehicleStatuses: VehicleStatus[] = ['متاحة', 'في الخدمة', 'صيانة'];
-    vehicleTypes: string[] = ['Type I Truck', 'Type II Van', 'Type III Cutaway'];
+    vehicleTypes: VehicleType[] = ['Type I Truck', 'Type II Van', 'Type III Cutaway'];
     colors: string[] = ['White', 'Red', 'Yellow', 'Silver', 'Blue'];
 
     // Computed filtered drivers list
@@ -65,11 +75,13 @@ export class FleetComponent implements OnInit {
         return this.driversList.filter(d => d.name.toLowerCase().includes(term));
     });
 
-    driversList: { id: string; name: string }[] = [];
+    driversList: DriverReference[] = [];
 
     constructor(
         private globalVars: GlobalVarsService,
-        private route: ActivatedRoute
+        private route: ActivatedRoute,
+        private toastService: ToastService,
+        private validationService: ValidationService
     ) {
         this.globalVars.setGlobalHeader('أسطول المركبات');
         this.driversList = this.globalVars.driversList;
@@ -142,16 +154,31 @@ export class FleetComponent implements OnInit {
         return this.vehicles().filter(vehicle => {
             // Status Filter
             const statusMatch = status === 'All' || vehicle.status === status;
-            
+
             // Search Filter - now includes all vehicle properties
-            const searchMatch = search === '' || 
+            const searchMatch = search === '' ||
                 vehicle.vehicleId.toLowerCase().includes(search) ||
                 vehicle.vehicleName.toLowerCase().includes(search) ||
                 (vehicle.currentDriver && vehicle.currentDriver.toLowerCase().includes(search));
-            
+
             return statusMatch && searchMatch;
         });
     });
+
+    getPaginatedAmbulances() {
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        return this.filteredVehicles().slice(startIndex, endIndex);
+    }
+
+    onPageChange(page: number): void {
+        this.currentPage = page;
+    }
+
+    onItemsPerPageChange(itemsPerPage: number): void {
+        this.itemsPerPage = itemsPerPage;
+        this.currentPage = 1;
+    }
 
     // --- Component Methods ---
 
@@ -217,11 +244,24 @@ export class FleetComponent implements OnInit {
     }
 
     addVehicle(): void {
+        // Validate the vehicle form
+        const validation = this.validationService.validateVehicle({
+            vehicleId: this.vehicleForm.vehicleId,
+            vehicleName: this.vehicleForm.vehicleName,
+            type: this.vehicleForm.type,
+            status: this.vehicleForm.status
+        });
+
+        if (!validation.valid) {
+            this.toastService.error(validation.errors.join(', '));
+            return;
+        }
+
         const vehicle: Vehicle = {
             id: this.generateId(),
             vehicleId: this.vehicleForm.vehicleId,
             vehicleName: this.vehicleForm.vehicleName,
-            type: this.vehicleForm.type,
+            type: this.vehicleForm.type as VehicleType,
             currentDriver: this.vehicleForm.currentDriver || null,
             notes: this.vehicleForm.notes,
             status: this.vehicleForm.status
@@ -229,6 +269,7 @@ export class FleetComponent implements OnInit {
 
         this.vehicles.update(vehicles => [...vehicles, vehicle]);
         this.isAddVehicleModalOpen.set(false);
+        this.toastService.success('تم إضافة المركبة بنجاح');
     }
 
     openEditVehicleModal(): void {
@@ -251,11 +292,24 @@ export class FleetComponent implements OnInit {
     saveEditVehicle(): void {
         const vehicle = this.selectedVehicle();
         if (vehicle) {
+            // Validate the vehicle form
+            const validation = this.validationService.validateVehicle({
+                vehicleId: this.vehicleForm.vehicleId,
+                vehicleName: this.vehicleForm.vehicleName,
+                type: this.vehicleForm.type,
+                status: this.vehicleForm.status
+            });
+
+            if (!validation.valid) {
+                this.toastService.error(validation.errors.join(', '));
+                return;
+            }
+
             const updatedVehicle: Vehicle = {
                 ...vehicle,
                 vehicleId: this.vehicleForm.vehicleId,
                 vehicleName: this.vehicleForm.vehicleName,
-                type: this.vehicleForm.type,
+                type: this.vehicleForm.type as VehicleType,
                 currentDriver: this.vehicleForm.currentDriver || null,
                 notes: this.vehicleForm.notes,
                 status: this.vehicleForm.status
@@ -265,6 +319,7 @@ export class FleetComponent implements OnInit {
             this.selectedVehicle.set(updatedVehicle);
             this.isEditVehicleModalOpen.set(false);
             this.isViewVehicleModalOpen.set(true);
+            this.toastService.success('تم تحديث المركبة بنجاح');
         }
     }
 
@@ -280,5 +335,35 @@ export class FleetComponent implements OnInit {
 
     closeEditVehicleModal(): void {
         this.isEditVehicleModalOpen.set(false);
+    }
+
+    showDeleteConfirmation(vehicle: Vehicle): void {
+        this.vehicleToDelete.set(vehicle);
+        this.confirmationModalConfig.set({
+            type: 'delete',
+            title: 'تأكيد حذف المركبة',
+            message: `هل أنت متأكد من أنك تريد حذف المركبة ${vehicle.vehicleName} (${vehicle.vehicleId})؟<br>لا يمكن التراجع عن هذا الإجراء.`,
+            confirmButtonText: 'حذف',
+            cancelButtonText: 'إلغاء',
+            highlightedText: vehicle.vehicleName
+        });
+        this.isDeleteVehicleModalOpen.set(true);
+    }
+
+    closeDeleteConfirmation(): void {
+        this.vehicleToDelete.set(null);
+        this.isDeleteVehicleModalOpen.set(false);
+    }
+
+    confirmDeleteVehicle(): void {
+        const vehicle = this.vehicleToDelete();
+        if (vehicle) {
+            this.vehicles.update(vehicles => vehicles.filter(v => v.id !== vehicle.id));
+            this.toastService.success(`تم حذف المركبة: ${vehicle.vehicleName}`);
+            this.closeDeleteConfirmation();
+            if (this.selectedVehicle()?.id === vehicle.id) {
+                this.closeViewVehicleModal();
+            }
+        }
     }
 }

@@ -248,10 +248,11 @@
                                     <p class="text-muted small mb-1">المركبة</p>
                                     <h5 class="fw-bold">{{ record.vehicleId }}</h5>
                                 </div>
-                                <span class="badge rounded-pill fw-bold" [ngClass]="getStatusBadgeClass(record.status)">
-                                    <i class="fa-solid me-1" [ngClass]="getStatusIcon(record.status)"></i>
-                                    {{ record.status }}
-                                </span>
+                                <app-status-badge
+                                    [status]="record.status"
+                                    [type]="'maintenance'"
+                                    size="medium">
+                                </app-status-badge>
                             </div>
                         </div>
                         <div class="col-6">
@@ -417,7 +418,7 @@
 
             <!-- Maintenance Records List -->
             <div class="row row-cols-1 g-4">
-                @for (record of filteredRecords(); track record.id) {
+                @for (record of getPaginatedMaintenanceRecords(); track record.id) {
                 <div class="col">
                     <div class="card shadow-sm rounded-xl overflow-hidden cursor-pointer hover-lift"
                         (click)="viewRecordDetails(record)">
@@ -427,10 +428,11 @@
                                     <h5 class="fw-bold mb-1">{{ record.vehicleId }}</h5>
                                     <p class="text-muted small mb-0">{{ formatDate(record.date) }}</p>
                                 </div>
-                                <span class="badge rounded-pill fw-bold" [ngClass]="getStatusBadgeClass(record.status)">
-                                    <i class="fa-solid me-1" [ngClass]="getStatusIcon(record.status)"></i>
-                                    {{ record.status }}
-                                </span>
+                                <app-status-badge
+                                    [status]="record.status"
+                                    [type]="'maintenance'"
+                                    size="medium">
+                                </app-status-badge>
                             </div>
                         </div>
                         <div class="card-body p-4">
@@ -453,7 +455,7 @@
                                 <div class="col-12">
                                     <p class="text-muted small mb-1">عداد المسافات</p>
                                     <p class="fw-semibold mb-0">
-                                        قبل: {{ record.odometerBefore.toLocaleString() }} ميل / 
+                                        قبل: {{ record.odometerBefore.toLocaleString() }} ميل /
                                         بعد: {{ record.odometerAfter.toLocaleString() }} ميل
                                     </p>
                                 </div>
@@ -473,6 +475,19 @@
                 </div>
                 }
             </div>
+
+            <!-- Pagination -->
+            @if (filteredRecords().length > 0) {
+            <div class="mt-4">
+                <app-pagination
+                    [currentPage]="currentPage"
+                    [totalItems]="filteredRecords().length"
+                    [itemsPerPage]="itemsPerPage"
+                    (pageChange)="onPageChange($event)"
+                    (itemsPerPageChange)="onItemsPerPageChange($event)">
+                </app-pagination>
+            </div>
+            }
         </div>
     </main>
 

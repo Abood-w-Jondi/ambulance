@@ -1,35 +1,12 @@
 <div class="d-flex flex-column min-vh-100 bg-light">
 
-    <!-- Delete Confirmation Modal -->
-    @if (isDeleteModalOpen()) {
-    <div class="modal-backdrop fade show"></div>
-    <div class="modal fade show d-block" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-xl shadow-lg border-0">
-                <div class="modal-header bg-danger text-white rounded-top-xl border-0 justify-content-between">
-                    <h5 class="modal-title fw-bold">تأكيد حذف السائق</h5>
-                    <button type="button" style="background-color: transparent; border: none; color: white;" (click)="closeDeleteConfirmation()">
-                        <i class="fa-solid fa-xmark" style="font-size: 20px;"></i>
-                    </button>
-                </div>
-                <div class="modal-body text-end p-4">
-                    <p class="mb-4">
-                        هل أنت متأكد من أنك تريد حذف حساب السائق
-                        <span class="fw-bold text-danger">{{ driverToDelete()?.arabicName }}</span>؟
-                        <br>
-                        لا يمكن التراجع عن هذا الإجراء.
-                    </p>
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
-                            (click)="closeDeleteConfirmation()">إلغاء</button>
-                        <button type="button" class="btn btn-danger rounded-pill px-4"
-                            (click)="confirmDeleteDriver()">حذف</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    }
+    <!-- Confirmation Modal -->
+    <app-confirmation-modal
+        [isOpen]="isDeleteModalOpen()"
+        [config]="confirmationModalConfig()"
+        (confirmed)="confirmDeleteDriver()"
+        (cancelled)="closeDeleteConfirmation()">
+    </app-confirmation-modal>
 
     <!-- Add Driver Modal -->
     @if (isAddModalOpen()) {
@@ -205,8 +182,8 @@
                             </div>
 
                             <div class="col-12">
-                                <div class="form-check form-switch d-flex align-items-center justify-content-end">
-                                    <label class="form-check-label me-3 fw-medium" for="editIsActive">
+                                <div class="form-check form-switch d-flex align-items-center justify-content-start gap-2">
+                                    <label class="form-check-label fw-medium" for="editIsActive">
                                         الحساب نشط (يمكن تسجيل الدخول)
                                     </label>
                                     <input class="form-check-input" type="checkbox" role="switch" id="editIsActive"
@@ -246,7 +223,7 @@
                                 <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold"
                                     [disabled]="!isEditFormValid()">
                                     <i class="fa-solid fa-floppy-disk me-1"></i>
-                                    حفظ التغييرات
+                             حفظ
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
                                     (click)="closeEditModal()">إلغاء</button>
@@ -254,7 +231,7 @@
                             <button type="button" class="btn btn-danger rounded-pill px-4"
                                 (click)="showDeleteConfirmation(driverToEdit()!)">
                                 <i class="fa-solid fa-trash me-1"></i>
-                                حذف السائق
+حذف
                             </button>
                         </div>
                     </form>
@@ -341,19 +318,28 @@
                     </div>
                     
                     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-                        @for (driver of filteredDrivers(); track driver.id) {
+                        @for (driver of getPaginatedDrivers(); track driver.id) {
                         <div class="col">
                             <div class="card shadow-sm rounded-xl h-100 position-relative"
                                 [ngClass]="{'opacity-75': !driver.isActive}">
 
-                                <!-- Edit Button (Pen Icon) -->
-                                <button
-                                    class="btn btn-sm btn-outline-primary position-absolute top-0 start-0 m-3 rounded-circle"
-                                    style="width: 32px; height: 32px; padding: 0;"
-                                    (click)="openEditModal(driver)"
-                                    title="تعديل معلومات السائق">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
+                                <!-- Action Buttons -->
+                                <div class="position-absolute top-0 start-0 m-3 d-flex gap-2">
+                                    <button
+                                        class="btn btn-sm btn-outline-primary rounded-circle"
+                                        style="width: 32px; height: 32px; padding: 0;"
+                                        (click)="openEditModal(driver)"
+                                        title="تعديل معلومات السائق">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button
+                                        class="btn btn-sm btn-outline-success rounded-circle"
+                                        style="width: 32px; height: 32px; padding: 0;"
+                                        (click)="viewUserProfile(driver)"
+                                        title="عرض/تعديل الملف الشخصي">
+                                        <i class="fa-solid fa-user"></i>
+                                    </button>
+                                </div>
 
                                 <!-- Deactivated Badge -->
                                 @if (!driver.isActive) {
@@ -372,20 +358,14 @@
                                         <div class="flex-grow-1">
                                             <p class="h6 fw-bold m-0 text-dark">{{ driver.arabicName }}</p>
                                             <div class="d-flex align-items-center gap-2 mt-1">
-                                                <span class="driver-status-dot"
-                                                    [ngStyle]="{'background-color': driver.statusColor}"></span>
-                                                <p class="small fw-medium m-0"
-                                                    [ngStyle]="{'color': driver.statusColor}">{{ driver.arabicStatus }}
-                                                </p>
+                                                <app-status-badge
+                                                    [status]="driver.arabicStatus"
+                                                    [type]="'driver'"
+                                                    [size]="'small'">
+                                                </app-status-badge>
                                             </div>
                                             @if (driver.email || driver.username) {
                                             <p class="small text-muted m-0 mt-1">
-                                                @if (driver.email) {
-                                                <i class="fa-solid fa-envelope me-1"></i>{{ driver.email }}
-                                                }
-                                                @if (driver.username && driver.email) {
-                                                <br>
-                                                }
                                                 @if (driver.username) {
                                                 <i class="fa-solid fa-user me-1"></i>{{ driver.username }}
                                                 }
@@ -462,6 +442,20 @@
                         </div>
                         }
                     </div>
+
+                    <!-- Pagination -->
+                    @if (filteredDrivers().length > 0) {
+                    <div class="mt-4">
+                        <app-pagination
+                            [currentPage]="currentPage"
+                            [totalItems]="filteredDrivers().length"
+                            [itemsPerPage]="itemsPerPage"
+                            [maxVisiblePages]="5"
+                            (pageChange)="onPageChange($event)"
+                            (itemsPerPageChange)="onItemsPerPageChange($event)">
+                        </app-pagination>
+                    </div>
+                    }
                 </div>
 
             </div>
