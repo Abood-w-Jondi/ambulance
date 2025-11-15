@@ -1,9 +1,10 @@
-import { Component, signal, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlobalVarsService } from '../../global-vars.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { ValidationService } from '../../shared/services/validation.service';
+import { TripService } from '../../shared/services/trip.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
@@ -18,7 +19,7 @@ import { Trip, TransferStatus, FilterStatus, DriverReference, ParamedicReference
     styleUrl: './trips.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TripsComponent {
+export class TripsComponent implements OnInit {
     // --- Filter Panel Toggle ---
     isFilterPanelVisible = signal(false);
 
@@ -126,7 +127,12 @@ export class TripsComponent {
         return this.paramedicsList.filter(p => p.name.toLowerCase().includes(term));
     });
 
-    constructor(private globalVars: GlobalVarsService, private toastService: ToastService, private validationService: ValidationService) {
+    constructor(
+        private globalVars: GlobalVarsService,
+        private toastService: ToastService,
+        private validationService: ValidationService,
+        private tripService: TripService
+    ) {
         this.globalVars.setGlobalHeader('الرحلات والنقليات');
         this.driversList = this.globalVars.driversList;
         this.paramedicsList = [
@@ -136,15 +142,16 @@ export class TripsComponent {
         ];
     }
 
+    ngOnInit(): void {
+        this.loadData();
+    }
+
     // Pagination
     currentPage = 1;
     itemsPerPage = 10;
+    totalRecords = 0;
+    isLoading = signal(false);
     
-    // Helper to generate IDs
-    private generateId(): string {
-        return Date.now().toString() + Math.random().toString(36).substring(2, 9);
-    }
-
     // Calculate money distribution
     private calculateShares(totalAmount: number, paramedicShare: number) {
         const remaining = totalAmount - paramedicShare;
@@ -157,115 +164,61 @@ export class TripsComponent {
     private getDateString(day: number, month: number, year: number): string {
         return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     }
-    
-    // Dummy Data
-    trips = signal<Trip[]>([
-        {
-            id: this.generateId(),
-            day: 26,
-            month: 10,
-            year: 2023,
-            driver: 'جين سميث',
-            paramedic: 'ضابط أحمد',
-            transferFrom: 'مستشفى سانت ماري',
-            transferTo: 'دار رعاية أوكوود',
-            start: 100,
-            end: 150,
-            diesel: 25.5,
-            patientName: 'إيزابيلا رودريغز',
-            patientAge: 65,
-            ymdDay: 26,
-            ymdMonth: 10,
-            ymdYear: 2023,
-            transferStatus: 'تم النقل',
-            diagnosis: 'كسر في الورك',
-            totalAmount: 250.00,
-            paramedicShare: 50,
-            driverShare: 66.67,
-            eqShare: 133.33
-        },
-        {
-            id: this.generateId(),
-            day: 26,
-            month: 10,
-            year: 2023,
-            driver: 'روبرت براون',
-            paramedic: 'ضابط محمد',
-            transferFrom: 'عيادة المدينة العامة',
-            transferTo: 'مقر إقامة المريض',
-            start: 50,
-            end: 85,
-            diesel: 15.0,
-            patientName: 'مايكل تشين',
-            patientAge: 42,
-            ymdDay: 26,
-            ymdMonth: 10,
-            ymdYear: 2023,
-            transferStatus: 'ميداني',
-            diagnosis: 'ألم في الصدر',
-            totalAmount: 175.50,
-            paramedicShare: 40,
-            driverShare: 45.17,
-            eqShare: 90.33
+
+    trips = signal<Trip[]>([]);
+
+    loadData(): void {
+        this.isLoading.set(true);
+
+        // Build query params
+        const params: any = {
+            page: this.currentPage,
+            limit: this.itemsPerPage,
+            status: this.filterStatus() !== 'All' ? this.filterStatus() : undefined
+        };
+
+        // Add date filters if set
+        const dateFilterData = this.dateFilter();
+        if (dateFilterData.type === 'single' && dateFilterData.single) {
+            params.startDate = dateFilterData.single.toISOString().split('T')[0];
+            params.endDate = dateFilterData.single.toISOString().split('T')[0];
+        } else if (dateFilterData.type === 'range' && dateFilterData.from && dateFilterData.to) {
+            params.startDate = dateFilterData.from.toISOString().split('T')[0];
+            params.endDate = dateFilterData.to.toISOString().split('T')[0];
         }
-    ]);
+
+        this.tripService.getTrips(params).subscribe({
+            next: (response) => {
+                this.trips.set(response.data);
+                this.totalRecords = response.total;
+                this.isLoading.set(false);
+            },
+            error: (error) => {
+                console.error('Error loading trips:', error);
+                this.toastService.error('فشل تحميل بيانات الرحلات');
+                this.isLoading.set(false);
+            }
+        });
+    }
 
     // --- Computed Property for Filtering ---
     filteredTrips = computed(() => {
-        const status = this.filterStatus();
-        const dateFilterData = this.dateFilter();
-        const driverName = this.driverNameFilter().toLowerCase().trim();
-        const paramedicName = this.paramedicNameFilter().toLowerCase().trim();
-        const patientName = this.patientNameFilter().toLowerCase().trim();
-        const locationFrom = this.locationFromFilter().toLowerCase().trim();
-        const locationTo = this.locationToFilter().toLowerCase().trim();
-
-        return this.trips().filter(trip => {
-            // Status Filter
-            const statusMatch = status === 'All' || trip.transferStatus === status;
-
-            // Date Filter
-            let dateMatch = true;
-            if (dateFilterData.type === 'single' && dateFilterData.single) {
-                const tripDate = new Date(trip.year, trip.month - 1, trip.day);
-                dateMatch = tripDate.getTime() === dateFilterData.single.getTime();
-            } else if (dateFilterData.type === 'range' && dateFilterData.from && dateFilterData.to) {
-                const tripDate = new Date(trip.year, trip.month - 1, trip.day);
-                dateMatch = tripDate >= dateFilterData.from && tripDate <= dateFilterData.to;
-            }
-
-            // Driver Filter
-            const driverMatch = driverName === '' || trip.driver.toLowerCase().includes(driverName);
-
-            // Paramedic Filter
-            const paramedicMatch = paramedicName === '' || trip.paramedic.toLowerCase().includes(paramedicName);
-
-            // Patient Filter
-            const patientMatch = patientName === '' || trip.patientName.toLowerCase().includes(patientName);
-
-            // Location From Filter
-            const locationFromMatch = locationFrom === '' || trip.transferFrom.toLowerCase().includes(locationFrom);
-
-            // Location To Filter
-            const locationToMatch = locationTo === '' || trip.transferTo.toLowerCase().includes(locationTo);
-
-            return statusMatch && dateMatch && driverMatch && paramedicMatch && patientMatch && locationFromMatch && locationToMatch;
-        });
+        return this.trips();
     });
 
     getPaginatedTrips(): Trip[] {
-        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-        const endIndex = startIndex + this.itemsPerPage;
-        return this.filteredTrips().slice(startIndex, endIndex);
+        return this.trips();
     }
 
     onPageChange(page: number): void {
         this.currentPage = page;
+        this.loadData();
     }
 
     onItemsPerPageChange(itemsPerPage: number): void {
         this.itemsPerPage = itemsPerPage;
         this.currentPage = 1;
+        this.loadData();
     }
 
     // --- Component Methods ---
@@ -354,12 +307,12 @@ export class TripsComponent {
 
     applyFilters(): void {
         this.filterStatus.set(this.selectedStatus);
-        
+
         // Apply date filter
         if (this.dateFilterType === 'single' && this.dateFilterDay && this.dateFilterMonth && this.dateFilterYear) {
             const singleDate = new Date(this.dateFilterYear, this.dateFilterMonth - 1, this.dateFilterDay);
             this.dateFilter.set({ type: 'single', single: singleDate });
-        } else if (this.dateFilterType === 'range' && 
+        } else if (this.dateFilterType === 'range' &&
                    this.dateFilterDayFrom && this.dateFilterMonthFrom && this.dateFilterYearFrom &&
                    this.dateFilterDayTo && this.dateFilterMonthTo && this.dateFilterYearTo) {
             const fromDate = new Date(this.dateFilterYearFrom, this.dateFilterMonthFrom - 1, this.dateFilterDayFrom);
@@ -368,15 +321,15 @@ export class TripsComponent {
         } else {
             this.dateFilter.set({ type: 'single' });
         }
-        
+
         this.driverNameFilter.set(this.driverFilterValue);
         this.paramedicNameFilter.set(this.paramedicFilterValue);
         this.patientNameFilter.set(this.patientFilterValue);
         this.locationFromFilter.set(this.locationFromFilterValue);
         this.locationToFilter.set(this.locationToFilterValue);
-        
-        // Hide filter panel after applying
-        //this.isFilterPanelVisible.set(false);
+
+        this.currentPage = 1;
+        this.loadData();
     }
     
     resetFilters(): void {
@@ -396,7 +349,7 @@ export class TripsComponent {
         this.locationFromFilterValue = '';
         this.locationToFilterValue = '';
         this.selectedStatus = 'All';
-        
+
         this.filterStatus.set('All');
         this.dateFilter.set({ type: 'single' });
         this.driverNameFilter.set('');
@@ -404,11 +357,15 @@ export class TripsComponent {
         this.patientNameFilter.set('');
         this.locationFromFilter.set('');
         this.locationToFilter.set('');
+        this.currentPage = 1;
+        this.loadData();
     }
 
     selectStatus(status: FilterStatus): void {
         this.selectedStatus = status;
         this.filterStatus.set(status);
+        this.currentPage = 1;
+        this.loadData();
     }
 
     getStatusClass(status: FilterStatus): string {
@@ -445,8 +402,7 @@ export class TripsComponent {
     addTrip(): void {
         const shares = this.calculateShares(this.tripForm.totalAmount, this.tripForm.paramedicShare);
 
-        const trip: Trip = {
-            id: this.generateId(),
+        this.tripService.createTrip({
             day: this.tripForm.day,
             month: this.tripForm.month,
             year: this.tripForm.year,
@@ -466,11 +422,17 @@ export class TripsComponent {
             diagnosis: this.tripForm.diagnosis,
             totalAmount: this.tripForm.totalAmount,
             ...shares
-        };
-
-        this.trips.update(trips => [...trips, trip]);
-        this.isAddTripModalOpen.set(false);
-        this.toastService.success('تمت إضافة الرحلة بنجاح');
+        }).subscribe({
+            next: () => {
+                this.isAddTripModalOpen.set(false);
+                this.toastService.success('تمت إضافة الرحلة بنجاح');
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error creating trip:', error);
+                this.toastService.error('فشلت عملية إضافة الرحلة');
+            }
+        });
     }
 
     openEditTripModal(): void {
@@ -509,8 +471,7 @@ export class TripsComponent {
         if (trip) {
             const shares = this.calculateShares(this.tripForm.totalAmount, this.tripForm.paramedicShare);
 
-            const updatedTrip: Trip = {
-                ...trip,
+            this.tripService.updateTrip(trip.id, {
                 day: this.tripForm.day,
                 month: this.tripForm.month,
                 year: this.tripForm.year,
@@ -530,13 +491,19 @@ export class TripsComponent {
                 diagnosis: this.tripForm.diagnosis,
                 totalAmount: this.tripForm.totalAmount,
                 ...shares
-            };
-
-            this.trips.update(trips => trips.map(t => t.id === trip.id ? updatedTrip : t));
-            this.selectedTrip.set(updatedTrip);
-            this.isEditTripModalOpen.set(false);
-            this.isViewTripModalOpen.set(true);
-            this.toastService.success('تم تحديث الرحلة بنجاح');
+            }).subscribe({
+                next: (updatedTrip) => {
+                    this.selectedTrip.set(updatedTrip);
+                    this.isEditTripModalOpen.set(false);
+                    this.isViewTripModalOpen.set(true);
+                    this.toastService.success('تم تحديث الرحلة بنجاح');
+                    this.loadData();
+                },
+                error: (error) => {
+                    console.error('Error updating trip:', error);
+                    this.toastService.error('فشلت عملية تحديث الرحلة');
+                }
+            });
         }
     }
 
@@ -575,13 +542,20 @@ export class TripsComponent {
     confirmDeleteTrip(): void {
         const trip = this.tripToDelete();
         if (trip) {
-            this.trips.update(trips => trips.filter(t => t.id !== trip.id));
-            this.toastService.success(`تم حذف رحلة المريض: ${trip.patientName}`);
-            this.closeDeleteConfirmation();
-            // Close view modal if it's open
-            if (this.selectedTrip()?.id === trip.id) {
-                this.closeViewTripModal();
-            }
+            this.tripService.deleteTrip(trip.id).subscribe({
+                next: () => {
+                    this.toastService.success(`تم حذف رحلة المريض: ${trip.patientName}`);
+                    this.closeDeleteConfirmation();
+                    if (this.selectedTrip()?.id === trip.id) {
+                        this.closeViewTripModal();
+                    }
+                    this.loadData();
+                },
+                error: (error) => {
+                    console.error('Error deleting trip:', error);
+                    this.toastService.error('فشلت عملية حذف الرحلة');
+                }
+            });
         }
     }
 

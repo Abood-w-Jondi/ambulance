@@ -5,6 +5,7 @@ import { GlobalVarsService } from '../../global-vars.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastService } from '../../shared/services/toast.service';
 import { ValidationService } from '../../shared/services/validation.service';
+import { ParamedicService } from '../../shared/services/paramedic.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
@@ -23,13 +24,16 @@ export class ParamedicsListComponent implements OnInit {
     // Pagination
     currentPage = 1;
     itemsPerPage = 10;
+    totalRecords = 0;
+    isLoading = signal(false);
 
     constructor(
         private globalVarsService: GlobalVarsService,
         private route: ActivatedRoute,
         private router: Router,
         private toastService: ToastService,
-        private validationService: ValidationService
+        private validationService: ValidationService,
+        private paramedicService: ParamedicService
     ) {
         this.globalVarsService.setGlobalHeader('المسعفون');
     }
@@ -109,116 +113,49 @@ export class ParamedicsListComponent implements OnInit {
 
     reductionAmounts: { [key: string]: number } = {};
 
-    private generateId(): string {
-        return Date.now().toString() + Math.random().toString(36).substring(2, 9);
-    }
-
-    paramedics = signal<Paramedic[]>([
-        {
-            id: this.generateId(),
-            name: 'Ahmad Hassan',
-            arabicName: 'أحمد حسن',
-            username: 'ahassan',
-            email: 'ahmad.hassan@example.com',
-            arabicStatus: 'متاح',
-            statusColor: '#10B981',
-            tripsToday: 6,
-            amountOwed: 180.50,
-            isAccountCleared: false,
-            isActive: true,
-            imageUrl: 'https://placehold.co/56x56/10B981/ffffff?text=AH',
-            imageAlt: 'صورة ملف تعريف أحمد حسن',
-        },
-        {
-            id: this.generateId(),
-            name: 'Sarah Mohammed',
-            arabicName: 'سارة محمد',
-            username: 'smohammed',
-            email: '',
-            arabicStatus: 'في رحلة',
-            statusColor: '#3B82F6',
-            tripsToday: 4,
-            amountOwed: 120.00,
-            isAccountCleared: false,
-            isActive: true,
-            imageUrl: 'https://placehold.co/56x56/3B82F6/ffffff?text=SM',
-            imageAlt: 'صورة ملف تعريف سارة محمد',
-        },
-        {
-            id: this.generateId(),
-            name: 'Fatima Ali',
-            arabicName: 'فاطمة علي',
-            username: '',
-            email: 'fatima.ali@example.com',
-            arabicStatus: 'متاح',
-            statusColor: '#10B981',
-            tripsToday: 9,
-            amountOwed: 275.25,
-            isAccountCleared: false,
-            isActive: true,
-            imageUrl: 'https://placehold.co/56x56/10B981/ffffff?text=FA',
-            imageAlt: 'صورة ملف تعريف فاطمة علي',
-        },
-        {
-            id: this.generateId(),
-            name: 'Omar Khalil',
-            arabicName: 'عمر خليل',
-            username: 'okhalil',
-            email: 'omar.k@example.com',
-            arabicStatus: 'في إجازة',
-            statusColor: '#F59E0B',
-            tripsToday: 0,
-            amountOwed: 0.00,
-            isAccountCleared: true,
-            isActive: false,
-            imageUrl: 'https://placehold.co/56x56/F59E0B/ffffff?text=OK',
-            imageAlt: 'صورة ملف تعريف عمر خليل',
-        },
-    ]);
+    paramedics = signal<Paramedic[]>([]);
 
     filteredParamedics = computed(() => {
-        let paramedicsList = this.paramedics();
-        const term = this.searchTerm().toLowerCase().trim();
-        const status = this.filterStatus();
-        const min = this.minOwed();
-        const max = this.maxOwed();
-
-        if (term) {
-            paramedicsList = paramedicsList.filter(p =>
-                p.arabicName.toLowerCase().includes(term) ||
-                p.name.toLowerCase().includes(term) ||
-                (p.email && p.email.toLowerCase().includes(term)) ||
-                (p.username && p.username.toLowerCase().includes(term))
-            );
-        }
-
-        if (status !== 'all') {
-            paramedicsList = paramedicsList.filter(p => p.arabicStatus === status);
-        }
-
-        if (min !== null && !isNaN(min)) {
-            paramedicsList = paramedicsList.filter(p => p.amountOwed >= min!);
-        }
-        if (max !== null && !isNaN(max)) {
-            paramedicsList = paramedicsList.filter(p => p.amountOwed <= max!);
-        }
-
-        return paramedicsList;
+        return this.paramedics();
     });
 
     getPaginatedParamedics(): Paramedic[] {
-        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-        const endIndex = startIndex + this.itemsPerPage;
-        return this.filteredParamedics().slice(startIndex, endIndex);
+        return this.paramedics();
     }
 
     onPageChange(page: number): void {
         this.currentPage = page;
+        this.loadData();
     }
 
     onItemsPerPageChange(itemsPerPage: number): void {
         this.itemsPerPage = itemsPerPage;
         this.currentPage = 1;
+        this.loadData();
+    }
+
+    loadData(): void {
+        this.isLoading.set(true);
+
+        this.paramedicService.getParamedics({
+            page: this.currentPage,
+            limit: this.itemsPerPage,
+            search: this.searchTerm() || undefined,
+            status: this.filterStatus() !== 'all' ? this.filterStatus() as any : undefined,
+            minOwed: this.minOwed() || undefined,
+            maxOwed: this.maxOwed() || undefined
+        }).subscribe({
+            next: (response) => {
+                this.paramedics.set(response.data);
+                this.totalRecords = response.total;
+                this.isLoading.set(false);
+            },
+            error: (error) => {
+                console.error('Error loading paramedics:', error);
+                this.toastService.error('فشل تحميل بيانات المسعفين');
+                this.isLoading.set(false);
+            }
+        });
     }
 
     addNewParamedic() {
@@ -231,26 +168,26 @@ export class ParamedicsListComponent implements OnInit {
             return;
         }
 
-        const newParamedic: Paramedic = {
-            id: this.generateId(),
+        this.paramedicService.createParamedic({
             arabicName: this.newParamedic.arabicName,
             name: this.newParamedic.name,
             username: this.newParamedic.username || undefined,
             email: this.newParamedic.email || undefined,
-            arabicStatus: 'غير متصل',
-            statusColor: '#6B7280',
-            tripsToday: this.newParamedic.tripsToday,
-            amountOwed: this.newParamedic.amountOwed,
-            isAccountCleared: this.newParamedic.amountOwed === 0,
-            isActive: true,
-            imageUrl: `https://placehold.co/56x56/9CA3AF/ffffff?text=${this.newParamedic.name.charAt(0).toUpperCase()}`,
-            imageAlt: `صورة ملف تعريف ${this.newParamedic.arabicName}`,
-        };
-
-        this.paramedics.update(list => [...list, newParamedic]);
-        this.toastService.success(`تمت إضافة مسعف جديد: ${newParamedic.arabicName} (${newParamedic.name})`, 3000);
-        this.isAddModalOpen.set(false);
-        this.newParamedic = { arabicName: '', name: '', username: '', email: '', password: '', amountOwed: 0, tripsToday: 0 };
+            password: this.newParamedic.password,
+            amountOwed: this.newParamedic.amountOwed || 0,
+            tripsToday: this.newParamedic.tripsToday || 0
+        } as any).subscribe({
+            next: (paramedic) => {
+                this.toastService.success(`تمت إضافة مسعف جديد: ${paramedic.arabicName} (${paramedic.name})`, 3000);
+                this.isAddModalOpen.set(false);
+                this.newParamedic = { arabicName: '', name: '', username: '', email: '', password: '', amountOwed: 0, tripsToday: 0 };
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error creating paramedic:', error);
+                this.toastService.error('فشلت عملية إضافة المسعف');
+            }
+        });
     }
 
     openEditModal(paramedic: Paramedic) {
@@ -298,40 +235,35 @@ export class ParamedicsListComponent implements OnInit {
             return;
         }
 
-        let statusColor = '#6B7280';
-        if (this.editParamedic.arabicStatus === 'متاح') {
-            statusColor = '#10B981';
-        } else if (this.editParamedic.arabicStatus === 'في رحلة') {
-            statusColor = '#3B82F6';
-        } else if (this.editParamedic.arabicStatus === 'في إجازة') {
-            statusColor = '#F59E0B';
-        }
-
-        this.paramedics.update(list => list.map(p => {
-            if (p.id === paramedic.id) {
-                return {
-                    ...p,
-                    arabicName: this.editParamedic.arabicName,
-                    name: this.editParamedic.name,
-                    username: this.editParamedic.username || undefined,
-                    email: this.editParamedic.email || undefined,
-                    arabicStatus: this.editParamedic.arabicStatus,
-                    statusColor: statusColor,
-                    tripsToday: this.editParamedic.tripsToday,
-                    amountOwed: this.editParamedic.amountOwed,
-                    isAccountCleared: this.editParamedic.amountOwed === 0,
-                    isActive: this.editParamedic.isActive
-                };
-            }
-            return p;
-        }));
+        const updateData: any = {
+            arabicName: this.editParamedic.arabicName,
+            name: this.editParamedic.name,
+            username: this.editParamedic.username || undefined,
+            email: this.editParamedic.email || undefined,
+            arabicStatus: this.editParamedic.arabicStatus,
+            tripsToday: this.editParamedic.tripsToday,
+            amountOwed: this.editParamedic.amountOwed,
+            isActive: this.editParamedic.isActive
+        };
 
         if (this.editParamedic.newPassword && this.editParamedic.newPassword.trim() !== '') {
-            this.toastService.info(`تم تغيير كلمة مرور المسعف: ${this.editParamedic.arabicName}`, 3000);
+            updateData.password = this.editParamedic.newPassword;
         }
 
-        this.toastService.info(`تم تعديل بيانات المسعف: ${this.editParamedic.arabicName} (${this.editParamedic.name})`, 3000);
-        this.closeEditModal();
+        this.paramedicService.updateParamedic(paramedic.id, updateData).subscribe({
+            next: () => {
+                this.toastService.info(`تم تعديل بيانات المسعف: ${this.editParamedic.arabicName} (${this.editParamedic.name})`, 3000);
+                if (this.editParamedic.newPassword && this.editParamedic.newPassword.trim() !== '') {
+                    this.toastService.info(`تم تغيير كلمة مرور المسعف: ${this.editParamedic.arabicName}`, 3000);
+                }
+                this.closeEditModal();
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error updating paramedic:', error);
+                this.toastService.error('فشلت عملية تعديل المسعف');
+            }
+        });
     }
 
     showDeleteConfirmation(paramedic: Paramedic) {
@@ -355,26 +287,33 @@ export class ParamedicsListComponent implements OnInit {
     confirmDeleteParamedic() {
         const paramedic = this.paramedicToDelete();
         if (paramedic) {
-            this.paramedics.update(list => list.filter(p => p.id !== paramedic.id));
-            this.toastService.success(`تم حذف المسعف: ${paramedic.arabicName} (${paramedic.name})`, 3000);
-            this.closeDeleteConfirmation();
+            this.paramedicService.deleteParamedic(paramedic.id).subscribe({
+                next: () => {
+                    this.toastService.success(`تم حذف المسعف: ${paramedic.arabicName} (${paramedic.name})`, 3000);
+                    this.closeDeleteConfirmation();
+                    this.loadData();
+                },
+                error: (error) => {
+                    console.error('Error deleting paramedic:', error);
+                    this.toastService.error('فشلت عملية حذف المسعف');
+                }
+            });
         }
         this.isEditModalOpen.set(false);
     }
 
     clearIndividualBalance(paramedic: Paramedic) {
-        this.paramedics.update(list => list.map(p => {
-            if (p.id === paramedic.id) {
-                return {
-                    ...p,
-                    amountOwed: 0.00,
-                    isAccountCleared: true
-                };
+        this.paramedicService.clearBalance(paramedic.id).subscribe({
+            next: () => {
+                delete this.reductionAmounts[paramedic.id];
+                this.toastService.success(`تم تصفير الرصيد للمسعف: ${paramedic.arabicName}`, 3000);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error clearing balance:', error);
+                this.toastService.error('فشلت عملية تصفير الرصيد');
             }
-            return p;
-        }));
-        delete this.reductionAmounts[paramedic.id];
-        this.toastService.success(`تم تصفير الرصيد للمسعف: ${paramedic.arabicName}`, 3000);
+        });
     }
 
     ngOnInit(): void {
@@ -385,6 +324,7 @@ export class ParamedicsListComponent implements OnInit {
                 this.searchTerm.set(this.searchTermValue);
             }
         });
+        this.loadData();
     }
 
     reduceBalance(paramedic: Paramedic, amount: number) {
@@ -397,21 +337,17 @@ export class ParamedicsListComponent implements OnInit {
             return;
         }
 
-        const updatedParamedics = this.paramedics().map(p => {
-            if (p.id === paramedic.id) {
-                const newAmount = Math.round((paramedic.amountOwed - amount) * 100) / 100;
-                return {
-                    ...p,
-                    amountOwed: Math.max(0, newAmount),
-                    isAccountCleared: newAmount <= 0.001
-                };
+        this.paramedicService.reduceBalance(paramedic.id, amount).subscribe({
+            next: () => {
+                delete this.reductionAmounts[paramedic.id];
+                this.toastService.info(`تم خصم ₪${amount} من رصيد المسعف: ${paramedic.arabicName}`, 3000);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error reducing balance:', error);
+                this.toastService.error('فشلت عملية خصم الرصيد');
             }
-            return p;
         });
-
-        this.paramedics.set(updatedParamedics);
-        delete this.reductionAmounts[paramedic.id];
-        this.toastService.info(`تم خصم ₪${amount} من رصيد المسعف: ${paramedic.arabicName}`, 3000);
     }
 
     toggleMobileFilters() {
@@ -431,6 +367,13 @@ export class ParamedicsListComponent implements OnInit {
 
         this.showFiltersOnMobile.set(false);
         this.toastService.info('تمت إعادة تعيين الفلاتر', 3000);
+        this.currentPage = 1;
+        this.loadData();
+    }
+
+    applyFiltersOnSearch() {
+        this.currentPage = 1;
+        this.loadData();
     }
 
     getStatusOptions(): Array<'متاح' | 'في رحلة' | 'غير متصل' | 'في إجازة'> {
@@ -440,7 +383,6 @@ export class ParamedicsListComponent implements OnInit {
     isAddFormValid(): boolean {
         return !!(
             this.newParamedic.arabicName &&
-            this.newParamedic.name &&
             this.newParamedic.password &&
             (this.newParamedic.username || this.newParamedic.email)
         );
@@ -449,7 +391,6 @@ export class ParamedicsListComponent implements OnInit {
     isEditFormValid(): boolean {
         return !!(
             this.editParamedic.arabicName &&
-            this.editParamedic.name &&
             (this.editParamedic.username || this.editParamedic.email)
         );
     }

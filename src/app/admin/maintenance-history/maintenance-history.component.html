@@ -43,15 +43,20 @@
                             </div>
                             
                             <div class="col-12">
-                                <label for="vehicleId" class="form-label small fw-medium">المركبة</label>
+                                <label for="vehicleSearch" class="form-label small fw-medium">المركبة</label>
+                                <input type="text" id="vehicleSearch" class="form-control mb-2"
+                                    placeholder="بحث عن مركبة..."
+                                    [(ngModel)]="vehicleSearchTerm"
+                                    [ngModelOptions]="{standalone: true}">
                                 <select id="vehicleId" class="form-select" [(ngModel)]="recordForm.vehicleId" name="vehicleId" required>
                                     <option value="">اختر المركبة</option>
-                                    @for (vehicle of vehiclesList; track vehicle) {
-                                        @if (vehicle !== 'جميع المركبات') {
-                                        <option [value]="vehicle">{{ vehicle }}</option>
-                                        }
+                                    @for (vehicle of filteredVehicles(); track vehicle.id) {
+                                        <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                                     }
                                 </select>
+                                <small class="text-muted d-block mt-1">
+                                    عرض {{ filteredVehicles().length }} من {{ vehiclesList.length }} مركبة
+                                </small>
                             </div>
                             
                             <div class="col-12">
@@ -158,14 +163,20 @@
                             </div>
                             
                             <div class="col-12">
-                                <label for="editVehicleId" class="form-label small fw-medium">المركبة</label>
+                                <label for="editVehicleSearch" class="form-label small fw-medium">المركبة</label>
+                                <input type="text" id="editVehicleSearch" class="form-control mb-2"
+                                    placeholder="بحث عن مركبة..."
+                                    [(ngModel)]="vehicleSearchTerm"
+                                    [ngModelOptions]="{standalone: true}">
                                 <select id="editVehicleId" class="form-select" [(ngModel)]="recordForm.vehicleId" name="vehicleId" required>
-                                    @for (vehicle of vehiclesList; track vehicle) {
-                                        @if (vehicle !== 'جميع المركبات') {
-                                        <option [value]="vehicle">{{ vehicle }}</option>
-                                        }
+                                    <option value="">اختر المركبة</option>
+                                    @for (vehicle of filteredVehicles(); track vehicle.id) {
+                                        <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                                     }
                                 </select>
+                                <small class="text-muted d-block mt-1">
+                                    عرض {{ filteredVehicles().length }} من {{ vehiclesList.length }} مركبة
+                                </small>
                             </div>
                             
                             <div class="col-12">
@@ -246,7 +257,7 @@
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
                                     <p class="text-muted small mb-1">المركبة</p>
-                                    <h5 class="fw-bold">{{ record.vehicleId }}</h5>
+                                    <h5 class="fw-bold cursor-pointer text-primary-hover" (click)="navigateToFleet(record.vehicleInternalId); $event.stopPropagation()">{{ record.vehicleName || record.vehicleId }}</h5>
                                 </div>
                                 <app-status-badge
                                     [status]="record.status"
@@ -315,9 +326,10 @@
                     <span class="input-group-text bg-white border-end-0">
                         <i class="fa-solid fa-search text-muted"></i>
                     </span>
-                    <input type="text" class="form-control border-start-0" 
-                        placeholder="البحث في موقع الصيانة، المركبة، أو الملاحظات..."
-                        [(ngModel)]="searchTerm">
+                    <input type="text" class="form-control border-start-0"
+                        placeholder="البحث في رقم المركبة، اسم المركبة، أو موقع الخدمة..."
+                        [ngModel]="searchTerm()"
+                        (ngModelChange)="searchTerm.set($event)">
                 </div>
             </div>
             
@@ -386,8 +398,9 @@
                     <div class="col-md-6">
                         <label for="vehicleFilter" class="form-label small fw-medium">المركبة</label>
                         <select id="vehicleFilter" class="form-select" [(ngModel)]="selectedVehicle">
-                            @for (vehicle of vehiclesList; track vehicle) {
-                            <option [value]="vehicle">{{ vehicle }}</option>
+                            <option value="جميع المركبات">جميع المركبات</option>
+                            @for (vehicle of vehiclesList; track vehicle.id) {
+                            <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                             }
                         </select>
                     </div>
@@ -425,7 +438,10 @@
                         <div class="card-header bg-white border-bottom p-3">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="text-end">
-                                    <h5 class="fw-bold mb-1">{{ record.vehicleId }}</h5>
+                                    <h5 class="fw-bold mb-1">
+                                        <span class="cursor-pointer text-primary-hover" (click)="navigateToFleet(record.vehicleInternalId); $event.stopPropagation()" title="عرض تفاصيل المركبة">{{ record.vehicleName || record.vehicleId }}</span>
+                                        <i class="fa-solid fa-filter ms-2 text-muted cursor-pointer" style="font-size: 0.8rem;" (click)="filterByVehicle(record.vehicleId, $event)" title="فلترة حسب هذه المركبة"></i>
+                                    </h5>
                                     <p class="text-muted small mb-0">{{ formatDate(record.date) }}</p>
                                 </div>
                                 <app-status-badge
@@ -439,7 +455,10 @@
                             <div class="row g-3 text-end">
                                 <div class="col-6">
                                     <p class="text-muted small mb-1">نوع الصيانة</p>
-                                    <p class="fw-semibold mb-0">{{ record.type }}</p>
+                                    <p class="fw-semibold mb-0">
+                                        <span class="cursor-pointer text-primary-hover" (click)="filterByMaintenanceType(record.type, $event)" title="فلترة حسب هذا النوع">{{ record.type }}</span>
+                                        <i class="fa-solid fa-filter ms-1 text-muted cursor-pointer" style="font-size: 0.7rem;" (click)="filterByMaintenanceType(record.type, $event)" title="فلترة حسب هذا النوع"></i>
+                                    </p>
                                 </div>
                                 <div class="col-6">
                                     <p class="text-muted small mb-1">التكلفة</p>
@@ -449,7 +468,8 @@
                                     <p class="text-muted small mb-1">موقع الخدمة</p>
                                     <p class="fw-semibold mb-0">
                                         <i class="fa-solid fa-location-dot text-danger me-1"></i>
-                                        {{ record.serviceLocation }}
+                                        <span class="cursor-pointer text-primary-hover" (click)="filterByServiceLocation(record.serviceLocation, $event)" title="البحث عن هذا الموقع">{{ record.serviceLocation }}</span>
+                                        <i class="fa-solid fa-filter ms-1 text-muted cursor-pointer" style="font-size: 0.7rem;" (click)="filterByServiceLocation(record.serviceLocation, $event)" title="البحث عن هذا الموقع"></i>
                                     </p>
                                 </div>
                                 <div class="col-12">

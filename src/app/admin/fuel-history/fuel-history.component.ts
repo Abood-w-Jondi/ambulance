@@ -5,8 +5,10 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { GlobalVarsService } from '../../global-vars.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { ValidationService } from '../../shared/services/validation.service';
+import { FuelService } from '../../shared/services/fuel.service';
+import { VehicleService } from '../../shared/services/vehicle.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
-import { FuelRecord } from '../../shared/models';
+import { FuelRecord, Vehicle } from '../../shared/models';
 
 @Component({
     selector: 'app-fuel-history',
@@ -45,8 +47,10 @@ export class FuelHistoryComponent implements OnInit {
         year: new Date().getFullYear(),
         ambulanceName: '',
         ambulanceNumber: '',
+        ambulanceId: '',          // Internal ID for backend
         driverId: '',
         driverName: '',
+        driverInternalId: '',     // Internal ID for backend
         odometerBefore: 0,
         odometerAfter: 0,
         fuelAmount: 0,
@@ -54,25 +58,31 @@ export class FuelHistoryComponent implements OnInit {
         notes: ''
     };
 
-    ambulanceList: string[] = [
-        'جميع المركبات',
-        'إسعاف 01',
-        'إسعاف 04',
-        'إسعاف 07',
-        'إسعاف 12',
-        'إسعاف 25'
-    ];
+    vehiclesList: Vehicle[] = [];
+    vehicleSearchTerm = signal('');
+    filteredVehicles = computed(() => {
+        const term = this.vehicleSearchTerm().toLowerCase();
+        if (!term) return this.vehiclesList;
+        return this.vehiclesList.filter(v =>
+            v.vehicleName.toLowerCase().includes(term) ||
+            v.vehicleId.toLowerCase().includes(term)
+        );
+    });
 
     // Pagination
     currentPage = 1;
     itemsPerPage = 10;
+    totalRecords = 0;
+    isLoading = signal(false);
 
     constructor(
         private globalVars: GlobalVarsService,
         private router: Router,
         private route: ActivatedRoute,
         private toastService: ToastService,
-        private validationService: ValidationService
+        private validationService: ValidationService,
+        private fuelService: FuelService,
+        private vehicleService: VehicleService
     ) {
         this.globalVars.setGlobalHeader('سجل الوقود');
     }
@@ -87,160 +97,95 @@ export class FuelHistoryComponent implements OnInit {
             }
         });
         this.toastService.info('يمكنك النقر على أسماء المركبات أو أرقامها أو معرفات السائقين للتنقل إلى المكونات ذات الصلة.', 3000);
+        this.loadVehicles();
+        this.loadData();
+    }
+
+    loadVehicles(): void {
+        // Load all vehicles with a high limit for the dropdown
+        this.vehicleService.getVehicles({ limit: 1000 }).subscribe({
+            next: (res) => {
+                this.vehiclesList = res.data;
+            },
+            error: (error) => {
+                console.error('Error loading vehicles:', error);
+                this.toastService.error('فشل تحميل المركبات');
+            }
+        });
     }
     
-    // Helper to generate IDs
-    private generateId(): string {
-        return Date.now().toString() + Math.random().toString(36).substring(2, 9);
-    }
-    
-    // Dummy Data (fuel amounts now in liters)
-    records = signal<FuelRecord[]>([
-        {
-            id: this.generateId(),
-            ambulanceName: 'إسعاف 04',
-            ambulanceNumber: 'AMB-004',
-            driverId: 'D-124',
-            driverName: 'أحمد محمود',
-            date: new Date(2023, 9, 26), // October 26
-            odometerBefore: 125400,
-            odometerAfter: 125750,
-            fuelAmount: 57.5, // liters (15.2 gallons converted)
-            cost: 75.50,
-            notes: ''
-        },
-        {
-            id: this.generateId(),
-            ambulanceName: 'إسعاف 04',
-            ambulanceNumber: 'AMB-004',
-            driverId: 'D-124',
-            driverName: 'أحمد محمود',
-            date: new Date(2023, 9, 19), // October 19
-            odometerBefore: 125015,
-            odometerAfter: 125400,
-            fuelAmount: 56.0, // liters (14.8 gallons converted)
-            cost: 72.30,
-            notes: 'المضخة رقم 3 كانت بطيئة. تم الإبلاغ عن ذلك لموظف المحطة.'
-        },
-        {
-            id: this.generateId(),
-            ambulanceName: 'إسعاف 04',
-            ambulanceNumber: 'AMB-004',
-            driverId: 'D-124',
-            driverName: 'أحمد محمود',
-            date: new Date(2023, 9, 12), // October 12
-            odometerBefore: 124650,
-            odometerAfter: 125015,
-            fuelAmount: 58.7, // liters (15.5 gallons converted)
-            cost: 78.10,
-            notes: ''
-        },
-        {
-            id: this.generateId(),
-            ambulanceName: 'إسعاف 07',
-            ambulanceNumber: 'AMB-007',
-            driverId: 'D-089',
-            driverName: 'محمد علي',
-            date: new Date(2023, 9, 25), // October 25
-            odometerBefore: 98200,
-            odometerAfter: 98550,
-            fuelAmount: 60.5, // liters (16.0 gallons converted)
-            cost: 80.00,
-            notes: ''
-        },
-        {
-            id: this.generateId(),
-            ambulanceName: 'إسعاف 01',
-            ambulanceNumber: 'AMB-001',
-            driverId: 'D-045',
-            driverName: 'خالد حسن',
-            date: new Date(2023, 9, 20), // October 20
-            odometerBefore: 142300,
-            odometerAfter: 142680,
-            fuelAmount: 54.9, // liters (14.5 gallons converted)
-            cost: 71.25,
-            notes: 'تم التزود بالوقود في المحطة الشمالية'
+    records = signal<FuelRecord[]>([]);
+
+    loadData(): void {
+        this.isLoading.set(true);
+
+        const params: any = {
+            page: this.currentPage,
+            limit: this.itemsPerPage
+        };
+
+        const filterDate = this.dateFilter();
+        if (filterDate) {
+            params.startDate = filterDate.toISOString().split('T')[0];
+            params.endDate = filterDate.toISOString().split('T')[0];
         }
-    ]);
+
+        this.fuelService.getFuelRecords(params).subscribe({
+            next: (response) => {
+                this.records.set(response.data);
+                this.totalRecords = response.total;
+                this.isLoading.set(false);
+            },
+            error: (error) => {
+                console.error('Error loading fuel records:', error);
+                this.toastService.error('فشل تحميل سجلات الوقود');
+                this.isLoading.set(false);
+            }
+        });
+    }
 
     // --- Computed Property for Filtering ---
     filteredRecords = computed(() => {
-        const filterDate = this.dateFilter();
-        const ambulance = this.ambulanceFilter();
-        const search = this.searchTerm().toLowerCase().trim();
-
-        return this.records().filter(record => {
-            // Date Filter - only applies if specific date is selected (not default placeholders)
-            let dateMatch = true;
-            if (filterDate) {
-                // If day is selected, match exact date
-                if (typeof this.filterDay === 'number') {
-                    dateMatch = record.date.getDate() === filterDate.getDate() &&
-                               record.date.getMonth() === filterDate.getMonth() &&
-                               record.date.getFullYear() === filterDate.getFullYear();
-                }
-                // If only month/year selected, match month and year
-                else if (typeof this.filterMonth === 'number' && typeof this.filterYear === 'number') {
-                    dateMatch = record.date.getMonth() === filterDate.getMonth() &&
-                               record.date.getFullYear() === filterDate.getFullYear();
-                }
-                // If only year selected, match year
-                else if (typeof this.filterYear === 'number') {
-                    dateMatch = record.date.getFullYear() === filterDate.getFullYear();
-                }
-            }
-
-            // Ambulance Filter
-            const ambulanceMatch = ambulance === 'جميع المركبات' ||
-                                  record.ambulanceName === ambulance;
-
-            // Search Filter (searches through all ambulance properties)
-            const searchMatch = search === '' ||
-                record.ambulanceName.toLowerCase().includes(search) ||
-                record.ambulanceNumber.toLowerCase().includes(search) ||
-                record.driverId.toLowerCase().includes(search) ||
-                record.driverName.toLowerCase().includes(search) ||
-                (record.notes && record.notes.toLowerCase().includes(search));
-
-            return dateMatch && ambulanceMatch && searchMatch;
-        });
+        return this.records();
     });
 
     // --- Pagination Methods ---
     getPaginatedFuelRecords() {
-        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-        const endIndex = startIndex + this.itemsPerPage;
-        return this.filteredRecords().slice(startIndex, endIndex);
+        return this.records();
     }
 
     onPageChange(page: number): void {
         this.currentPage = page;
+        this.loadData();
     }
 
     onItemsPerPageChange(itemsPerPage: number): void {
         this.itemsPerPage = itemsPerPage;
         this.currentPage = 1;
+        this.loadData();
     }
 
     // --- Component Methods ---
 
     applyFilters(): void {
         // Only create date filter if at least one date component is selected
-        if (typeof this.filterDay === 'number' || 
-            typeof this.filterMonth === 'number' || 
+        if (typeof this.filterDay === 'number' ||
+            typeof this.filterMonth === 'number' ||
             typeof this.filterYear === 'number') {
-            
+
             const day = typeof this.filterDay === 'number' ? this.filterDay : 1;
             const month = typeof this.filterMonth === 'number' ? this.filterMonth - 1 : 0;
             const year = typeof this.filterYear === 'number' ? this.filterYear : new Date().getFullYear();
-            
+
             const filterDate = new Date(year, month, day);
             this.dateFilter.set(filterDate);
         } else {
             this.dateFilter.set(null);
         }
-        
+
         this.ambulanceFilter.set(this.selectedAmbulance);
+        this.currentPage = 1;
+        this.loadData();
     }
 
     clearFilters(): void {
@@ -249,9 +194,11 @@ export class FuelHistoryComponent implements OnInit {
         this.filterYear = 'سنة';
         this.selectedAmbulance = 'جميع المركبات';
         this.searchTerm.set('');
-        
+
         this.dateFilter.set(null);
         this.ambulanceFilter.set('جميع المركبات');
+        this.currentPage = 1;
+        this.loadData();
     }
 
     formatDate(date: Date): string {
@@ -269,8 +216,10 @@ export class FuelHistoryComponent implements OnInit {
             year: new Date().getFullYear(),
             ambulanceName: '',
             ambulanceNumber: '',
+            ambulanceId: '',
             driverId: '',
             driverName: '',
+            driverInternalId: '',
             odometerBefore: 0,
             odometerAfter: 0,
             fuelAmount: 0,
@@ -281,12 +230,12 @@ export class FuelHistoryComponent implements OnInit {
     }
 
     addRecord(): void {
-        // Validate fuel record using ValidationService
+         let date : any= new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day)
         const validationData = {
             ambulanceId: this.recordForm.ambulanceName,
             liters: this.recordForm.fuelAmount,
             cost: this.recordForm.cost,
-            date: new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day),
+            date: date,
             mileage: this.recordForm.odometerAfter
         };
 
@@ -306,23 +255,30 @@ export class FuelHistoryComponent implements OnInit {
             return;
         }
 
-        const record: FuelRecord = {
-            id: this.generateId(),
+        this.fuelService.createFuelRecord({
             ambulanceName: this.recordForm.ambulanceName,
             ambulanceNumber: this.recordForm.ambulanceNumber,
+            ambulanceId: this.recordForm.ambulanceId,
             driverId: this.recordForm.driverId,
             driverName: this.recordForm.driverName,
-            date: new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day),
+            driverInternalId: this.recordForm.driverInternalId,
+            date: date,
             odometerBefore: this.recordForm.odometerBefore,
             odometerAfter: this.recordForm.odometerAfter,
             fuelAmount: this.recordForm.fuelAmount,
             cost: this.recordForm.cost,
             notes: this.recordForm.notes
-        };
-
-        this.records.update(records => [...records, record]);
-        this.isAddRecordModalOpen.set(false);
-        this.toastService.success(`سجل وقود جديد (${record.ambulanceNumber}) تمت إضافته بنجاح`, 3000);
+        }).subscribe({
+            next: (record) => {
+                this.isAddRecordModalOpen.set(false);
+                this.toastService.success(`سجل وقود جديد (${record.ambulanceNumber}) تمت إضافته بنجاح`, 3000);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error creating fuel record:', error);
+                this.toastService.error('فشلت عملية إضافة سجل الوقود');
+            }
+        });
     }
 
     openEditRecordModal(): void {
@@ -334,8 +290,10 @@ export class FuelHistoryComponent implements OnInit {
                 year: record.date.getFullYear(),
                 ambulanceName: record.ambulanceName,
                 ambulanceNumber: record.ambulanceNumber,
+                ambulanceId: record.ambulanceId || '',
                 driverId: record.driverId,
                 driverName: record.driverName,
+                driverInternalId: record.driverInternalId || '',
                 odometerBefore: record.odometerBefore,
                 odometerAfter: record.odometerAfter,
                 fuelAmount: record.fuelAmount,
@@ -348,6 +306,7 @@ export class FuelHistoryComponent implements OnInit {
     }
 
     saveEditRecord(): void {
+         let date : any= new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day)
         const record = this.selectedRecord();
         if (record) {
             // Validate fuel record using ValidationService
@@ -355,7 +314,7 @@ export class FuelHistoryComponent implements OnInit {
                 ambulanceId: this.recordForm.ambulanceName,
                 liters: this.recordForm.fuelAmount,
                 cost: this.recordForm.cost,
-                date: new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day),
+                date: date,
                 mileage: this.recordForm.odometerAfter
             };
 
@@ -375,25 +334,32 @@ export class FuelHistoryComponent implements OnInit {
                 return;
             }
 
-            const updatedRecord: FuelRecord = {
-                ...record,
+            this.fuelService.updateFuelRecord(record.id, {
                 ambulanceName: this.recordForm.ambulanceName,
                 ambulanceNumber: this.recordForm.ambulanceNumber,
+                ambulanceId: this.recordForm.ambulanceId,
                 driverId: this.recordForm.driverId,
                 driverName: this.recordForm.driverName,
-                date: new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day),
+                driverInternalId: this.recordForm.driverInternalId,
+                date: date,
                 odometerBefore: this.recordForm.odometerBefore,
                 odometerAfter: this.recordForm.odometerAfter,
                 fuelAmount: this.recordForm.fuelAmount,
                 cost: this.recordForm.cost,
                 notes: this.recordForm.notes
-            };
-
-            this.records.update(records => records.map(r => r.id === record.id ? updatedRecord : r));
-            this.selectedRecord.set(updatedRecord);
-            this.isEditRecordModalOpen.set(false);
-            this.isViewRecordModalOpen.set(true);
-            this.toastService.info(`تم تعديل سجل الوقود (${updatedRecord.ambulanceNumber}) للسائق ${updatedRecord.driverName}`, 3000);
+            }).subscribe({
+                next: (updatedRecord) => {
+                    this.selectedRecord.set(updatedRecord);
+                    this.isEditRecordModalOpen.set(false);
+                    this.isViewRecordModalOpen.set(true);
+                    this.toastService.info(`تم تعديل سجل الوقود (${updatedRecord.ambulanceNumber}) للسائق ${updatedRecord.driverName}`, 3000);
+                    this.loadData();
+                },
+                error: (error) => {
+                    console.error('Error updating fuel record:', error);
+                    this.toastService.error('فشلت عملية تحديث سجل الوقود');
+                }
+            });
         }
     }
 
@@ -414,13 +380,21 @@ export class FuelHistoryComponent implements OnInit {
     deleteRecord(recordId: string): void {
         if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
             const deleted = this.records().find(r => r.id === recordId);
-            this.records.update(records => records.filter(r => r.id !== recordId));
-            this.closeViewRecordModal();
-            if (deleted) {
-                this.toastService.success(`تم حذف سجل الوقود (${deleted.ambulanceNumber}) للسائق ${deleted.driverName}`, 3000);
-            } else {
-                this.toastService.success('تم حذف سجل وقود', 3000);
-            }
+            this.fuelService.deleteFuelRecord(recordId).subscribe({
+                next: () => {
+                    this.closeViewRecordModal();
+                    if (deleted) {
+                        this.toastService.success(`تم حذف سجل الوقود (${deleted.ambulanceNumber}) للسائق ${deleted.driverName}`, 3000);
+                    } else {
+                        this.toastService.success('تم حذف سجل وقود', 3000);
+                    }
+                    this.loadData();
+                },
+                error: (error) => {
+                    console.error('Error deleting fuel record:', error);
+                    this.toastService.error('فشلت عملية حذف سجل الوقود');
+                }
+            });
         }
     }
 
@@ -457,5 +431,27 @@ export class FuelHistoryComponent implements OnInit {
     getYears(): (number | string)[] {
         const currentYear = new Date().getFullYear();
         return ['سنة', ...Array.from({ length: 10 }, (_, i) => currentYear - i)];
+    }
+
+    /**
+     * Handle vehicle selection from dropdown
+     */
+    onVehicleSelect(event: Event): void {
+        const target = event.target as HTMLSelectElement;
+        const vehicleId = target.value;
+
+        if (!vehicleId) {
+            this.recordForm.ambulanceId = '';
+            this.recordForm.ambulanceName = '';
+            this.recordForm.ambulanceNumber = '';
+            return;
+        }
+
+        const vehicle = this.vehiclesList.find(v => v.id === vehicleId);
+        if (vehicle) {
+            this.recordForm.ambulanceId = vehicle.id;
+            this.recordForm.ambulanceName = vehicle.vehicleName;
+            this.recordForm.ambulanceNumber = vehicle.vehicleId;
+        }
     }
 }

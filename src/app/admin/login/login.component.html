@@ -65,13 +65,23 @@
             </div>
           </div>
 
+          <!-- Error Message -->
+          <div *ngIf="errorMessage" class="alert alert-danger text-end mb-3" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            {{ errorMessage }}
+          </div>
+
           <!-- Login Button -->
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             class="btn btn-primary w-100 py-3 fw-bold"
-            [disabled]="!loginForm.valid"
+            [disabled]="!loginForm.valid || isLoading"
           >
-            تسجيل الدخول
+            <span *ngIf="!isLoading">تسجيل الدخول</span>
+            <span *ngIf="isLoading">
+              <i class="fas fa-spinner fa-spin me-2"></i>
+              جاري تسجيل الدخول...
+            </span>
           </button>
 
           <!-- Forgot Password -->

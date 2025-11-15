@@ -15,8 +15,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-xl shadow-lg border-0">
                 <div class="modal-header bg-primary-custom rounded-top-xl border-0 justify-content-between text-white">
-                    <h5 class="modal-title fw-bold text-dark">إضافة مركبة جديدة</h5>
-                    <button type="button" style="background-color: transparent; border: none;" data-bs-dismiss="modal" aria-label="Close"
+                    <h5 class="modal-title fw-bold ">إضافة مركبة جديدة</h5>
+                    <button type="button" style="background-color: transparent; color: white; border: none;" data-bs-dismiss="modal" aria-label="Close"
                         (click)="isAddVehicleModalOpen.set(false)"><i class="fa fa-times"></i></button>
                 </div>
                 <div class="modal-body p-4 text-end">
@@ -224,9 +224,10 @@
                         <span class="input-group-text bg-white border-end-0">
                             <i class="fa-solid fa-search text-muted"></i>
                         </span>
-                        <input type="text" class="form-control border-start-0" 
+                        <input type="text" class="form-control border-start-0"
                             placeholder="البحث برقم المركبة أو السائق..."
-                            [(ngModel)]="searchTerm">
+                            [(ngModel)]="searchTerm"
+                            (ngModelChange)="onSearchChange()">
                     </div>
                 </div>
                 <div class="col-12 col-md-4 d-flex justify-content-end">

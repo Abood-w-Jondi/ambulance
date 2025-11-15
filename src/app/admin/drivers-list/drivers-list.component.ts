@@ -5,6 +5,7 @@ import { GlobalVarsService } from '../../global-vars.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastService } from '../../shared/services/toast.service';
 import { ValidationService } from '../../shared/services/validation.service';
+import { DriverService } from '../../shared/services/driver.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
@@ -24,13 +25,16 @@ export class DriversListComponent implements OnInit {
     // Pagination
     currentPage = 1;
     itemsPerPage = 10;
+    totalRecords = 0;
+    isLoading = signal(false);
 
     constructor(
         private globalVarsService: GlobalVarsService,
         private route: ActivatedRoute,
         private router: Router,
         private toastService: ToastService,
-        private validationService: ValidationService
+        private validationService: ValidationService,
+        private driverService: DriverService
     ) {
         this.globalVarsService.setGlobalHeader('سائقي الإسعاف');
     }
@@ -110,162 +114,50 @@ export class DriversListComponent implements OnInit {
 
     reductionAmounts: { [key: string]: number } = {};
 
-    private generateId(): string {
-        return Date.now().toString() + Math.random().toString(36).substring(2, 9);
-    }
-
-    drivers = signal<Driver[]>([
-        {
-            id: this.generateId(),
-            name: 'Eleanor Pena',
-            arabicName: 'إليانور بينا',
-            username: 'epena',
-            email: 'eleanor.pena@example.com',
-            arabicStatus: 'متاح',
-            statusColor: '#10B981',
-            tripsToday: 8,
-            amountOwed: 250.75,
-            isAccountCleared: false,
-            isActive: true,
-            imageUrl: 'https://placehold.co/56x56/10B981/ffffff?text=EP',
-            imageAlt: 'صورة ملف تعريف إليانور بينا',
-        },
-        {
-            id: this.generateId(),
-            name: 'Wade Warren',
-            arabicName: 'ويد وارين',
-            username: 'wwarren',
-            email: '',
-            arabicStatus: 'في رحلة',
-            statusColor: '#3B82F6',
-            tripsToday: 5,
-            amountOwed: 150.00,
-            isAccountCleared: false,
-            isActive: true,
-            imageUrl: 'https://placehold.co/56x56/3B82F6/ffffff?text=WW',
-            imageAlt: 'صورة ملف تعريف ويد وارين',
-        },
-        {
-            id: this.generateId(),
-            name: 'Wade Warren',
-            arabicName: 'ويد وارين',
-            username: 'wwarren',
-            email: '',
-            arabicStatus: 'في رحلة',
-            statusColor: '#3B82F6',
-            tripsToday: 5,
-            amountOwed: 150.00,
-            isAccountCleared: false,
-            isActive: true,
-            imageUrl: 'https://placehold.co/56x56/3B82F6/ffffff?text=WW',
-            imageAlt: 'صورة ملف تعريف ويد وارين',
-        },
-        {
-            id: this.generateId(),
-            name: 'Wade Warren',
-            arabicName: 'ويد وارين',
-            username: 'wwarren',
-            email: '',
-            arabicStatus: 'في رحلة',
-            statusColor: '#3B82F6',
-            tripsToday: 5,
-            amountOwed: 150.00,
-            isAccountCleared: false,
-            isActive: true,
-            imageUrl: 'https://placehold.co/56x56/3B82F6/ffffff?text=WW',
-            imageAlt: 'صورة ملف تعريف ويد وارين',
-        },
-        {
-            id: this.generateId(),
-            name: 'Wade Warren',
-            arabicName: 'ويد وارين',
-            username: 'wwarren',
-            email: '',
-            arabicStatus: 'في رحلة',
-            statusColor: '#3B82F6',
-            tripsToday: 5,
-            amountOwed: 150.00,
-            isAccountCleared: false,
-            isActive: true,
-            imageUrl: 'https://placehold.co/56x56/3B82F6/ffffff?text=WW',
-            imageAlt: 'صورة ملف تعريف ويد وارين',
-        },
-        {
-            id: this.generateId(),
-            name: 'Jacob Jones',
-            arabicName: 'جاكوب جونز',
-            username: '',
-            email: 'jacob.jones@example.com',
-            arabicStatus: 'متاح',
-            statusColor: '#10B981',
-            tripsToday: 12,
-            amountOwed: 310.50,
-            isAccountCleared: false,
-            isActive: true,
-            imageUrl: 'https://placehold.co/56x56/10B981/ffffff?text=JJ',
-            imageAlt: 'صورة ملف تعريف جاكوب جونز',
-        },
-        {
-            id: this.generateId(),
-            name: 'Cameron Williamson',
-            arabicName: 'كاميرون ويليامسون',
-            username: 'cwilliamson',
-            email: 'cameron.w@example.com',
-            arabicStatus: 'غير متصل',
-            statusColor: '#6B7280',
-            tripsToday: 0,
-            amountOwed: 0.00,
-            isAccountCleared: true,
-            isActive: false,
-            imageUrl: 'https://placehold.co/56x56/6B7280/ffffff?text=CW',
-            imageAlt: 'صورة ملف تعريف كاميرون ويليامسون',
-        },
-    ]);
+    drivers = signal<Driver[]>([]);
 
     filteredDrivers = computed(() => {
-        let driversList = this.drivers();
-        const term = this.searchTerm().toLowerCase().trim();
-        const status = this.filterStatus();
-        const min = this.minOwed();
-        const max = this.maxOwed();
-
-        if (term) {
-            driversList = driversList.filter(d =>
-                d.arabicName.toLowerCase().includes(term) ||
-                d.name.toLowerCase().includes(term) ||
-                (d.email && d.email.toLowerCase().includes(term)) ||
-                (d.username && d.username.toLowerCase().includes(term))
-            );
-        }
-
-        if (status !== 'all') {
-            driversList = driversList.filter(d => d.arabicStatus === status);
-        }
-
-        if (min !== null && !isNaN(min)) {
-            driversList = driversList.filter(d => d.amountOwed >= min!);
-        }
-        if (max !== null && !isNaN(max)) {
-            driversList = driversList.filter(d => d.amountOwed <= max!);
-        }
-
-        return driversList;
+        return this.drivers();
     });
 
     // Paginated drivers
     getPaginatedDrivers(): Driver[] {
-        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-        const endIndex = startIndex + this.itemsPerPage;
-        return this.filteredDrivers().slice(startIndex, endIndex);
+        return this.drivers();
     }
 
     onPageChange(page: number): void {
         this.currentPage = page;
+        this.loadData();
     }
 
     onItemsPerPageChange(itemsPerPage: number): void {
         this.itemsPerPage = itemsPerPage;
         this.currentPage = 1;
+        this.loadData();
+    }
+
+    loadData(): void {
+        this.isLoading.set(true);
+
+        this.driverService.getDrivers({
+            page: this.currentPage,
+            limit: this.itemsPerPage,
+            search: this.searchTerm() || undefined,
+            status: this.filterStatus() !== 'all' ? this.filterStatus() as any : undefined,
+            minOwed: this.minOwed() || undefined,
+            maxOwed: this.maxOwed() || undefined
+        }).subscribe({
+            next: (response) => {
+                this.drivers.set(response.data);
+                this.totalRecords = response.total;
+                this.isLoading.set(false);
+            },
+            error: (error) => {
+                console.error('Error loading drivers:', error);
+                this.toastService.error('فشل تحميل بيانات السائقين');
+                this.isLoading.set(false);
+            }
+        });
     }
 
     addNewDriver() {
@@ -279,26 +171,26 @@ export class DriversListComponent implements OnInit {
             return;
         }
 
-        const newDriver: Driver = {
-            id: this.generateId(),
+        this.driverService.createDriver({
             arabicName: this.newDriver.arabicName,
             name: this.newDriver.name,
             username: this.newDriver.username || undefined,
             email: this.newDriver.email || undefined,
-            arabicStatus: 'غير متصل',
-            statusColor: '#6B7280',
-            tripsToday: this.newDriver.tripsToday,
-            amountOwed: this.newDriver.amountOwed,
-            isAccountCleared: this.newDriver.amountOwed === 0,
-            isActive: true,
-            imageUrl: `https://placehold.co/56x56/9CA3AF/ffffff?text=${this.newDriver.name.charAt(0).toUpperCase()}`,
-            imageAlt: `صورة ملف تعريف ${this.newDriver.arabicName}`,
-        };
-
-    this.drivers.update(list => [...list, newDriver]);
-    this.toastService.success(`تمت إضافة سائق جديد: ${newDriver.arabicName} (${newDriver.name})`, 3000);
-    this.isAddModalOpen.set(false);
-    this.newDriver = { arabicName: '', name: '', username: '', email: '', password: '', amountOwed: 0, tripsToday: 0 };
+            password: this.newDriver.password,
+            amountOwed: this.newDriver.amountOwed || 0,
+            tripsToday: this.newDriver.tripsToday || 0
+        } as any).subscribe({
+            next: (driver) => {
+                this.toastService.success(`تمت إضافة سائق جديد: ${driver.arabicName} (${driver.name})`, 3000);
+                this.isAddModalOpen.set(false);
+                this.newDriver = { arabicName: '', name: '', username: '', email: '', password: '', amountOwed: 0, tripsToday: 0 };
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error creating driver:', error);
+                this.toastService.error('فشلت عملية إضافة السائق');
+            }
+        });
     }
 
     openEditModal(driver: Driver) {
@@ -347,38 +239,35 @@ export class DriversListComponent implements OnInit {
             return;
         }
 
-        let statusColor = '#6B7280';
-        if (this.editDriver.arabicStatus === 'متاح') {
-            statusColor = '#10B981';
-        } else if (this.editDriver.arabicStatus === 'في رحلة') {
-            statusColor = '#3B82F6';
-        }
-
-        this.drivers.update(list => list.map(d => {
-            if (d.id === driver.id) {
-                return {
-                    ...d,
-                    arabicName: this.editDriver.arabicName,
-                    name: this.editDriver.name,
-                    username: this.editDriver.username || undefined,
-                    email: this.editDriver.email || undefined,
-                    arabicStatus: this.editDriver.arabicStatus,
-                    statusColor: statusColor,
-                    tripsToday: this.editDriver.tripsToday,
-                    amountOwed: this.editDriver.amountOwed,
-                    isAccountCleared: this.editDriver.amountOwed === 0,
-                    isActive: this.editDriver.isActive
-                };
-            }
-            return d;
-        }));
+        const updateData: any = {
+            arabicName: this.editDriver.arabicName,
+            name: this.editDriver.name,
+            username: this.editDriver.username || undefined,
+            email: this.editDriver.email || undefined,
+            arabicStatus: this.editDriver.arabicStatus,
+            tripsToday: this.editDriver.tripsToday,
+            amountOwed: this.editDriver.amountOwed,
+            isActive: this.editDriver.isActive
+        };
 
         if (this.editDriver.newPassword && this.editDriver.newPassword.trim() !== '') {
-            this.toastService.info(`تم تغيير كلمة مرور السائق: ${this.editDriver.arabicName}`, 3000);
+            updateData.password = this.editDriver.newPassword;
         }
 
-        this.toastService.info(`تم تعديل بيانات السائق: ${this.editDriver.arabicName} (${this.editDriver.name})`, 3000);
-        this.closeEditModal();
+        this.driverService.updateDriver(driver.id, updateData).subscribe({
+            next: () => {
+                this.toastService.info(`تم تعديل بيانات السائق: ${this.editDriver.arabicName} (${this.editDriver.name})`, 3000);
+                if (this.editDriver.newPassword && this.editDriver.newPassword.trim() !== '') {
+                    this.toastService.info(`تم تغيير كلمة مرور السائق: ${this.editDriver.arabicName}`, 3000);
+                }
+                this.closeEditModal();
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error updating driver:', error);
+                this.toastService.error('فشلت عملية تعديل السائق');
+            }
+        });
     }
 
     showDeleteConfirmation(driver: Driver) {
@@ -402,40 +291,51 @@ export class DriversListComponent implements OnInit {
     confirmDeleteDriver() {
         const driver = this.driverToDelete();
         if (driver) {
-            this.drivers.update(list => list.filter(d => d.id !== driver.id));
-            this.toastService.success(`تم حذف السائق: ${driver.arabicName} (${driver.name})`, 3000);
-            this.closeDeleteConfirmation();
+            this.driverService.deleteDriver(driver.id).subscribe({
+                next: () => {
+                    this.toastService.success(`تم حذف السائق: ${driver.arabicName} (${driver.name})`, 3000);
+                    this.closeDeleteConfirmation();
+                    this.loadData();
+                },
+                error: (error) => {
+                    console.error('Error deleting driver:', error);
+                    this.toastService.error('فشلت عملية حذف السائق');
+                }
+            });
         }
         this.isEditModalOpen.set(false);
     }
 
     toggleDriverStatus(driver: Driver) {
-        this.drivers.update(list => list.map(d => {
-            if (d.id === driver.id) {
-                const newIsActive = !d.isActive;
-                this.toastService.info(`تم ${newIsActive ? 'تفعيل' : 'تعطيل'} حساب السائق: ${d.arabicName}`, 3000);
-                return {
-                    ...d,
-                    isActive: newIsActive
-                };
+        const newIsActive = !driver.isActive;
+        const serviceCall = newIsActive
+            ? this.driverService.activateDriver(driver.id)
+            : this.driverService.deactivateDriver(driver.id);
+
+        serviceCall.subscribe({
+            next: () => {
+                this.toastService.info(`تم ${newIsActive ? 'تفعيل' : 'تعطيل'} حساب السائق: ${driver.arabicName}`, 3000);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error toggling driver status:', error);
+                this.toastService.error('فشلت عملية تغيير حالة السائق');
             }
-            return d;
-        }));
+        });
     }
 
     clearIndividualBalance(driver: Driver) {
-        this.drivers.update(list => list.map(d => {
-            if (d.id === driver.id) {
-                return {
-                    ...d,
-                    amountOwed: 0.00,
-                    isAccountCleared: true
-                };
+        this.driverService.clearBalance(driver.id).subscribe({
+            next: () => {
+                delete this.reductionAmounts[driver.id];
+                this.toastService.success(`تم تصفير الرصيد للسائق: ${driver.arabicName}`, 3000);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error clearing balance:', error);
+                this.toastService.error('فشلت عملية تصفير الرصيد');
             }
-            return d;
-        }));
-        delete this.reductionAmounts[driver.id];
-        this.toastService.success(`تم تصفير الرصيد للسائق: ${driver.arabicName}`, 3000);
+        });
     }
 
     ngOnInit(): void {
@@ -446,6 +346,7 @@ export class DriversListComponent implements OnInit {
                 this.searchTerm.set(this.searchTermValue);
             }
         });
+        this.loadData();
     }
 
     reduceBalance(driver: Driver, amount: number) {
@@ -459,21 +360,17 @@ export class DriversListComponent implements OnInit {
             return;
         }
 
-        const updatedDrivers = this.drivers().map(d => {
-            if (d.id === driver.id) {
-                const newAmount = Math.round((driver.amountOwed - amount) * 100) / 100;
-                return {
-                    ...d,
-                    amountOwed: Math.max(0, newAmount),
-                    isAccountCleared: newAmount <= 0.001
-                };
+        this.driverService.reduceBalance(driver.id, amount).subscribe({
+            next: () => {
+                delete this.reductionAmounts[driver.id];
+                this.toastService.info(`تم خصم ₪${amount} من رصيد السائق: ${driver.arabicName}`, 3000);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error reducing balance:', error);
+                this.toastService.error('فشلت عملية خصم الرصيد');
             }
-            return d;
         });
-
-    this.drivers.set(updatedDrivers);
-    delete this.reductionAmounts[driver.id];
-    this.toastService.info(`تم خصم ₪${amount} من رصيد السائق: ${driver.arabicName}`, 3000);
     }
 
     toggleMobileFilters() {
@@ -481,18 +378,25 @@ export class DriversListComponent implements OnInit {
     }
 
     resetFilters() {
-    this.searchTerm.set('');
-    this.filterStatus.set('all');
-    this.minOwed.set(null);
-    this.maxOwed.set(null);
-        
-    this.searchTermValue = '';
-    this.filterStatusValue = 'all';
-    this.minOwedValue = null;
-    this.maxOwedValue = null;
+        this.searchTerm.set('');
+        this.filterStatus.set('all');
+        this.minOwed.set(null);
+        this.maxOwed.set(null);
 
-    this.showFiltersOnMobile.set(false);
-    this.toastService.info('تمت إعادة تعيين الفلاتر', 3000);
+        this.searchTermValue = '';
+        this.filterStatusValue = 'all';
+        this.minOwedValue = null;
+        this.maxOwedValue = null;
+
+        this.showFiltersOnMobile.set(false);
+        this.toastService.info('تمت إعادة تعيين الفلاتر', 3000);
+        this.currentPage = 1;
+        this.loadData();
+    }
+
+    applyFiltersOnSearch() {
+        this.currentPage = 1;
+        this.loadData();
     }
 
     getStatusOptions(): Array<'متاح' | 'في رحلة' | 'غير متصل'> {
@@ -502,7 +406,6 @@ export class DriversListComponent implements OnInit {
     isAddFormValid(): boolean {
         return !!(
             this.newDriver.arabicName &&
-            this.newDriver.name &&
             this.newDriver.password &&
             (this.newDriver.username || this.newDriver.email)
         );
@@ -511,7 +414,6 @@ export class DriversListComponent implements OnInit {
     isEditFormValid(): boolean {
         return !!(
             this.editDriver.arabicName &&
-            this.editDriver.name &&
             (this.editDriver.username || this.editDriver.email)
         );
     }

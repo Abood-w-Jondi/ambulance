@@ -61,18 +61,38 @@ export class AuthService {
    * Logout current user
    */
   logout(): Observable<void> {
-    return this.http.post<void>(`${this.API_URL}/auth/logout`, {}).pipe(
-      tap(() => {
-        this.clearAuthData();
-        this.router.navigate(['/login']);
-      }),
-      catchError(() => {
-        // Even if server logout fails, clear local data
-        this.clearAuthData();
-        this.router.navigate(['/login']);
-        return throwError(() => new Error('Logout failed'));
-      })
-    );
+    const token = this.getAccessToken();
+
+    // Always clear local data first
+    this.clearAuthData();
+
+    // If we have a valid token, notify the server
+    if (token) {
+      return this.http.post<void>(`${this.API_URL}/auth/logout`, {}).pipe(
+        tap(() => {
+          this.router.navigate(['/login']);
+        }),
+        catchError(() => {
+          // Even if server logout fails, we've already cleared local data
+          this.router.navigate(['/login']);
+          return throwError(() => new Error('Logout failed'));
+        })
+      );
+    } else {
+      // No token, just navigate to login
+      this.router.navigate(['/login']);
+      return new Observable(observer => {
+        observer.next();
+        observer.complete();
+      });
+    }
+  }
+
+  /**
+   * Logout without calling API (for use in interceptor)
+   */
+  logoutLocal(): void {
+    this.clearAuthData();
   }
 
   /**
@@ -242,7 +262,7 @@ export class AuthService {
   /**
    * Clear all authentication data
    */
-  private clearAuthData(): void {
+  public clearAuthData(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem('ambulance_user');

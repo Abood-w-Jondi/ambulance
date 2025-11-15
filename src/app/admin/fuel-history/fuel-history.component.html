@@ -43,15 +43,20 @@
                             </div>
                             
                             <div class="col-12">
-                                <label for="ambulanceName" class="form-label small fw-medium">اسم الإسعاف</label>
-                                <select id="ambulanceName" class="form-select" [(ngModel)]="recordForm.ambulanceName" name="ambulanceName" required>
-                                    <option value="">اختر الإسعاف</option>
-                                    @for (ambulance of ambulanceList; track ambulance) {
-                                        @if (ambulance !== 'جميع المركبات') {
-                                        <option [value]="ambulance">{{ ambulance }}</option>
-                                        }
+                                <label for="vehicleSearch" class="form-label small fw-medium">المركبة</label>
+                                <input type="text" id="vehicleSearch" class="form-control mb-2"
+                                    placeholder="بحث عن مركبة..."
+                                    [(ngModel)]="vehicleSearchTerm"
+                                    [ngModelOptions]="{standalone: true}">
+                                <select id="ambulanceName" class="form-select" [(ngModel)]="recordForm.ambulanceId" (change)="onVehicleSelect($event)" name="ambulanceName" required>
+                                    <option value="">اختر المركبة</option>
+                                    @for (vehicle of filteredVehicles(); track vehicle.id) {
+                                        <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                                     }
                                 </select>
+                                <small class="text-muted d-block mt-1">
+                                    عرض {{ filteredVehicles().length }} من {{ vehiclesList.length }} مركبة
+                                </small>
                             </div>
                             
                             <div class="col-12">
@@ -157,14 +162,20 @@
                             </div>
                             
                             <div class="col-12">
-                                <label for="editAmbulanceName" class="form-label small fw-medium">اسم الإسعاف</label>
-                                <select id="editAmbulanceName" class="form-select" [(ngModel)]="recordForm.ambulanceName" name="ambulanceName" required>
-                                    @for (ambulance of ambulanceList; track ambulance) {
-                                        @if (ambulance !== 'جميع المركبات') {
-                                        <option [value]="ambulance">{{ ambulance }}</option>
-                                        }
+                                <label for="editVehicleSearch" class="form-label small fw-medium">المركبة</label>
+                                <input type="text" id="editVehicleSearch" class="form-control mb-2"
+                                    placeholder="بحث عن مركبة..."
+                                    [(ngModel)]="vehicleSearchTerm"
+                                    [ngModelOptions]="{standalone: true}">
+                                <select id="editAmbulanceName" class="form-select" [(ngModel)]="recordForm.ambulanceId" (change)="onVehicleSelect($event)" name="ambulanceName" required>
+                                    <option value="">اختر المركبة</option>
+                                    @for (vehicle of filteredVehicles(); track vehicle.id) {
+                                        <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                                     }
                                 </select>
+                                <small class="text-muted d-block mt-1">
+                                    عرض {{ filteredVehicles().length }} من {{ vehiclesList.length }} مركبة
+                                </small>
                             </div>
                             
                             <div class="col-12">
@@ -369,8 +380,9 @@
                     <div class="col-md-6">
                         <label for="ambulanceFilter" class="form-label small fw-medium">الإسعاف</label>
                         <select id="ambulanceFilter" class="form-select" [(ngModel)]="selectedAmbulance">
-                            @for (ambulance of ambulanceList; track ambulance) {
-                            <option [value]="ambulance">{{ ambulance }}</option>
+                            <option value="جميع المركبات">جميع المركبات</option>
+                            @for (vehicle of vehiclesList; track vehicle.id) {
+                            <option [value]="vehicle.vehicleName">{{ vehicle.vehicleName }}</option>
                             }
                         </select>
                     </div>

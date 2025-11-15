@@ -83,7 +83,7 @@ export const driverGuard: CanActivateFn = (
     return false;
   }
 
-  if (authService.isDriver() || authService.isParamedic()) {
+  if (authService.isDriver() || authService.isParamedic() || authService.isAdmin()) {
     return true;
   }
 

@@ -6,7 +6,8 @@ export interface MaintenanceRecord {
     id: string;
 
     // Vehicle Information
-    vehicleId: string;         // Vehicle display ID or name
+    vehicleId: string;          // Vehicle ID (e.g., 'AMB-004')
+    vehicleName?: string;       // Vehicle display name (e.g., 'إسعاف 04')
     vehicleInternalId?: string; // Internal vehicle ID for backend reference
 
     // Date & Time
