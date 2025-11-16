@@ -1,12 +1,13 @@
-import { Component, signal, ChangeDetectionStrategy, computed, OnInit } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, computed, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { GlobalVarsService } from '../../global-vars.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { ValidationService } from '../../shared/services/validation.service';
 import { FuelService } from '../../shared/services/fuel.service';
 import { VehicleService } from '../../shared/services/vehicle.service';
+import { DriverService } from '../../shared/services/driver.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { FuelRecord, Vehicle } from '../../shared/models';
 
@@ -21,18 +22,18 @@ import { FuelRecord, Vehicle } from '../../shared/models';
 export class FuelHistoryComponent implements OnInit {
     // --- State Initialization (Signals) ---
     searchTerm = signal('');
-    filterDay: number | string = 'يوم';
-    filterMonth: number | string = 'شهر';
-    filterYear: number | string = 'سنة';
-    selectedAmbulance: string = 'جميع المركبات';
-    
+    startDay: number = 1;
+    startMonth: number = 1;
+    startYear: number = 2020;
+    endDay: number = new Date().getDate();
+    endMonth: number = new Date().getMonth() + 1;
+    endYear: number = new Date().getFullYear();
+    selectedVehicle: string = 'جميع المركبات';
+
     // Filters for computation
-    dateFilter = signal<Date | null>(null);
-    ambulanceFilter = signal<string>('جميع المركبات');
-    
-    // Query parameter filters
-    queryFilterType = signal<string | null>(null);
-    queryFilterValue = signal<string | null>(null);
+    dateFilterFrom = signal<Date | null>(null);
+    dateFilterTo = signal<Date | null>(null);
+    vehicleFilter = signal<string>('جميع المركبات');
     
     // Modal Control
     isAddRecordModalOpen = signal(false);
@@ -69,35 +70,54 @@ export class FuelHistoryComponent implements OnInit {
         );
     });
 
+    driversList: any[] = [];
+    driverSearchTerm = signal('');
+    filteredDrivers = computed(() => {
+        const term = this.driverSearchTerm().toLowerCase();
+        if (!term) return this.driversList;
+        return this.driversList.filter((d: any) =>
+            d.arabicName?.toLowerCase().includes(term) ||
+            d.name?.toLowerCase().includes(term)
+        );
+    });
+
     // Pagination
     currentPage = 1;
     itemsPerPage = 10;
     totalRecords = 0;
     isLoading = signal(false);
 
+    private searchDebounceTimer: any = null;
+
     constructor(
         private globalVars: GlobalVarsService,
         private router: Router,
-        private route: ActivatedRoute,
         private toastService: ToastService,
         private validationService: ValidationService,
         private fuelService: FuelService,
-        private vehicleService: VehicleService
+        private vehicleService: VehicleService,
+        private driverService: DriverService
     ) {
         this.globalVars.setGlobalHeader('سجل الوقود');
+
+        // Watch search term changes and trigger search with debounce
+        effect(() => {
+            this.searchTerm(); // Track dependency
+
+            if (this.searchDebounceTimer) {
+                clearTimeout(this.searchDebounceTimer);
+            }
+
+            this.searchDebounceTimer = setTimeout(() => {
+                this.currentPage = 1;
+                this.loadData();
+            }, 500);
+        });
     }
 
     ngOnInit(): void {
-        // Check for query parameters from fleet component
-        this.route.queryParams.subscribe(params => {
-            if (params['filterType'] && params['filterValue']) {
-                this.queryFilterType.set(params['filterType']);
-                this.queryFilterValue.set(params['filterValue']);
-                this.searchTerm.set(params['filterValue']);
-            }
-        });
-        this.toastService.info('يمكنك النقر على أسماء المركبات أو أرقامها أو معرفات السائقين للتنقل إلى المكونات ذات الصلة.', 3000);
         this.loadVehicles();
+        this.loadDrivers();
         this.loadData();
     }
 
@@ -113,6 +133,19 @@ export class FuelHistoryComponent implements OnInit {
             }
         });
     }
+
+    loadDrivers(): void {
+        // Load all drivers with a high limit for the dropdown
+        this.driverService.getDrivers({ limit: 1000 }).subscribe({
+            next: (res) => {
+                this.driversList = res.data;
+            },
+            error: (error) => {
+                console.error('Error loading drivers:', error);
+                this.toastService.error('فشل تحميل السائقين');
+            }
+        });
+    }
     
     records = signal<FuelRecord[]>([]);
 
@@ -121,13 +154,20 @@ export class FuelHistoryComponent implements OnInit {
 
         const params: any = {
             page: this.currentPage,
-            limit: this.itemsPerPage
+            limit: this.itemsPerPage,
+            vehicleInternalId: this.vehicleFilter() !== 'جميع المركبات' ? this.vehicleFilter() : undefined,
         };
 
-        const filterDate = this.dateFilter();
-        if (filterDate) {
-            params.startDate = filterDate.toISOString().split('T')[0];
-            params.endDate = filterDate.toISOString().split('T')[0];
+        const fromDate = this.dateFilterFrom();
+        const toDate = this.dateFilterTo();
+        if (fromDate && toDate) {
+            params.startDate = fromDate.toISOString().split('T')[0];
+            params.endDate = toDate.toISOString().split('T')[0];
+        }
+
+        // Add search parameter
+        if (this.searchTerm().trim()) {
+            params.search = this.searchTerm().trim();
         }
 
         this.fuelService.getFuelRecords(params).subscribe({
@@ -143,11 +183,6 @@ export class FuelHistoryComponent implements OnInit {
             }
         });
     }
-
-    // --- Computed Property for Filtering ---
-    filteredRecords = computed(() => {
-        return this.records();
-    });
 
     // --- Pagination Methods ---
     getPaginatedFuelRecords() {
@@ -168,46 +203,59 @@ export class FuelHistoryComponent implements OnInit {
     // --- Component Methods ---
 
     applyFilters(): void {
-        // Only create date filter if at least one date component is selected
-        if (typeof this.filterDay === 'number' ||
-            typeof this.filterMonth === 'number' ||
-            typeof this.filterYear === 'number') {
+        const fromDate = new Date(this.startYear, this.startMonth - 1, this.startDay);
+        const toDate = new Date(this.endYear, this.endMonth - 1, this.endDay);
 
-            const day = typeof this.filterDay === 'number' ? this.filterDay : 1;
-            const month = typeof this.filterMonth === 'number' ? this.filterMonth - 1 : 0;
-            const year = typeof this.filterYear === 'number' ? this.filterYear : new Date().getFullYear();
-
-            const filterDate = new Date(year, month, day);
-            this.dateFilter.set(filterDate);
-        } else {
-            this.dateFilter.set(null);
-        }
-
-        this.ambulanceFilter.set(this.selectedAmbulance);
+        this.dateFilterFrom.set(fromDate);
+        this.dateFilterTo.set(toDate);
+        this.vehicleFilter.set(this.selectedVehicle);
         this.currentPage = 1;
         this.loadData();
     }
 
     clearFilters(): void {
-        this.filterDay = 'يوم';
-        this.filterMonth = 'شهر';
-        this.filterYear = 'سنة';
-        this.selectedAmbulance = 'جميع المركبات';
+        this.startDay = 1;
+        this.startMonth = 1;
+        this.startYear = new Date().getFullYear();
+        this.endDay = 31;
+        this.endMonth = 12;
+        this.endYear = new Date().getFullYear();
+        this.selectedVehicle = 'جميع المركبات';
         this.searchTerm.set('');
 
-        this.dateFilter.set(null);
-        this.ambulanceFilter.set('جميع المركبات');
+        this.dateFilterFrom.set(null);
+        this.dateFilterTo.set(null);
+        this.vehicleFilter.set('جميع المركبات');
         this.currentPage = 1;
         this.loadData();
     }
 
-    formatDate(date: Date): string {
-        return date.toLocaleDateString('ar-EG', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        });
+    // 🛠️ AFTER: Robust null/invalid date check
+formatDate(date: Date | string | null | undefined): string {
+    // 1. Check if the input is truthy (not null, undefined, or empty string)
+    if (!date) {
+        return '---'; // Placeholder for missing date
     }
+
+    let dateObject: Date;
+
+    // 2. If it's a string, convert it to Date (if Step 1 didn't catch it, this is a fallback)
+    if (typeof date === 'string') {
+        dateObject = new Date(date);
+    } else if (date instanceof Date) {
+        dateObject = date;
+    } else {
+        return 'تاريخ غير صالح'; // Catch unexpected types
+    }
+
+    // 3. Check if the resulting Date object is valid
+    if (isNaN(dateObject.getTime())) {
+        return 'تاريخ غير صالح';
+    }
+
+    // 4. Return the formatted date string
+    return dateObject.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+}
 
     openAddRecordModal(): void {
         this.recordForm = {
@@ -398,39 +446,66 @@ export class FuelHistoryComponent implements OnInit {
         }
     }
 
-    // Navigation methods for clicking on ambulance properties
-    navigateToFleet(filterType: 'name' | 'number' | 'driver' | 'driverId', value: string): void {
-        // Navigate to fleet component with query params
-        this.router.navigate(['admin/vehicles'], { 
-            queryParams: { 
-                filterType: filterType,
-                filterValue: value 
-            } 
-        });
-    }
-    navigateToDriver(value: string): void {
-        this.router.navigate(['admin/drivers-list'], { 
-            queryParams: { 
-                filterValue: value 
-            } 
-        });
-    }
-
-    getDaysInMonth(month: number | string, year: number | string): (number | string)[] {
-        if (typeof month !== 'number' || typeof year !== 'number') {
-            return ['يوم'];
-        }
+    getDaysInMonth(month: number, year: number): number[] {
         const days = new Date(year, month, 0).getDate();
-        return ['يوم', ...Array.from({ length: days }, (_, i) => i + 1)];
+        return Array.from({ length: days }, (_, i) => i + 1);
     }
 
-    getMonths(): (number | string)[] {
-        return ['شهر', ...Array.from({ length: 12 }, (_, i) => i + 1)];
+    getMonths(): number[] {
+        return Array.from({ length: 12 }, (_, i) => i + 1);
     }
 
-    getYears(): (number | string)[] {
+    getYears(): number[] {
         const currentYear = new Date().getFullYear();
-        return ['سنة', ...Array.from({ length: 10 }, (_, i) => currentYear - i)];
+        return Array.from({ length: 10 }, (_, i) => currentYear - i);
+    }
+
+    /**
+     * Navigate to fleet page filtered by vehicle
+     */
+    navigateToFleet(vehicleInternalId?: string): void {
+        if (vehicleInternalId) {
+            this.router.navigate(['admin/vehicles'], {
+                queryParams: {
+                    filterType: 'id',
+                    filterValue: vehicleInternalId
+                }
+            });
+        }
+    }
+
+    /**
+     * Navigate to driver page
+     */
+    navigateToDriver(value: string): void {
+        this.router.navigate(['admin/drivers-list'], {
+            queryParams: {
+                filterValue: value
+            }
+        });
+    }
+
+    /**
+     * Filter by clicking on vehicle name
+     */
+    filterByVehicle(vehicleId: string, event?: Event): void {
+        if (event) {
+            event.stopPropagation();
+        }
+        this.selectedVehicle = vehicleId;
+        this.vehicleFilter.set(vehicleId);
+        this.currentPage = 1;
+        this.loadData();
+    }
+
+    /**
+     * Filter by clicking on driver name
+     */
+    filterByDriver(driverName: string, event?: Event): void {
+        if (event) {
+            event.stopPropagation();
+        }
+        this.searchTerm.set(driverName);
     }
 
     /**
@@ -452,6 +527,28 @@ export class FuelHistoryComponent implements OnInit {
             this.recordForm.ambulanceId = vehicle.id;
             this.recordForm.ambulanceName = vehicle.vehicleName;
             this.recordForm.ambulanceNumber = vehicle.vehicleId;
+        }
+    }
+
+    /**
+     * Handle driver selection from dropdown
+     */
+    onDriverSelect(event: Event): void {
+        const target = event.target as HTMLSelectElement;
+        const driverId = target.value;
+
+        if (!driverId) {
+            this.recordForm.driverInternalId = '';
+            this.recordForm.driverId = '';
+            this.recordForm.driverName = '';
+            return;
+        }
+
+        const driver = this.driversList.find((d: any) => d.id === driverId);
+        if (driver) {
+            this.recordForm.driverInternalId = driver.id;
+            this.recordForm.driverId = driver.driver_code;
+            this.recordForm.driverName = driver.arabicName;
         }
     }
 }

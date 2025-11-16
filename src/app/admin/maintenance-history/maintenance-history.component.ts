@@ -1,4 +1,4 @@
-import { Component, signal, ChangeDetectionStrategy, computed, OnInit } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, computed, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -25,11 +25,11 @@ export class MaintenanceHistoryComponent implements OnInit {
     searchTerm = signal('');
     maintenanceTypeFilter = signal('');
     startDay: number = 1;
-    startMonth: number = 8;
-    startYear: number = 2023;
-    endDay: number = 31;
-    endMonth: number = 8;
-    endYear: number = 2023;
+    startMonth: number = 1;
+    startYear: number = 2020;
+    endDay: number = new Date().getDate();
+    endMonth: number = new Date().getMonth() + 1;
+    endYear: number = new Date().getFullYear() + 10;
     selectedVehicle: string = 'جميع المركبات';
     selectedMaintenanceType: string = 'جميع الأنواع';
     
@@ -90,6 +90,8 @@ export class MaintenanceHistoryComponent implements OnInit {
     totalRecords = 0;
     isLoading = signal(false);
 
+    private searchDebounceTimer: any = null;
+
     constructor(
         private globalVars: GlobalVarsService,
         private toastService: ToastService,
@@ -99,6 +101,20 @@ export class MaintenanceHistoryComponent implements OnInit {
         private router: Router
     ) {
         this.globalVars.setGlobalHeader('سجل الصيانة');
+
+        // Watch search term changes and trigger search with debounce
+        effect(() => {
+            this.searchTerm(); // Track dependency
+
+            if (this.searchDebounceTimer) {
+                clearTimeout(this.searchDebounceTimer);
+            }
+
+            this.searchDebounceTimer = setTimeout(() => {
+                this.currentPage = 1;
+                this.loadData();
+            }, 500);
+        });
     }
 
     ngOnInit(): void {
@@ -127,7 +143,7 @@ export class MaintenanceHistoryComponent implements OnInit {
         const params: any = {
             page: this.currentPage,
             limit: this.itemsPerPage,
-            vehicleId: this.vehicleFilter() !== 'جميع المركبات' ? this.vehicleFilter() : undefined,
+            vehicleInternalId: this.vehicleFilter() !== 'جميع المركبات' ? this.vehicleFilter() : undefined,
         };
 
         const fromDate = this.dateFilterFrom();
@@ -139,7 +155,12 @@ export class MaintenanceHistoryComponent implements OnInit {
 
         // Add maintenance type filter
         if (this.maintenanceTypeFilter() && this.maintenanceTypeFilter() !== 'جميع الأنواع') {
-            params.type = this.maintenanceTypeFilter();
+            params.maintenanceType = this.maintenanceTypeFilter();
+        }
+
+        // Add search parameter
+        if (this.searchTerm().trim()) {
+            params.search = this.searchTerm().trim();
         }
 
         this.maintenanceService.getMaintenanceRecords(params).subscribe({
@@ -156,26 +177,9 @@ export class MaintenanceHistoryComponent implements OnInit {
         });
     }
 
-    // --- Computed Property for Filtering ---
-    filteredRecords = computed(() => {
-        let filtered = this.records();
-
-        // Apply search term filter for vehicleId, vehicleName, and serviceLocation
-        const search = this.searchTerm().toLowerCase().trim();
-        if (search) {
-            filtered = filtered.filter(record =>
-                record.vehicleId?.toLowerCase().includes(search) ||
-                record.vehicleName?.toLowerCase().includes(search) ||
-                record.serviceLocation?.toLowerCase().includes(search)
-            );
-        }
-
-        return filtered;
-    });
-
     // --- Pagination Methods ---
     getPaginatedMaintenanceRecords() {
-        return this.filteredRecords();
+        return this.records();
     }
 
     onPageChange(page: number): void {

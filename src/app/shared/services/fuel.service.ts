@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { FuelRecord } from '../models';
 import { PaginatedResponse } from './driver.service';
@@ -39,14 +40,27 @@ export class FuelService {
       });
     }
 
-    return this.http.get<PaginatedResponse<FuelRecord>>(this.API_URL, { params: httpParams });
+    return this.http.get<PaginatedResponse<any>>(this.API_URL, { params: httpParams }).pipe(
+      map(response => ({
+        ...response,
+        data: response.data.map((record: any) => ({
+          ...record,
+          date: new Date(record.date)
+        }))
+      }))
+    );
   }
 
   /**
    * Get fuel record by ID
    */
   getFuelRecordById(id: string): Observable<FuelRecord> {
-    return this.http.get<FuelRecord>(`${this.API_URL}/${id}`);
+    return this.http.get<any>(`${this.API_URL}/${id}`).pipe(
+      map(record => ({
+        ...record,
+        date: new Date(record.date)
+      }))
+    );
   }
 
   /**
@@ -55,7 +69,12 @@ export class FuelService {
   createFuelRecord(record: Partial<FuelRecord>): Observable<FuelRecord> {
     // Map frontend fields to backend fields
     const payload = this.mapToBackendFormat(record);
-    return this.http.post<FuelRecord>(this.API_URL, payload);
+    return this.http.post<any>(this.API_URL, payload).pipe(
+      map(result => ({
+        ...result,
+        date: new Date(result.date)
+      }))
+    );
   }
 
   /**
@@ -64,7 +83,12 @@ export class FuelService {
   updateFuelRecord(id: string, record: Partial<FuelRecord>): Observable<FuelRecord> {
     // Map frontend fields to backend fields
     const payload = this.mapToBackendFormat(record);
-    return this.http.put<FuelRecord>(`${this.API_URL}/${id}`, payload);
+    return this.http.put<any>(`${this.API_URL}/${id}`, payload).pipe(
+      map(result => ({
+        ...result,
+        date: new Date(result.date)
+      }))
+    );
   }
 
   /**

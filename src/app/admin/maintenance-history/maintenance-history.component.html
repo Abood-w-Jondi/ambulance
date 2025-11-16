@@ -497,11 +497,11 @@
             </div>
 
             <!-- Pagination -->
-            @if (filteredRecords().length > 0) {
+            @if (totalRecords > 0) {
             <div class="mt-4">
                 <app-pagination
                     [currentPage]="currentPage"
-                    [totalItems]="filteredRecords().length"
+                    [totalItems]="totalRecords"
                     [itemsPerPage]="itemsPerPage"
                     (pageChange)="onPageChange($event)"
                     (itemsPerPageChange)="onItemsPerPageChange($event)">
