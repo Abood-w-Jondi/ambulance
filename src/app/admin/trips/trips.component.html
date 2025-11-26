@@ -1,11 +1,8 @@
 <div class="d-flex flex-column min-vh-100 bg-light">
 
     <!-- Confirmation Modal -->
-    <app-confirmation-modal
-        [isOpen]="isDeleteTripModalOpen()"
-        [config]="confirmationModalConfig()"
-        (confirmed)="confirmDeleteTrip()"
-        (cancelled)="closeDeleteConfirmation()">
+    <app-confirmation-modal [isOpen]="isDeleteTripModalOpen()" [config]="confirmationModalConfig()"
+        (confirmed)="confirmDeleteTrip()" (cancelled)="closeDeleteConfirmation()">
     </app-confirmation-modal>
 
     <!-- Add Trip Modal -->
@@ -16,8 +13,9 @@
             <div class="modal-content rounded-xl shadow-lg border-0">
                 <div class="modal-header bg-primary-custom rounded-top-xl border-0 justify-content-between text-white">
                     <h5 class="modal-title fw-bold">إضافة رحلة/نقل جديد</h5>
-                    <button type="button" style="background-color: transparent; border: none; color: white;" data-bs-dismiss="modal" aria-label="Close"
-                        (click)="isAddTripModalOpen.set(false)"><i class="fa fa-times"></i></button>
+                    <button type="button" style="background-color: transparent; border: none; color: white;"
+                        data-bs-dismiss="modal" aria-label="Close" (click)="isAddTripModalOpen.set(false)"><i
+                            class="fa fa-times"></i></button>
                 </div>
                 <div class="modal-body p-4 text-end" style="max-height: 70vh; overflow-y: auto;">
                     <form (ngSubmit)="addTrip()">
@@ -52,64 +50,55 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- YMD Fields -->
                             <div class="col-12">
                                 <label class="form-label small fw-medium">YMD</label>
                                 <div class="row g-2">
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.ymdDay" name="ymdDay" required>
-                                            <option value="" disabled>اليوم</option>
-                                            @for (day of getDaysInMonth(tripForm.ymdMonth, tripForm.ymdYear); track day) {
-                                            <option [value]="day">{{ day }}</option>
-                                            }
-                                        </select>
+                                    <div class="col-6">
+                                        <input type="number" class="form-select" [(ngModel)]="tripForm.ymdNumber"
+                                            name="ymdNumber" min="1" max="365" placeholder="العمر" required>
                                     </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.ymdMonth" name="ymdMonth" required>
-                                            <option value="" disabled>الشهر</option>
-                                            @for (month of getMonths(); track month) {
-                                            <option [value]="month">{{ month }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.ymdYear" name="ymdYear" required>
-                                            <option value="" disabled>السنة</option>
-                                            @for (year of getYears(); track year) {
-                                            <option [value]="year">{{ year }}</option>
-                                            }
+                                    <div class="col-6">
+                                        <select class="form-select" [(ngModel)]="tripForm.ymdPeriod" name="ymdPeriod"
+                                            required>
+                                            <option value="يوم">يوم</option>
+                                            <option value="اسبوع">اسبوع</option>
+                                            <option value="شهر">شهر</option>
+                                            <option value="سنة">سنة</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Driver with Search -->
                             <div class="col-6">
                                 <label for="driver" class="form-label small fw-medium">السائق</label>
-                                <input type="text" class="form-control mb-2" placeholder="بحث..." 
+                                <input type="text" class="form-control mb-2" placeholder="بحث..."
                                     [(ngModel)]="driverSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="driver" class="form-select" [(ngModel)]="tripForm.driver" name="driver" required>
+                                <select id="driver" class="form-select" [(ngModel)]="tripForm.driverId"
+                                    (change)="onDriverSelect($event)" name="driverId" required>
                                     <option value="">اختر السائق</option>
                                     @for (driver of filteredDriversList(); track driver.id) {
-                                    <option [value]="driver.name">{{ driver.name }}</option>
+                                    <option [value]="driver.id">{{ driver.name }}</option>
                                     }
                                 </select>
                             </div>
-                            
+
                             <!-- Paramedic with Search -->
                             <div class="col-6">
                                 <label for="paramedic" class="form-label small fw-medium">ضابط الاسعاف</label>
-                                <input type="text" class="form-control mb-2" placeholder="بحث..." 
+                                <input type="text" class="form-control mb-2" placeholder="بحث..."
                                     [(ngModel)]="paramedicSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="paramedic" class="form-select" [(ngModel)]="tripForm.paramedic" name="paramedic" required>
+                                <select id="paramedic" class="form-select" [(ngModel)]="tripForm.paramedicId"
+                                    (change)="onParamedicSelect($event)" name="paramedicId" required>
                                     <option value="">اختر الضابط</option>
                                     @for (paramedic of filteredParamedicsList(); track paramedic.id) {
-                                    <option [value]="paramedic.name">{{ paramedic.name }}</option>
+                                    <option [value]="paramedic.id">{{ paramedic.name }}</option>
                                     }
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="transferFrom" class="form-label small fw-medium">نقل من</label>
                                 <input id="transferFrom" type="text" class="form-control" placeholder="موقع الانطلاق"
@@ -122,28 +111,23 @@
                             </div>
                             <div class="col-4">
                                 <label for="start" class="form-label small fw-medium">بدء</label>
-                                <input id="start" type="number" class="form-control text-end" placeholder="0"
+                                <input id="start" type="number" class="form-control text-end" placeholder=""
                                     [(ngModel)]="tripForm.start" name="start" min="0" style="direction: ltr;" required>
                             </div>
                             <div class="col-4">
                                 <label for="end" class="form-label small fw-medium">نهاية</label>
-                                <input id="end" type="number" class="form-control text-end" placeholder="0"
+                                <input id="end" type="number" class="form-control text-end" placeholder=""
                                     [(ngModel)]="tripForm.end" name="end" min="0" style="direction: ltr;" required>
                             </div>
                             <div class="col-4">
-                                <label for="diesel" class="form-label small fw-medium">سولار (لتر)</label>
-                                <input id="diesel" type="number" class="form-control text-end" placeholder="0"
-                                    [(ngModel)]="tripForm.diesel" name="diesel" min="0" step="0.1" style="direction: ltr;" required>
+                                <label for="diesel" class="form-label small fw-medium">سولار (كيلومتر)</label>
+                                <input id="diesel" type="number" class="form-control text-end" [value]="calculatedDiesel"
+                                    readonly style="direction: ltr; background-color: #e9ecef;">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label for="patientName" class="form-label small fw-medium">المريض</label>
                                 <input id="patientName" type="text" class="form-control" placeholder="اسم المريض"
                                     [(ngModel)]="tripForm.patientName" name="patientName" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="patientAge" class="form-label small fw-medium">العمر</label>
-                                <input id="patientAge" type="number" class="form-control text-end" placeholder="0"
-                                    [(ngModel)]="tripForm.patientAge" name="patientAge" min="0" style="direction: ltr;" required>
                             </div>
                             <div class="col-md-12">
                                 <label for="diagnosis" class="form-label small fw-medium">التشخيص</label>
@@ -152,7 +136,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="transferStatus" class="form-label small fw-medium">النقل</label>
-                                <select id="transferStatus" class="form-select" [(ngModel)]="tripForm.transferStatus" name="transferStatus" required>
+                                <select id="transferStatus" class="form-select" [(ngModel)]="tripForm.transferStatus"
+                                    name="transferStatus" required>
                                     @for (status of transferStatuses; track status) {
                                     <option [value]="status">{{ status }}</option>
                                     }
@@ -161,18 +146,21 @@
                             <div class="col-6">
                                 <label for="totalAmount" class="form-label small fw-medium">المبلغ (₪)</label>
                                 <input id="totalAmount" type="number" class="form-control text-end" placeholder="0.00"
-                                    [(ngModel)]="tripForm.totalAmount" name="totalAmount" min="0" step="0.01" style="direction: ltr;" required>
+                                    [(ngModel)]="tripForm.totalAmount" name="totalAmount" min="0" step="0.01"
+                                    style="direction: ltr;" required>
                             </div>
                             <div class="col-6">
                                 <label for="paramedicShare" class="form-label small fw-medium">حصة الضابط (₪)</label>
-                                <input id="paramedicShare" type="number" class="form-control text-end" placeholder="0.00"
-                                    [(ngModel)]="tripForm.paramedicShare" name="paramedicShare" min="0" step="0.01" style="direction: ltr;" required>
+                                <input id="paramedicShare" type="number" class="form-control text-end"
+                                    placeholder="0.00" [(ngModel)]="tripForm.paramedicShare" name="paramedicShare"
+                                    min="0" step="0.01" style="direction: ltr;" required>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
                                 (click)="isAddTripModalOpen.set(false)">إلغاء</button>
-                            <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold">إضافة الرحلة</button>
+                            <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold">إضافة
+                                الرحلة</button>
                         </div>
                     </form>
                 </div>
@@ -189,8 +177,8 @@
             <div class="modal-content rounded-xl shadow-lg border-0">
                 <div class="modal-header bg-warning rounded-top-xl border-0 justify-content-between text-dark">
                     <h5 class="modal-title fw-bold">تعديل الرحلة</h5>
-                    <button type="button" style="background-color: transparent; border: none;" data-bs-dismiss="modal" aria-label="Close"
-                        (click)="closeEditTripModal()"><i class="fa fa-times"></i></button>
+                    <button type="button" style="background-color: transparent; border: none;" data-bs-dismiss="modal"
+                        aria-label="Close" (click)="closeEditTripModal()"><i class="fa fa-times"></i></button>
                 </div>
                 <div class="modal-body p-4 text-end" style="max-height: 70vh; overflow-y: auto;">
                     <form (ngSubmit)="saveEditTrip()">
@@ -222,65 +210,60 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- YMD Fields -->
                             <div class="col-12">
                                 <label class="form-label small fw-medium">YMD</label>
                                 <div class="row g-2">
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.ymdDay" name="ymdDay" required>
-                                            @for (day of getDaysInMonth(tripForm.ymdMonth, tripForm.ymdYear); track day) {
-                                            <option [value]="day">{{ day }}</option>
-                                            }
-                                        </select>
+                                    <div class="col-6">
+                                        <input type="number" class="form-select" [(ngModel)]="tripForm.ymdNumber"
+                                            name="ymdNumber" min="1" max="365" placeholder="الرقم (1-365)" required>
                                     </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.ymdMonth" name="ymdMonth" required>
-                                            @for (month of getMonths(); track month) {
-                                            <option [value]="month">{{ month }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.ymdYear" name="ymdYear" required>
-                                            @for (year of getYears(); track year) {
-                                            <option [value]="year">{{ year }}</option>
-                                            }
+                                    <div class="col-6">
+                                        <select class="form-select" [(ngModel)]="tripForm.ymdPeriod" name="ymdPeriod"
+                                            required>
+                                            <option value="يوم">يوم</option>
+                                            <option value="اسبوع">اسبوع</option>
+                                            <option value="شهر">شهر</option>
+                                            <option value="سنة">سنة</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Driver with Search -->
                             <div class="col-md-6">
                                 <label for="editDriver" class="form-label small fw-medium">السائق</label>
-                                <input type="text" class="form-control mb-2" placeholder="بحث..." 
+                                <input type="text" class="form-control mb-2" placeholder="بحث..."
                                     [(ngModel)]="driverSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="editDriver" class="form-select" [(ngModel)]="tripForm.driver" name="driver" required>
+                                <select id="editDriver" class="form-select" [(ngModel)]="tripForm.driverId"
+                                    (change)="onDriverSelect($event)" name="driverId" required>
                                     <option value="">اختر السائق</option>
                                     @for (driver of filteredDriversList(); track driver.id) {
-                                    <option [value]="driver.name">{{ driver.name }}</option>
+                                    <option [value]="driver.id">{{ driver.name }}</option>
                                     }
                                 </select>
                             </div>
-                            
+
                             <!-- Paramedic with Search -->
                             <div class="col-md-6">
                                 <label for="editParamedic" class="form-label small fw-medium">ضابط الاسعاف</label>
-                                <input type="text" class="form-control mb-2" placeholder="بحث..." 
+                                <input type="text" class="form-control mb-2" placeholder="بحث..."
                                     [(ngModel)]="paramedicSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="editParamedic" class="form-select" [(ngModel)]="tripForm.paramedic" name="paramedic" required>
+                                <select id="editParamedic" class="form-select" [(ngModel)]="tripForm.paramedicId"
+                                    (change)="onParamedicSelect($event)" name="paramedicId" required>
                                     <option value="">اختر الضابط</option>
                                     @for (paramedic of filteredParamedicsList(); track paramedic.id) {
-                                    <option [value]="paramedic.name">{{ paramedic.name }}</option>
+                                    <option [value]="paramedic.id">{{ paramedic.name }}</option>
                                     }
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="editTransferFrom" class="form-label small fw-medium">نقل من</label>
-                                <input id="editTransferFrom" type="text" class="form-control" placeholder="موقع الانطلاق"
-                                    [(ngModel)]="tripForm.transferFrom" name="transferFrom" required>
+                                <input id="editTransferFrom" type="text" class="form-control"
+                                    placeholder="موقع الانطلاق" [(ngModel)]="tripForm.transferFrom" name="transferFrom"
+                                    required>
                             </div>
                             <div class="col-md-6">
                                 <label for="editTransferTo" class="form-label small fw-medium">نقل الى</label>
@@ -289,28 +272,23 @@
                             </div>
                             <div class="col-4">
                                 <label for="editStart" class="form-label small fw-medium">بدء</label>
-                                <input id="editStart" type="number" class="form-control text-end" placeholder="0"
+                                <input id="editStart" type="number" class="form-control text-end" placeholder=""
                                     [(ngModel)]="tripForm.start" name="start" min="0" style="direction: ltr;" required>
                             </div>
                             <div class="col-4">
                                 <label for="editEnd" class="form-label small fw-medium">نهاية</label>
-                                <input id="editEnd" type="number" class="form-control text-end" placeholder="0"
+                                <input id="editEnd" type="number" class="form-control text-end" placeholder=""
                                     [(ngModel)]="tripForm.end" name="end" min="0" style="direction: ltr;" required>
                             </div>
                             <div class="col-4">
-                                <label for="editDiesel" class="form-label small fw-medium">سولار (لتر)</label>
-                                <input id="editDiesel" type="number" class="form-control text-end" placeholder="0"
-                                    [(ngModel)]="tripForm.diesel" name="diesel" min="0" step="0.1" style="direction: ltr;" required>
+                                <label for="editDiesel" class="form-label small fw-medium">سولار (كيلومتر)</label>
+                                <input id="editDiesel" type="number" class="form-control text-end" [value]="calculatedDiesel"
+                                    readonly style="direction: ltr; background-color: #e9ecef;">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label for="editPatientName" class="form-label small fw-medium">المريض</label>
                                 <input id="editPatientName" type="text" class="form-control" placeholder="اسم المريض"
                                     [(ngModel)]="tripForm.patientName" name="patientName" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="editPatientAge" class="form-label small fw-medium">العمر</label>
-                                <input id="editPatientAge" type="number" class="form-control text-end" placeholder="0"
-                                    [(ngModel)]="tripForm.patientAge" name="patientAge" min="0" style="direction: ltr;" required>
                             </div>
                             <div class="col-md-12">
                                 <label for="editDiagnosis" class="form-label small fw-medium">التشخيص</label>
@@ -319,7 +297,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="editTransferStatus" class="form-label small fw-medium">النقل</label>
-                                <select id="editTransferStatus" class="form-select" [(ngModel)]="tripForm.transferStatus" name="transferStatus" required>
+                                <select id="editTransferStatus" class="form-select"
+                                    [(ngModel)]="tripForm.transferStatus" name="transferStatus" required>
                                     @for (status of transferStatuses; track status) {
                                     <option [value]="status">{{ status }}</option>
                                     }
@@ -327,19 +306,23 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="editTotalAmount" class="form-label small fw-medium">المبلغ (₪)</label>
-                                <input id="editTotalAmount" type="number" class="form-control text-end" placeholder="0.00"
-                                    [(ngModel)]="tripForm.totalAmount" name="totalAmount" min="0" step="0.01" style="direction: ltr;" required>
+                                <input id="editTotalAmount" type="number" class="form-control text-end"
+                                    placeholder="0.00" [(ngModel)]="tripForm.totalAmount" name="totalAmount" min="0"
+                                    step="0.01" style="direction: ltr;" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="editParamedicShare" class="form-label small fw-medium">حصة الضابط (₪)</label>
-                                <input id="editParamedicShare" type="number" class="form-control text-end" placeholder="0.00"
-                                    [(ngModel)]="tripForm.paramedicShare" name="paramedicShare" min="0" step="0.01" style="direction: ltr;" required>
+                                <label for="editParamedicShare" class="form-label small fw-medium">حصة الضابط
+                                    (₪)</label>
+                                <input id="editParamedicShare" type="number" class="form-control text-end"
+                                    placeholder="0.00" [(ngModel)]="tripForm.paramedicShare" name="paramedicShare"
+                                    min="0" step="0.01" style="direction: ltr;" required>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
                                 (click)="closeEditTripModal()">إلغاء</button>
-                            <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">حفظ التغييرات</button>
+                            <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold">حفظ
+                                التغييرات</button>
                         </div>
                     </form>
                 </div>
@@ -356,8 +339,8 @@
             <div class="modal-content rounded-xl shadow-lg border-0">
                 <div class="modal-header bg-primary-custom rounded-top-xl border-0 justify-content-between">
                     <h5 class="modal-title fw-bold">تفاصيل الرحلة</h5>
-                    <button type="button" style="border: none; background: none;" data-bs-dismiss="modal" aria-label="Close"
-                        (click)="closeViewTripModal()"><i class="fas fa-times"></i></button>
+                    <button type="button" style="border: none; background: none;" data-bs-dismiss="modal"
+                        aria-label="Close" (click)="closeViewTripModal()"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="modal-body p-4 text-end" style="overflow: auto;">
                     @if (selectedTrip(); as trip) {
@@ -368,7 +351,7 @@
                         </div>
                         <div class="col-6">
                             <p class="text-muted small mb-1">YMD</p>
-                            <p class="fw-bold">{{ getFormattedDate(trip.ymdDay, trip.ymdMonth, trip.ymdYear) }}</p>
+                            <p class="fw-bold">{{ trip.ymdValue && trip.ymdPeriod ? trip.ymdValue + ' ' + trip.ymdPeriod : 'غير محدد' }}</p>
                         </div>
                         <div class="col-6">
                             <p class="text-muted small mb-1">السائق</p>
@@ -395,16 +378,12 @@
                             <p class="fw-bold">{{ trip.end }}</p>
                         </div>
                         <div class="col-4">
-                            <p class="text-muted small mb-1">سولار (لتر)</p>
+                            <p class="text-muted small mb-1">سولار (كيلومتر)</p>
                             <p class="fw-bold">{{ trip.diesel }}</p>
                         </div>
-                        <div class="col-6">
+                        <div class="col-12">
                             <p class="text-muted small mb-1">المريض</p>
                             <p class="fw-bold">{{ trip.patientName }}</p>
-                        </div>
-                        <div class="col-6">
-                            <p class="text-muted small mb-1">العمر</p>
-                            <p class="fw-bold">{{ trip.patientAge }}</p>
                         </div>
                         <div class="col-12">
                             <p class="text-muted small mb-1">التشخيص</p>
@@ -412,10 +391,7 @@
                         </div>
                         <div class="col-12">
                             <p class="text-muted small mb-1">النقل</p>
-                            <app-status-badge
-                                [status]="trip.transferStatus"
-                                [type]="'transfer'"
-                                [size]="'medium'">
+                            <app-status-badge [status]="trip.transferStatus" [type]="'transfer'" [size]="'medium'">
                             </app-status-badge>
                         </div>
                         <div class="col-12">
@@ -461,7 +437,7 @@
         </div>
     </div>
     }
-    
+
     <main class="flex-grow-1 p-3 p-lg-4" dir="rtl">
         <div class="container-fluid p-0" style="max-width: 1200px;">
             <div class="row g-4">
@@ -470,20 +446,20 @@
                     <!-- Toggle Filter Button -->
                     @if (!isFilterPanelVisible()) {
                     <div class="mb-3">
-                        <button class="btn btn-success w-100 fw-bold py-2 rounded-xl shadow-sm" 
+                        <button class="btn btn-success w-100 fw-bold py-2 rounded-xl shadow-sm"
                             (click)="toggleFilterPanel()">
                             <i class="fa-solid fa-filter me-2"></i>
                             إظهار الفلاتر
                         </button>
                     </div>
                     }
-                    
+
                     <!-- Filter Panel (Toggleable) -->
                     @if (isFilterPanelVisible()) {
                     <div class="card shadow-sm rounded-xl p-4 sticky-lg-top awayFromTop">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h2 class="h5 fw-bold mb-0 text-end">تصفية الرحلات</h2>
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" 
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle"
                                 (click)="toggleFilterPanel()" style="width: 32px; height: 32px;">
                                 <i class="fa-solid fa-times"></i>
                             </button>
@@ -494,16 +470,16 @@
                             <div class="col-12">
                                 <label class="form-label small fw-medium">نوع البحث</label>
                                 <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check rounded-3" name="dateFilterType" id="singleDate" 
-                                        [(ngModel)]="dateFilterType" value="single">
+                                    <input type="radio" class="btn-check rounded-3" name="dateFilterType"
+                                        id="singleDate" [(ngModel)]="dateFilterType" value="single">
                                     <label class="btn btn-outline-primary" for="singleDate">يوم واحد</label>
                                     <div style="width: 10px;"></div>
-                                    <input type="radio" class="btn-check rounded-3" name="dateFilterType" id="rangeDate" 
+                                    <input type="radio" class="btn-check rounded-3" name="dateFilterType" id="rangeDate"
                                         [(ngModel)]="dateFilterType" value="range">
                                     <label class="btn btn-outline-primary" for="rangeDate">نطاق زمني</label>
                                 </div>
                             </div>
-                            
+
                             <!-- Single Date Filter -->
                             @if (dateFilterType === 'single') {
                             <div class="col-12">
@@ -512,7 +488,9 @@
                                     <div class="col-4">
                                         <select class="form-select" [(ngModel)]="dateFilterDay">
                                             <option [value]="null">اليوم</option>
-                                            @for (day of getDaysInMonth(dateFilterMonth || 1, dateFilterYear || 2023); track day) {
+                                            @for (day of getDaysInMonth(dateFilterMonth || 1, dateFilterYear || 2023);
+                                            track
+                                            day) {
                                             <option [value]="day">{{ day }}</option>
                                             }
                                         </select>
@@ -536,7 +514,7 @@
                                 </div>
                             </div>
                             }
-                            
+
                             <!-- Date Range Filter -->
                             @if (dateFilterType === 'range') {
                             <div class="col-12">
@@ -545,7 +523,8 @@
                                     <div class="col-4">
                                         <select class="form-select" [(ngModel)]="dateFilterDayFrom">
                                             <option [value]="null">اليوم</option>
-                                            @for (day of getDaysInMonth(dateFilterMonthFrom || 1, dateFilterYearFrom || 2023); track day) {
+                                            @for (day of getDaysInMonth(dateFilterMonthFrom || 1, dateFilterYearFrom ||
+                                            2023); track day) {
                                             <option [value]="day">{{ day }}</option>
                                             }
                                         </select>
@@ -574,7 +553,9 @@
                                     <div class="col-4">
                                         <select class="form-select" [(ngModel)]="dateFilterDayTo">
                                             <option [value]="null">اليوم</option>
-                                            @for (day of getDaysInMonth(dateFilterMonthTo || 1, dateFilterYearTo || 2023); track day) {
+                                            @for (day of getDaysInMonth(dateFilterMonthTo || 1, dateFilterYearTo ||
+                                            2023);
+                                            track day) {
                                             <option [value]="day">{{ day }}</option>
                                             }
                                         </select>
@@ -598,11 +579,11 @@
                                 </div>
                             </div>
                             }
-                            
+
                             <!-- Driver Filter with Search -->
                             <div class="col-sm-6 col-12">
                                 <label for="driverFilter" class="form-label small fw-medium">السائق</label>
-                                <input type="text" class="form-control mb-2 text-end" placeholder="بحث..." 
+                                <input type="text" class="form-control mb-2 text-end" placeholder="بحث..."
                                     [(ngModel)]="driverFilterSearchTerm" [ngModelOptions]="{standalone: true}">
                                 <select id="driverFilter" class="form-select" [(ngModel)]="driverFilterValue">
                                     <option value="">جميع السائقين</option>
@@ -611,11 +592,11 @@
                                     }
                                 </select>
                             </div>
-                            
+
                             <!-- Paramedic Filter with Search -->
                             <div class="col-sm-6 col-12">
                                 <label for="paramedicFilter" class="form-label small fw-medium">ضابط الاسعاف</label>
-                                <input type="text" class="form-control mb-2 text-end" placeholder="بحث..." 
+                                <input type="text" class="form-control mb-2 text-end" placeholder="بحث..."
                                     [(ngModel)]="paramedicFilterSearchTerm" [ngModelOptions]="{standalone: true}">
                                 <select id="paramedicFilter" class="form-select" [(ngModel)]="paramedicFilterValue">
                                     <option value="">جميع الضباط</option>
@@ -624,26 +605,26 @@
                                     }
                                 </select>
                             </div>
-                            
+
                             <!-- Patient Filter -->
                             <div class="col-6 col-12">
                                 <label for="patientFilter" class="form-label small fw-medium">المريض</label>
-                                <input id="patientFilter" type="text" class="form-control text-end" placeholder="اسم المريض..." 
-                                    [(ngModel)]="patientFilterValue">
+                                <input id="patientFilter" type="text" class="form-control text-end"
+                                    placeholder="اسم المريض..." [(ngModel)]="patientFilterValue">
                             </div>
-                            
+
                             <!-- Location From Filter -->
                             <div class="col-sm-6 col-12">
                                 <label for="locationFromFilter" class="form-label small fw-medium">نقل من</label>
-                                <input id="locationFromFilter" type="text" class="form-control text-end" placeholder="موقع الانطلاق..." 
-                                    [(ngModel)]="locationFromFilterValue">
+                                <input id="locationFromFilter" type="text" class="form-control text-end"
+                                    placeholder="موقع الانطلاق..." [(ngModel)]="locationFromFilterValue">
                             </div>
-                            
+
                             <!-- Location To Filter -->
                             <div class="col-sm-6 col-12">
                                 <label for="locationToFilter" class="form-label small fw-medium">نقل الى</label>
-                                <input id="locationToFilter" type="text" class="form-control text-end" placeholder="موقع الوصول..." 
-                                    [(ngModel)]="locationToFilterValue">
+                                <input id="locationToFilter" type="text" class="form-control text-end"
+                                    placeholder="موقع الوصول..." [(ngModel)]="locationToFilterValue">
                             </div>
                         </div>
 
@@ -663,7 +644,8 @@
                         <div class="d-grid gap-2">
                             <button class="btn btn-success fw-bold py-2" (click)="applyFilters()">تطبيق
                                 الفلاتر</button>
-                            <button class="btn btn-outline-secondary" (click)="resetFilters()">إعادة تعيين الفلاتر</button>
+                            <button class="btn btn-outline-secondary" (click)="resetFilters()">إعادة تعيين
+                                الفلاتر</button>
                         </div>
                     </div>
                     }
@@ -671,13 +653,14 @@
 
                 <div class="col-12 col-lg-7">
                     <div class="d-flex justify-content-end mb-3">
-                        <button class="btn btn-success rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3 fw-bold"
+                        <button
+                            class="btn btn-success rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3 fw-bold"
                             (click)="openAddTripModal()">
                             <i class="fa-solid fa-circle-plus"></i>
                             إضافة رحلة جديدة
                         </button>
                     </div>
-                    
+
                     <div class="row row-cols-1 g-3">
                         @for (trip of getPaginatedTrips(); track trip.id) {
                         <div class="col">
@@ -693,14 +676,15 @@
                                                 title="انقر للبحث عن هذا المريض">
                                                 {{ trip.patientName }}
                                             </p>
-                                            <p class="h6 fw-bold m-0 text-dark" dir="ltr">₪{{ trip.totalAmount.toFixed(2) }}</p>
+                                            <p class="h6 fw-bold m-0 text-dark" dir="ltr">₪{{
+                                                trip.totalAmount.toFixed(2) }}
+                                            </p>
                                         </div>
 
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <p class="text-muted small m-0">
                                                 السائق:
-                                                <span class="clickable-field"
-                                                    (click)="quickFilterByDriver(trip.driver)"
+                                                <span class="clickable-field" (click)="quickFilterByDriver(trip.driver)"
                                                     title="انقر للتصفية حسب هذا السائق">
                                                     {{ trip.driver }}
                                                 </span>
@@ -725,7 +709,8 @@
                                             <span class="fw-medium">التشخيص:</span> {{ trip.diagnosis }}
                                         </p>
 
-                                        <div class="d-flex align-items-center gap-2 small fw-medium text-dark justify-content-end mb-3">
+                                        <div
+                                            class="d-flex align-items-center gap-2 small fw-medium text-dark justify-content-end mb-3">
                                             <span class="clickable-field"
                                                 (click)="quickFilterByLocation(trip.transferFrom, 'from')"
                                                 title="انقر للتصفية حسب موقع الانطلاق">
@@ -740,11 +725,13 @@
                                         </div>
 
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <button class="btn btn-sm btn-outline-primary rounded-pill" (click)="viewTripDetails(trip)">
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill"
+                                                (click)="viewTripDetails(trip)">
                                                 <i class="fa-solid fa-info-circle me-1"></i>
                                                 التفاصيل
                                             </button>
-                                            <span class="badge rounded-pill fw-bold" [ngClass]="getStatusBadgeClass(trip.transferStatus)">
+                                            <span class="badge rounded-pill fw-bold"
+                                                [ngClass]="getStatusBadgeClass(trip.transferStatus)">
                                                 {{ trip.transferStatus }}
                                             </span>
                                         </div>
@@ -763,12 +750,8 @@
                     <!-- Pagination -->
                     @if (filteredTrips().length > 0) {
                     <div class="mt-4">
-                        <app-pagination
-                            [currentPage]="currentPage"
-                            [totalItems]="filteredTrips().length"
-                            [itemsPerPage]="itemsPerPage"
-                            [maxVisiblePages]="5"
-                            (pageChange)="onPageChange($event)"
+                        <app-pagination [currentPage]="currentPage" [totalItems]="filteredTrips().length"
+                            [itemsPerPage]="itemsPerPage" [maxVisiblePages]="5" (pageChange)="onPageChange($event)"
                             (itemsPerPageChange)="onItemsPerPageChange($event)">
                         </app-pagination>
                     </div>

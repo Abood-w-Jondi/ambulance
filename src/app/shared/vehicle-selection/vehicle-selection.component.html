@@ -1,0 +1,155 @@
+<div class="vehicle-selection-wrapper min-vh-100 d-flex flex-column bg-light">
+  <!-- Header -->
+  <div class="bg-white border-bottom py-3 px-4">
+    <h1 class="text-center fw-bold fs-4 mb-0 text-dark">اختر المركبة</h1>
+  </div>
+
+  <!-- Search Bar (Sticky) -->
+  <div class="bg-white border-bottom py-3 px-4 sticky-top">
+    <div class="input-group shadow-sm rounded-3">
+      <span class="input-group-text bg-light border-0 rounded-start-3 ps-4">
+        <i class="fa fa-search text-muted"></i>
+      </span>
+      <input
+        type="text"
+        class="form-control bg-light border-0 rounded-end-3"
+        placeholder="ابحث بالاسم أو الرقم..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="searchTerm.set($event); onSearchChange()"
+      />
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="d-flex justify-content-center align-items-center py-5">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+      <span class="visually-hidden">جاري التحميل...</span>
+    </div>
+  </div>
+
+  <!-- Vehicles List -->
+  <div *ngIf="!isLoading()" class="flex-grow-1 px-4 py-3 overflow-auto">
+    <div class="d-flex flex-column gap-3">
+      <!-- Vehicle Item -->
+      <div
+        *ngFor="let vehicle of paginatedVehicles()"
+        class="vehicle-card bg-white rounded-3 p-3 d-flex align-items-center gap-3 cursor-pointer position-relative"
+        [class.vehicle-card-selected]="selectedVehicleId() === vehicle.id"
+        (click)="selectVehicle(vehicle.id)"
+      >
+        <!-- Icon -->
+        <div class="vehicle-icon d-flex align-items-center justify-content-center rounded-3 flex-shrink-0"
+             [class.bg-primary-subtle]="selectedVehicleId() === vehicle.id"
+             [class.bg-light]="selectedVehicleId() !== vehicle.id"
+             style="width: 48px; height: 48px;">
+          <i class="fa fa-truck-medical fs-4"
+             [class.text-primary]="selectedVehicleId() === vehicle.id"
+             [class.text-secondary]="selectedVehicleId() !== vehicle.id"></i>
+        </div>
+
+        <!-- Info -->
+        <div class="flex-grow-1">
+          <p class="fw-bold mb-1 text-dark text-truncate">{{ vehicle.vehicleName }}</p>
+          <p class="text-muted small mb-0">رقم: {{ vehicle.vehicleId }}</p>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="flex-shrink-0">
+          <span class="badge rounded-pill px-3 py-2" [ngClass]="getStatusBadgeClass(vehicle.status)">
+            {{ vehicle.status }}
+          </span>
+        </div>
+      </div>
+
+      <!-- No Results -->
+      <div *ngIf="filteredVehicles().length === 0" class="text-center py-5">
+        <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 mx-auto mb-3"
+             style="width: 64px; height: 64px;">
+          <i class="fa fa-search-minus fs-2 text-primary"></i>
+        </div>
+        <p class="fw-semibold fs-5 text-dark">لا توجد مركبات مطابقة</p>
+        <p class="text-muted small">جرب مصطلح بحث مختلف</p>
+      </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div *ngIf="filteredVehicles().length > itemsPerPage" class="pagination-container mt-3">
+      <nav aria-label="Vehicle pagination">
+        <ul class="pagination pagination-sm justify-content-center mb-0">
+          <!-- Previous Button -->
+          <li class="page-item" [class.disabled]="!hasPreviousPage()">
+            <button class="page-link rounded-start-3" (click)="previousPage()" [disabled]="!hasPreviousPage()">
+              <i class="fa fa-chevron-right"></i>
+            </button>
+          </li>
+
+          <!-- Page Numbers -->
+          <li class="page-item" *ngIf="currentPage() > 2">
+            <button class="page-link" (click)="goToPage(1)">1</button>
+          </li>
+          <li class="page-item disabled" *ngIf="currentPage() > 3">
+            <span class="page-link">...</span>
+          </li>
+
+          <li class="page-item" *ngIf="hasPreviousPage()">
+            <button class="page-link" (click)="previousPage()">{{ currentPage() - 1 }}</button>
+          </li>
+
+          <li class="page-item active">
+            <span class="page-link">{{ currentPage() }}</span>
+          </li>
+
+          <li class="page-item" *ngIf="hasNextPage()">
+            <button class="page-link" (click)="nextPage()">{{ currentPage() + 1 }}</button>
+          </li>
+
+          <li class="page-item disabled" *ngIf="currentPage() < totalPages() - 2">
+            <span class="page-link">...</span>
+          </li>
+          <li class="page-item" *ngIf="currentPage() < totalPages() - 1">
+            <button class="page-link" (click)="goToPage(totalPages())">{{ totalPages() }}</button>
+          </li>
+
+          <!-- Next Button -->
+          <li class="page-item" [class.disabled]="!hasNextPage()">
+            <button class="page-link rounded-end-3" (click)="nextPage()" [disabled]="!hasNextPage()">
+              <i class="fa fa-chevron-left"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Results Info -->
+      <div class="text-center mt-2">
+        <small class="text-muted">
+          عرض {{ (currentPage() - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage() * itemsPerPage, filteredVehicles().length) }} من {{ filteredVehicles().length }}
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Actions (Sticky) -->
+  <div class="bg-white bg-opacity-90 backdrop-blur border-top py-3 px-4 sticky-bottom">
+    <div class="d-flex flex-column gap-2">
+      <!-- Confirm Button -->
+      <button
+        class="btn btn-primary btn-lg w-100 fw-bold shadow-lg rounded-3 py-3"
+        [disabled]="!selectedVehicleId()"
+        (click)="confirmSelection()"
+        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;"
+      >
+        تأكيد الاختيار
+      </button>
+
+      <!-- Skip Button (for unauthenticated users and admins) -->
+      <button
+        *ngIf="canSkip()"
+        class="btn btn-link btn-lg w-100 text-primary fw-semibold text-decoration-none py-2"
+        (click)="skipSelection()"
+      >
+        <span *ngIf="!authService.isAuthenticated()">تخطي</span>
+        <span *ngIf="authService.isAuthenticated() && authService.isAdmin()">تخطي (وضع المدير)</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -33,26 +33,6 @@
                                     [(ngModel)]="vehicleForm.vehicleName" name="vehicleName" required>
                             </div>
                             <div class="col-12">
-                                <label for="type" class="form-label small fw-medium">النوع</label>
-                                <select id="type" class="form-select" [(ngModel)]="vehicleForm.type" name="type" required>
-                                    <option value="">اختر النوع</option>
-                                    @for (type of vehicleTypes; track type) {
-                                    <option [value]="type">{{ type }}</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label for="currentDriver" class="form-label small fw-medium">السائق الحالي</label>
-                                <input type="text" class="form-control mb-2" placeholder="بحث عن سائق..." 
-                                    [(ngModel)]="driverSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="currentDriver" class="form-select" [(ngModel)]="vehicleForm.currentDriver" name="currentDriver">
-                                    <option value="">بدون سائق</option>
-                                    @for (driver of filteredDriversList(); track driver.id) {
-                                    <option [value]="driver.name">{{ driver.name }}</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-12">
                                 <label for="notes" class="form-label small fw-medium">ملاحظات</label>
                                 <textarea id="notes" class="form-control" rows="3" placeholder="ملاحظات إضافية..."
                                     [(ngModel)]="vehicleForm.notes" name="notes"></textarea>
@@ -103,25 +83,6 @@
                                     [(ngModel)]="vehicleForm.vehicleName" name="vehicleName" required>
                             </div>
                             <div class="col-12">
-                                <label for="editType" class="form-label small fw-medium">النوع</label>
-                                <select id="editType" class="form-select" [(ngModel)]="vehicleForm.type" name="type" required>
-                                    @for (type of vehicleTypes; track type) {
-                                    <option [value]="type">{{ type }}</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label for="editCurrentDriver" class="form-label small fw-medium">السائق الحالي</label>
-                                <input type="text" class="form-control mb-2" placeholder="بحث عن سائق..." 
-                                    [(ngModel)]="driverSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="editCurrentDriver" class="form-select" [(ngModel)]="vehicleForm.currentDriver" name="currentDriver">
-                                    <option value="">بدون سائق</option>
-                                    @for (driver of filteredDriversList(); track driver.id) {
-                                    <option [value]="driver.name">{{ driver.name }}</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-12">
                                 <label for="editNotes" class="form-label small fw-medium">ملاحظات</label>
                                 <textarea id="editNotes" class="form-control" rows="3" placeholder="ملاحظات إضافية..."
                                     [(ngModel)]="vehicleForm.notes" name="notes"></textarea>
@@ -168,14 +129,6 @@
                         <div class="col-12">
                             <p class="text-muted small mb-1">اسم المركبة</p>
                             <p class="h5 fw-bold">{{ vehicle.vehicleName }}</p>
-                        </div>
-                        <div class="col-12">
-                            <p class="text-muted small mb-1">النوع</p>
-                            <p class="fw-bold">{{ vehicle.type }}</p>
-                        </div>
-                        <div class="col-12">
-                            <p class="text-muted small mb-1">السائق الحالي</p>
-                            <p class="fw-bold">{{ vehicle.currentDriver || 'غير مخصص' }}</p>
                         </div>
                         @if (vehicle.notes) {
                         <div class="col-12">
@@ -276,11 +229,6 @@
                                     </span>
                                 </div>
 
-                                <div class="mb-3">
-                                    <p class="text-muted small mb-1">النوع</p>
-                                    <p class="fw-medium m-0">{{ vehicle.type }}</p>
-                                </div>
-
                                 @if (vehicle.notes) {
                                 <div class="mb-3">
                                     <p class="text-muted small mb-1">ملاحظات</p>
@@ -288,18 +236,6 @@
                                 </div>
                                 }
 
-                                <div class="pt-2 border-top">
-                                    <p class="text-muted small mb-1">السائق الحالي</p>
-                                    <p class="fw-medium m-0">
-                                        @if (vehicle.currentDriver) {
-                                            <i class="fa-solid fa-user-check text-success me-1"></i>
-                                            {{ vehicle.currentDriver }}
-                                        } @else {
-                                            <i class="fa-solid fa-user-slash text-muted me-1"></i>
-                                            غير مخصص
-                                        }
-                                    </p>
-                                </div>
                             </div>
                         </div>
                     </div>

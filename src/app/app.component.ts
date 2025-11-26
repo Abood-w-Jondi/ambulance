@@ -6,6 +6,7 @@ import { filter } from 'rxjs/operators';
 import { BottomBarComponent } from './user/bottom-bar/bottom-bar.component';
 import { ToastComponent } from './shared/toast/toast.component';
 import { ToastService } from './shared/services/toast.service';
+import { VehicleCookieService } from './shared/services/vehicle-cookie.service';
 
 @Component({
   selector: 'app-root',
@@ -19,13 +20,15 @@ export class AppComponent implements OnInit {
 
   // Use a simple boolean property to control visibility
   public showSideBar: boolean = true;
+  public showBottomBar: boolean = true;
 
   @ViewChild(ToastComponent) toastComponent!: ToastComponent;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private vehicleCookieService: VehicleCookieService
   ) {}
 
   ngOnInit() {
@@ -39,6 +42,11 @@ export class AppComponent implements OnInit {
 
       // Set the visibility. Show the sidebar ONLY if the URL starts with '/admin'.
       this.showSideBar = url.startsWith('/admin');
+
+      // Show bottom bar only for user routes AND when vehicle is selected
+      const isUserRoute = url.startsWith('/user');
+      const hasVehicle = this.vehicleCookieService.hasSelectedVehicle();
+      this.showBottomBar = isUserRoute && hasVehicle;
     });
 
     // Subscribe to toast service

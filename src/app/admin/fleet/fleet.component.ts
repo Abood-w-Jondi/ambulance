@@ -4,13 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { GlobalVarsService } from '../../global-vars.service';
 import { ToastService } from '../../shared/services/toast.service';
-import { ValidationService } from '../../shared/services/validation.service';
 import { VehicleService } from '../../shared/services/vehicle.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
-import { VEHICLE_STATUS } from '../../shared/constants/status.constants';
-import { Vehicle, VehicleStatus, VehicleFilterStatus, VehicleType, DriverReference } from '../../shared/models';
+import { Vehicle, VehicleStatus, VehicleFilterStatus } from '../../shared/models';
 
 type FilterStatus = VehicleFilterStatus;
 
@@ -53,14 +51,9 @@ export class FleetComponent implements OnInit {
     vehicleForm = {
         vehicleId: '',
         vehicleName: '',
-        type: '' as VehicleType | '',
-        currentDriver: '',
         notes: '',
         status: 'متاحة' as VehicleStatus
     };
-
-    // Search for driver assignment
-    driverSearchTerm = signal('');
 
     // Pagination
     currentPage = 1;
@@ -69,26 +62,15 @@ export class FleetComponent implements OnInit {
     isLoading = signal(false);
 
     vehicleStatuses: VehicleStatus[] = ['متاحة', 'في الخدمة', 'صيانة'];
-    vehicleTypes: VehicleType[] = ['Type I Truck', 'Type II Van', 'Type III Cutaway'];
     colors: string[] = ['White', 'Red', 'Yellow', 'Silver', 'Blue'];
-
-    // Computed filtered drivers list
-    filteredDriversList = computed(() => {
-        const term = this.driverSearchTerm().toLowerCase();
-        return this.driversList.filter(d => d.name.toLowerCase().includes(term));
-    });
-
-    driversList: DriverReference[] = [];
 
     constructor(
         private globalVars: GlobalVarsService,
         private route: ActivatedRoute,
         private toastService: ToastService,
-        private validationService: ValidationService,
         private vehicleService: VehicleService
     ) {
         this.globalVars.setGlobalHeader('أسطول المركبات');
-        this.driversList = this.globalVars.driversList;
     }
 
     ngOnInit(): void {
@@ -211,12 +193,9 @@ export class FleetComponent implements OnInit {
         this.vehicleForm = {
             vehicleId: '',
             vehicleName: '',
-            type: '',
-            currentDriver: '',
             notes: '',
             status: 'متاحة'
         };
-        this.driverSearchTerm.set('');
         this.isAddVehicleModalOpen.set(true);
     }
 
@@ -225,8 +204,8 @@ export class FleetComponent implements OnInit {
         this.vehicleService.createVehicle({
             vehicleId: this.vehicleForm.vehicleId,
             vehicleName: this.vehicleForm.vehicleName,
-            type: this.vehicleForm.type as VehicleType,
-            currentDriver: this.vehicleForm.currentDriver || null,
+            type: 'Type I Truck',
+            currentDriver: null,
             notes: this.vehicleForm.notes,
             status: this.vehicleForm.status
         }).subscribe({
@@ -248,12 +227,9 @@ export class FleetComponent implements OnInit {
             this.vehicleForm = {
                 vehicleId: vehicle.vehicleId,
                 vehicleName: vehicle.vehicleName,
-                type: vehicle.type,
-                currentDriver: vehicle.currentDriver || '',
                 notes: vehicle.notes,
                 status: vehicle.status
             };
-            this.driverSearchTerm.set('');
             this.isViewVehicleModalOpen.set(false);
             this.isEditVehicleModalOpen.set(true);
         }
@@ -266,8 +242,8 @@ export class FleetComponent implements OnInit {
             this.vehicleService.updateVehicle(vehicle.id, {
                 vehicleId: this.vehicleForm.vehicleId,
                 vehicleName: this.vehicleForm.vehicleName,
-                type: this.vehicleForm.type as VehicleType,
-                currentDriver: this.vehicleForm.currentDriver || null,
+                type: vehicle.type,
+                currentDriver: null,
                 notes: this.vehicleForm.notes,
                 status: this.vehicleForm.status
             }).subscribe({

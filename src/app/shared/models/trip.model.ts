@@ -34,10 +34,9 @@ export interface Trip {
     // Medical Information
     diagnosis: string;         // Medical diagnosis/reason for transfer
 
-    // Date (Hijri/YMD - for reporting purposes)
-    ymdDay: number;
-    ymdMonth: number;
-    ymdYear: number;
+    // YMD fields (number 1-365 + period string: يوم/اسبوع/شهر/سنة)
+    ymdValue?: number;         // Number between 1-365
+    ymdPeriod?: string;        // One of: يوم, اسبوع, شهر, سنة
 
     // Status & Type
     transferStatus: TransferStatus;

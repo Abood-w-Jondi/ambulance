@@ -5,6 +5,8 @@ import { GlobalVarsService } from '../../global-vars.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { ValidationService } from '../../shared/services/validation.service';
 import { TripService } from '../../shared/services/trip.service';
+import { DriverService } from '../../shared/services/driver.service';
+import { ParamedicService } from '../../shared/services/paramedic.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
@@ -27,7 +29,7 @@ export class TripsComponent implements OnInit {
     thisyear = this.today.getFullYear();
     thismonth = this.today.getMonth()
     thisday = this.today.getDate();
-    
+
     // --- State Initialization (Signals) ---
     dateFilterType: 'single' | 'range' = 'single';
     dateFilterDay: number | null = null;
@@ -39,7 +41,7 @@ export class TripsComponent implements OnInit {
     dateFilterDayTo: number | null = null;
     dateFilterMonthTo: number | null = null;
     dateFilterYearTo: number | null = null;
-    
+
     driverFilterValue: string = '';
     paramedicFilterValue: string = '';
     patientFilterValue: string = '';
@@ -72,29 +74,35 @@ export class TripsComponent implements OnInit {
         confirmButtonText: '',
         cancelButtonText: 'إلغاء'
     });
-    
+
     // Form values for new/edit trip
     tripForm = {
         day: this.thisday,
         month: this.thismonth,
         year: this.thisyear,
         driver: '',
+        driverId: '',
         paramedic: '',
+        paramedicId: '',
         transferFrom: '',
         transferTo: '',
-        start: 0,
-        end: 0,
-        diesel: 0,
+        start: null as number | null,
+        end: null as number | null,
         patientName: '',
-        patientAge: 0,
-        ymdDay: 1,
-        ymdMonth: 1,
-        ymdYear: new Date().getFullYear(),
+        ymdNumber: 1,
+        ymdPeriod: 'يوم' as 'يوم' | 'اسبوع' | 'شهر' | 'سنة',
         transferStatus: 'تم النقل' as TransferStatus,
         diagnosis: '',
         totalAmount: 0,
         paramedicShare: 0
     };
+
+    // Computed diesel value based on end - start
+    get calculatedDiesel(): number {
+        const start = this.tripForm.start || 0;
+        const end = this.tripForm.end || 0;
+        return Math.max(0, end - start);
+    }
 
     // Search filters for dropdowns
     driverSearchTerm = signal('');
@@ -109,41 +117,91 @@ export class TripsComponent implements OnInit {
     // Computed filtered lists
     filteredDriversList = computed(() => {
         const term = this.driverSearchTerm().toLowerCase();
-        return this.driversList.filter(d => d.name.toLowerCase().includes(term));
+        return this.driversList.filter((d: any) =>
+            d.arabicName?.toLowerCase().includes(term) ||
+            d.englishName?.toLowerCase().includes(term)
+        );
     });
 
     filteredParamedicsList = computed(() => {
         const term = this.paramedicSearchTerm().toLowerCase();
-        return this.paramedicsList.filter(p => p.name.toLowerCase().includes(term));
+        return this.paramedicsList.filter((p: any) =>
+            p.arabicName?.toLowerCase().includes(term) ||
+            p.englishName?.toLowerCase().includes(term)
+        );
     });
 
     filteredDriversListForFilter = computed(() => {
         const term = this.driverFilterSearchTerm().toLowerCase();
-        return this.driversList.filter(d => d.name.toLowerCase().includes(term));
+        return this.driversList.filter((d: any) =>
+            d.arabicName?.toLowerCase().includes(term) ||
+            d.englishName?.toLowerCase().includes(term)
+        );
     });
 
     filteredParamedicsListForFilter = computed(() => {
         const term = this.paramedicFilterSearchTerm().toLowerCase();
-        return this.paramedicsList.filter(p => p.name.toLowerCase().includes(term));
+        return this.paramedicsList.filter((p: any) =>
+            p.arabicName?.toLowerCase().includes(term) ||
+            p.englishName?.toLowerCase().includes(term)
+        );
     });
 
     constructor(
         private globalVars: GlobalVarsService,
         private toastService: ToastService,
         private validationService: ValidationService,
-        private tripService: TripService
+        private tripService: TripService,
+        private driverService: DriverService,
+        private paramedicService: ParamedicService
     ) {
         this.globalVars.setGlobalHeader('الرحلات والنقليات');
-        this.driversList = this.globalVars.driversList;
-        this.paramedicsList = [
-            { id: '1', name: 'ضابط أحمد' },
-            { id: '2', name: 'ضابط محمد' },
-            { id: '3', name: 'ضابط علي' }
-        ];
     }
 
     ngOnInit(): void {
+        this.loadDrivers();
+        this.loadParamedics();
         this.loadData();
+    }
+
+    /**
+     * Load drivers from database
+     */
+    loadDrivers(): void {
+        this.driverService.getDrivers({ limit: 1000 }).subscribe({
+            next: (response) => {
+                this.driversList = response.data.map((driver: any) => ({
+                    id: driver.id,
+                    name: driver.arabicName || driver.name,
+                    arabicName: driver.arabicName,
+                    englishName: driver.name
+                }));
+            },
+            error: (error) => {
+                console.error('Error loading drivers:', error);
+                this.toastService.error('فشل تحميل قائمة السائقين');
+            }
+        });
+    }
+
+    /**
+     * Load paramedics from database
+     */
+    loadParamedics(): void {
+        this.paramedicService.getParamedics({ limit: 1000 }).subscribe({
+            next: (response) => {
+                this.paramedicsList = response.data.map((paramedic: any) => ({
+                    id: paramedic.id,
+                    name: paramedic.arabicName || paramedic.name,
+                    arabicName: paramedic.arabicName,
+                    englishName: paramedic.name
+                }));
+            },
+            error: (error) => {
+                console.error('Error loading paramedics:', error);
+                this.toastService.error('فشل تحميل قائمة ضباط الإسعاف');
+            }
+        });
     }
 
     // Pagination
@@ -151,7 +209,7 @@ export class TripsComponent implements OnInit {
     itemsPerPage = 10;
     totalRecords = 0;
     isLoading = signal(false);
-    
+
     // Calculate money distribution
     private calculateShares(totalAmount: number, paramedicShare: number) {
         const remaining = totalAmount - paramedicShare;
@@ -185,6 +243,38 @@ export class TripsComponent implements OnInit {
         } else if (dateFilterData.type === 'range' && dateFilterData.from && dateFilterData.to) {
             params.startDate = dateFilterData.from.toISOString().split('T')[0];
             params.endDate = dateFilterData.to.toISOString().split('T')[0];
+        }
+
+        // Add other filters
+        if (this.patientNameFilter()) {
+            params.patientName = this.patientNameFilter();
+        }
+        if (this.locationFromFilter()) {
+            params.pickupLocation = this.locationFromFilter();
+        }
+        if (this.locationToFilter()) {
+            params.dropoffLocation = this.locationToFilter();
+        }
+
+        // Add driver and paramedic filters by finding their IDs
+        const driverName = this.driverNameFilter();
+        if (driverName) {
+            const driver = this.driversList.find((d: any) =>
+                d.arabicName === driverName || d.englishName === driverName || d.name === driverName
+            );
+            if (driver) {
+                params.driverId = driver.id;
+            }
+        }
+
+        const paramedicName = this.paramedicNameFilter();
+        if (paramedicName) {
+            const paramedic = this.paramedicsList.find((p: any) =>
+                p.arabicName === paramedicName || p.englishName === paramedicName || p.name === paramedicName
+            );
+            if (paramedic) {
+                params.paramedicId = paramedic.id;
+            }
         }
 
         this.tripService.getTrips(params).subscribe({
@@ -313,8 +403,8 @@ export class TripsComponent implements OnInit {
             const singleDate = new Date(this.dateFilterYear, this.dateFilterMonth - 1, this.dateFilterDay);
             this.dateFilter.set({ type: 'single', single: singleDate });
         } else if (this.dateFilterType === 'range' &&
-                   this.dateFilterDayFrom && this.dateFilterMonthFrom && this.dateFilterYearFrom &&
-                   this.dateFilterDayTo && this.dateFilterMonthTo && this.dateFilterYearTo) {
+            this.dateFilterDayFrom && this.dateFilterMonthFrom && this.dateFilterYearFrom &&
+            this.dateFilterDayTo && this.dateFilterMonthTo && this.dateFilterYearTo) {
             const fromDate = new Date(this.dateFilterYearFrom, this.dateFilterMonthFrom - 1, this.dateFilterDayFrom);
             const toDate = new Date(this.dateFilterYearTo, this.dateFilterMonthTo - 1, this.dateFilterDayTo);
             this.dateFilter.set({ type: 'range', from: fromDate, to: toDate });
@@ -331,7 +421,7 @@ export class TripsComponent implements OnInit {
         this.currentPage = 1;
         this.loadData();
     }
-    
+
     resetFilters(): void {
         this.dateFilterType = 'single';
         this.dateFilterDay = null;
@@ -378,17 +468,16 @@ export class TripsComponent implements OnInit {
             month: this.thismonth + 1,
             year: this.thisyear,
             driver: '',
+            driverId: '',
             paramedic: '',
+            paramedicId: '',
             transferFrom: '',
             transferTo: '',
-            start: 0,
-            end: 0,
-            diesel: 0,
+            start: null,
+            end: null,
             patientName: '',
-            patientAge: 0,
-            ymdDay: 1,
-            ymdMonth: 1,
-            ymdYear: new Date().getFullYear(),
+            ymdNumber: 1,
+            ymdPeriod: 'يوم',
             transferStatus: 'تم النقل',
             diagnosis: '',
             totalAmount: 0,
@@ -407,17 +496,17 @@ export class TripsComponent implements OnInit {
             month: this.tripForm.month,
             year: this.tripForm.year,
             driver: this.tripForm.driver,
+            driverId: this.tripForm.driverId,
             paramedic: this.tripForm.paramedic,
+            paramedicId: this.tripForm.paramedicId,
             transferFrom: this.tripForm.transferFrom,
             transferTo: this.tripForm.transferTo,
-            start: this.tripForm.start,
-            end: this.tripForm.end,
-            diesel: this.tripForm.diesel,
+            start: this.tripForm.start || 0,
+            end: this.tripForm.end || 0,
+            diesel: this.calculatedDiesel,
             patientName: this.tripForm.patientName,
-            patientAge: this.tripForm.patientAge,
-            ymdDay: this.tripForm.ymdDay,
-            ymdMonth: this.tripForm.ymdMonth,
-            ymdYear: this.tripForm.ymdYear,
+            ymdValue: this.tripForm.ymdNumber,
+            ymdPeriod: this.tripForm.ymdPeriod,
             transferStatus: this.tripForm.transferStatus,
             diagnosis: this.tripForm.diagnosis,
             totalAmount: this.tripForm.totalAmount,
@@ -443,17 +532,16 @@ export class TripsComponent implements OnInit {
                 month: trip.month,
                 year: trip.year,
                 driver: trip.driver,
+                driverId: trip.driverId || '',
                 paramedic: trip.paramedic,
+                paramedicId: trip.paramedicId || '',
                 transferFrom: trip.transferFrom,
                 transferTo: trip.transferTo,
-                start: trip.start,
-                end: trip.end,
-                diesel: trip.diesel,
+                start: trip.start === 0 ? null : trip.start,
+                end: trip.end === 0 ? null : trip.end,
                 patientName: trip.patientName,
-                patientAge: trip.patientAge,
-                ymdDay: trip.ymdDay,
-                ymdMonth: trip.ymdMonth,
-                ymdYear: trip.ymdYear,
+                ymdNumber: trip.ymdValue || 1,
+                ymdPeriod: (trip.ymdPeriod as 'يوم' | 'اسبوع' | 'شهر' | 'سنة') || 'يوم',
                 transferStatus: trip.transferStatus,
                 diagnosis: trip.diagnosis,
                 totalAmount: trip.totalAmount,
@@ -471,29 +559,40 @@ export class TripsComponent implements OnInit {
         if (trip) {
             const shares = this.calculateShares(this.tripForm.totalAmount, this.tripForm.paramedicShare);
 
-            this.tripService.updateTrip(trip.id, {
+            const updatedData = {
                 day: this.tripForm.day,
                 month: this.tripForm.month,
                 year: this.tripForm.year,
                 driver: this.tripForm.driver,
+                driverId: this.tripForm.driverId,
                 paramedic: this.tripForm.paramedic,
+                paramedicId: this.tripForm.paramedicId,
                 transferFrom: this.tripForm.transferFrom,
                 transferTo: this.tripForm.transferTo,
-                start: this.tripForm.start,
-                end: this.tripForm.end,
-                diesel: this.tripForm.diesel,
+                start: this.tripForm.start || 0,
+                end: this.tripForm.end || 0,
+                diesel: this.calculatedDiesel,
                 patientName: this.tripForm.patientName,
-                patientAge: this.tripForm.patientAge,
-                ymdDay: this.tripForm.ymdDay,
-                ymdMonth: this.tripForm.ymdMonth,
-                ymdYear: this.tripForm.ymdYear,
+                ymdValue: this.tripForm.ymdNumber,
+                ymdPeriod: this.tripForm.ymdPeriod,
                 transferStatus: this.tripForm.transferStatus,
                 diagnosis: this.tripForm.diagnosis,
                 totalAmount: this.tripForm.totalAmount,
                 ...shares
-            }).subscribe({
+            };
+
+            this.tripService.updateTrip(trip.id, updatedData).subscribe({
                 next: (updatedTrip) => {
-                    this.selectedTrip.set(updatedTrip);
+                    // Update the selected trip with the returned data or construct it from the form
+                    if (updatedTrip && Object.keys(updatedTrip).length > 0) {
+                        this.selectedTrip.set(updatedTrip);
+                    } else {
+                        // If API doesn't return updated trip, construct it manually
+                        this.selectedTrip.set({
+                            ...trip,
+                            ...updatedData
+                        });
+                    }
                     this.isEditTripModalOpen.set(false);
                     this.isViewTripModalOpen.set(true);
                     this.toastService.success('تم تحديث الرحلة بنجاح');
@@ -575,5 +674,45 @@ export class TripsComponent implements OnInit {
     getYears(): number[] {
         const currentYear = new Date().getFullYear();
         return Array.from({ length: 10 }, (_, i) => currentYear - i);
+    }
+
+    /**
+     * Handle driver selection from dropdown
+     */
+    onDriverSelect(event: Event): void {
+        const target = event.target as HTMLSelectElement;
+        const driverId = target.value;
+
+        if (!driverId) {
+            this.tripForm.driverId = '';
+            this.tripForm.driver = '';
+            return;
+        }
+
+        const driver = this.driversList.find((d: any) => d.id === driverId);
+        if (driver) {
+            this.tripForm.driverId = driverId;
+            this.tripForm.driver = (driver as any).arabicName || (driver as any).name;
+        }
+    }
+
+    /**
+     * Handle paramedic selection from dropdown
+     */
+    onParamedicSelect(event: Event): void {
+        const target = event.target as HTMLSelectElement;
+        const paramedicId = target.value;
+
+        if (!paramedicId) {
+            this.tripForm.paramedicId = '';
+            this.tripForm.paramedic = '';
+            return;
+        }
+
+        const paramedic = this.paramedicsList.find((p: any) => p.id === paramedicId);
+        if (paramedic) {
+            this.tripForm.paramedicId = paramedicId;
+            this.tripForm.paramedic = (paramedic as any).arabicName || (paramedic as any).name;
+        }
     }
 }

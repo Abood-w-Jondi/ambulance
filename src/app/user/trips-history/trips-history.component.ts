@@ -19,9 +19,8 @@ interface Trip {
   diesel: number;
   patientName: string;
   patientAge: number;
-  ymdDay: number;
-  ymdMonth: number;
-  ymdYear: number;
+  ymdValue?: number;
+  ymdPeriod?: string;
   transferStatus: TransferStatus;
   diagnosis: string;
   totalAmount: number;
@@ -205,9 +204,8 @@ export class TripsHistoryComponent implements OnInit {
         diesel: Math.floor(Math.random() * 50) + 10,
         patientName: `مريض ${i}`,
         patientAge: Math.floor(Math.random() * 80) + 1,
-        ymdDay: Math.floor(Math.random() * 28) + 1,
-        ymdMonth: this.selectedMonth,
-        ymdYear: this.selectedYear,
+        ymdValue: Math.floor(Math.random() * 30) + 1,
+        ymdPeriod: ['يوم', 'اسبوع', 'شهر', 'سنة'][Math.floor(Math.random() * 4)],
         transferStatus: this.transferStatuses[Math.floor(Math.random() * this.transferStatuses.length)],
         diagnosis: 'كسر في الساق',
         totalAmount: Math.floor(Math.random() * 500) + 100,

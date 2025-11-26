@@ -18,23 +18,32 @@ import { TransportationTypesComponent } from './admin/settings/transportation-ty
 import { CommonLocationsComponent } from './admin/settings/common-locations/common-locations.component';
 import { UsersManagementComponent } from './admin/settings/users-management/users-management.component';
 import { ProfileComponent } from './admin/settings/profile/profile.component';
+import { VehicleSelectionComponent } from './shared/vehicle-selection/vehicle-selection.component';
 import { adminGuard, driverGuard, guestGuard } from './shared/guards/auth.guard';
+import { vehicleSelectionGuard, vehicleSelectionPageGuard } from './shared/guards/vehicle-selection.guard';
 
 export const routes = [
-	// Default redirect to login
-	{ path: '', redirectTo: 'login', pathMatch: 'full' as const },
+	// Default redirect to vehicle selection
+	{ path: '', redirectTo: 'select-vehicle', pathMatch: 'full' as const },
+
+	// Vehicle Selection route (first-time setup)
+	{
+		path: 'select-vehicle',
+		component: VehicleSelectionComponent,
+		canActivate: [vehicleSelectionPageGuard]
+	},
 
 	// Login route (guest only - authenticated users will be redirected)
 	{
 		path: 'login',
 		component: LoginComponent,
-		canActivate: [guestGuard]
+		canActivate: [guestGuard, vehicleSelectionGuard]
 	},
 
 	// Admin routes (admin only)
 	{
 		path: 'admin',
-		canActivate: [adminGuard],
+		canActivate: [adminGuard, vehicleSelectionGuard],
 		children: [
 			{ path: '', redirectTo: 'admin-dashboard', pathMatch: 'full' as const },
 			{ path: 'admin-dashboard', component: AdminDashboardComponent },
@@ -56,7 +65,7 @@ export const routes = [
 	// User/Driver routes (drivers and paramedics only)
 	{
 		path: 'user',
-		canActivate: [driverGuard],
+		canActivate: [driverGuard, vehicleSelectionGuard],
 		children: [
 			{ path: '', redirectTo: 'driver-dashboard', pathMatch: 'full' as const },
 			{ path: 'driver-dashboard', component: DriverDashboardComponent },
@@ -68,6 +77,6 @@ export const routes = [
 		],
 	},
 
-	// Wildcard route - redirect to login for any unknown paths
-	{ path: '**', redirectTo: 'login' }
+	// Wildcard route - redirect to vehicle selection for any unknown paths
+	{ path: '**', redirectTo: 'select-vehicle' }
 ];
