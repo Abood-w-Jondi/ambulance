@@ -57,7 +57,7 @@
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <input type="number" class="form-select" [(ngModel)]="tripForm.ymdNumber"
-                                            name="ymdNumber" min="1" max="365" placeholder="العمر" required>
+                                            name="ymdNumber" min="0" max="365" placeholder="العمر (اتركه فارغاً إذا كان 0)">
                                     </div>
                                     <div class="col-6">
                                         <select class="form-select" [(ngModel)]="tripForm.ymdPeriod" name="ymdPeriod"
@@ -124,10 +124,17 @@
                                 <input id="diesel" type="number" class="form-control text-end" [value]="calculatedDiesel"
                                     readonly style="direction: ltr; background-color: #e9ecef;">
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <label for="patientName" class="form-label small fw-medium">المريض</label>
                                 <input id="patientName" type="text" class="form-control" placeholder="اسم المريض"
                                     [(ngModel)]="tripForm.patientName" name="patientName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="patientContact" class="form-label small fw-medium">رقم التواصل</label>
+                                <input id="patientContact" type="tel" class="form-control text-end"
+                                    placeholder="05xx xxx xxx" [(ngModel)]="tripForm.patientContact"
+                                    name="patientContact" pattern="05[0-9]{2}\s?[0-9]{3}\s?[0-9]{3}"
+                                    style="direction: ltr;">
                             </div>
                             <div class="col-md-12">
                                 <label for="diagnosis" class="form-label small fw-medium">التشخيص</label>
@@ -144,16 +151,43 @@
                                 </select>
                             </div>
                             <div class="col-6">
-                                <label for="totalAmount" class="form-label small fw-medium">المبلغ (₪)</label>
-                                <input id="totalAmount" type="number" class="form-control text-end" placeholder="0.00"
-                                    [(ngModel)]="tripForm.totalAmount" name="totalAmount" min="0" step="0.01"
+                                <label for="tripType" class="form-label small fw-medium">نوع الرحلة</label>
+                                <select id="tripType" class="form-select" [(ngModel)]="tripForm.tripType"
+                                    (ngModelChange)="onTripTypeChange()" name="tripType">
+                                    <option value="">اختر نوع الرحلة</option>
+                                    @for (type of tripTypes; track type) {
+                                    <option [value]="type">{{ type }}</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label for="totalPrice" class="form-label small fw-medium">المبلغ الكلي (₪)</label>
+                                <input id="totalPrice" type="number" class="form-control text-end" placeholder="0.00"
+                                    [(ngModel)]="tripForm.totalPrice" name="totalPrice" min="0" step="0.01"
                                     style="direction: ltr;" required>
+                                <small class="text-muted">المبلغ المفترض دفعه</small>
+                            </div>
+                            <div class="col-6">
+                                <label for="payedPrice" class="form-label small fw-medium">المبلغ المدفوع (₪)</label>
+                                <input id="payedPrice" type="number" class="form-control text-end" placeholder="0.00"
+                                    [(ngModel)]="tripForm.payedPrice" name="payedPrice" min="0" step="0.01"
+                                    style="direction: ltr;" required>
+                                <small class="text-muted">المبلغ الذي دفعه المريض</small>
+                            </div>
+                            <div class="col-6">
+                                <label for="otherExpenses" class="form-label small fw-medium">مصاريف أخرى (₪)</label>
+                                <input id="otherExpenses" type="number" class="form-control text-end" placeholder="0.00"
+                                    [(ngModel)]="tripForm.otherExpenses" name="otherExpenses" min="0" step="0.01"
+                                    style="direction: ltr;">
                             </div>
                             <div class="col-6">
                                 <label for="paramedicShare" class="form-label small fw-medium">حصة الضابط (₪)</label>
                                 <input id="paramedicShare" type="number" class="form-control text-end"
                                     placeholder="0.00" [(ngModel)]="tripForm.paramedicShare" name="paramedicShare"
-                                    min="0" step="0.01" style="direction: ltr;" required>
+                                    min="0" step="0.01" style="direction: ltr;"
+                                    [readonly]="tripForm.tripType !== 'اخرى' && tripForm.tripType !== ''"
+                                    [style.background-color]="tripForm.tripType !== 'اخرى' && tripForm.tripType !== '' ? '#e9ecef' : 'white'" required>
+                                <small class="text-muted">يتم خصمها أولاً قبل توزيع الباقي</small>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end gap-2 mt-4">
@@ -217,7 +251,7 @@
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <input type="number" class="form-select" [(ngModel)]="tripForm.ymdNumber"
-                                            name="ymdNumber" min="1" max="365" placeholder="الرقم (1-365)" required>
+                                            name="ymdNumber" min="0" max="365" placeholder="العمر (اتركه فارغاً إذا كان 0)">
                                     </div>
                                     <div class="col-6">
                                         <select class="form-select" [(ngModel)]="tripForm.ymdPeriod" name="ymdPeriod"
@@ -285,10 +319,17 @@
                                 <input id="editDiesel" type="number" class="form-control text-end" [value]="calculatedDiesel"
                                     readonly style="direction: ltr; background-color: #e9ecef;">
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <label for="editPatientName" class="form-label small fw-medium">المريض</label>
                                 <input id="editPatientName" type="text" class="form-control" placeholder="اسم المريض"
                                     [(ngModel)]="tripForm.patientName" name="patientName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editPatientContact" class="form-label small fw-medium">رقم التواصل</label>
+                                <input id="editPatientContact" type="tel" class="form-control text-end"
+                                    placeholder="05xx xxx xxx" [(ngModel)]="tripForm.patientContact"
+                                    name="patientContact" pattern="05[0-9]{2}\s?[0-9]{3}\s?[0-9]{3}"
+                                    style="direction: ltr;">
                             </div>
                             <div class="col-md-12">
                                 <label for="editDiagnosis" class="form-label small fw-medium">التشخيص</label>
@@ -304,18 +345,44 @@
                                     }
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label for="editTotalAmount" class="form-label small fw-medium">المبلغ (₪)</label>
-                                <input id="editTotalAmount" type="number" class="form-control text-end"
-                                    placeholder="0.00" [(ngModel)]="tripForm.totalAmount" name="totalAmount" min="0"
-                                    step="0.01" style="direction: ltr;" required>
+                            <div class="col-6">
+                                <label for="editTripType" class="form-label small fw-medium">نوع الرحلة</label>
+                                <select id="editTripType" class="form-select" [(ngModel)]="tripForm.tripType"
+                                    (ngModelChange)="onTripTypeChange()" name="tripType">
+                                    <option value="">اختر نوع الرحلة</option>
+                                    @for (type of tripTypes; track type) {
+                                    <option [value]="type">{{ type }}</option>
+                                    }
+                                </select>
                             </div>
                             <div class="col-md-6">
-                                <label for="editParamedicShare" class="form-label small fw-medium">حصة الضابط
-                                    (₪)</label>
+                                <label for="editTotalPrice" class="form-label small fw-medium">المبلغ الكلي (₪)</label>
+                                <input id="editTotalPrice" type="number" class="form-control text-end"
+                                    placeholder="0.00" [(ngModel)]="tripForm.totalPrice" name="totalPrice" min="0"
+                                    step="0.01" style="direction: ltr;" required>
+                                <small class="text-muted">المبلغ المفترض دفعه</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editPayedPrice" class="form-label small fw-medium">المبلغ المدفوع (₪)</label>
+                                <input id="editPayedPrice" type="number" class="form-control text-end"
+                                    placeholder="0.00" [(ngModel)]="tripForm.payedPrice" name="payedPrice" min="0"
+                                    step="0.01" style="direction: ltr;" required>
+                                <small class="text-muted">المبلغ الذي دفعه المريض</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editOtherExpenses" class="form-label small fw-medium">مصاريف أخرى (₪)</label>
+                                <input id="editOtherExpenses" type="number" class="form-control text-end" placeholder="0.00"
+                                    [(ngModel)]="tripForm.otherExpenses" name="otherExpenses" min="0" step="0.01"
+                                    style="direction: ltr;">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editParamedicShare" class="form-label small fw-medium">حصة الضابط (₪)</label>
                                 <input id="editParamedicShare" type="number" class="form-control text-end"
                                     placeholder="0.00" [(ngModel)]="tripForm.paramedicShare" name="paramedicShare"
-                                    min="0" step="0.01" style="direction: ltr;" required>
+                                    min="0" step="0.01" style="direction: ltr;"
+                                    [readonly]="tripForm.tripType !== 'اخرى' && tripForm.tripType !== ''"
+                                    [style.background-color]="tripForm.tripType !== 'اخرى' && tripForm.tripType !== '' ? '#e9ecef' : 'white'" required>
+                                <small class="text-muted">يتم خصمها أولاً قبل توزيع الباقي</small>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end gap-2 mt-4">
@@ -381,9 +448,13 @@
                             <p class="text-muted small mb-1">سولار (كيلومتر)</p>
                             <p class="fw-bold">{{ trip.diesel }}</p>
                         </div>
-                        <div class="col-12">
+                        <div class="col-6">
                             <p class="text-muted small mb-1">المريض</p>
                             <p class="fw-bold">{{ trip.patientName }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="text-muted small mb-1">رقم التواصل</p>
+                            <p class="fw-bold" dir="ltr">{{ trip.patientContact || 'غير محدد' }}</p>
                         </div>
                         <div class="col-12">
                             <p class="text-muted small mb-1">التشخيص</p>
@@ -394,13 +465,29 @@
                             <app-status-badge [status]="trip.transferStatus" [type]="'transfer'" [size]="'medium'">
                             </app-status-badge>
                         </div>
-                        <div class="col-12">
-                            <hr class="my-3">
-                            <h6 class="fw-bold mb-3">توزيع المبلغ</h6>
+                        <div class="col-6">
+                            <p class="text-muted small mb-1">نوع الرحلة</p>
+                            <p class="fw-bold">{{ trip.tripType || 'غير محدد' }}</p>
                         </div>
                         <div class="col-6">
-                            <p class="text-muted small mb-1">المبلغ الكلي</p>
-                            <p class="fw-bold" dir="ltr">₪{{ trip.totalAmount.toFixed(2) }}</p>
+                            <p class="text-muted small mb-1">مصاريف أخرى</p>
+                            <p class="fw-bold" dir="ltr">₪{{ trip.otherExpenses.toFixed(2) }}</p>
+                        </div>
+                        <div class="col-12">
+                            <hr class="my-3">
+                            <h6 class="fw-bold mb-3">المعلومات المالية</h6>
+                        </div>
+                        <div class="col-6">
+                            <p class="text-muted small mb-1">المبلغ الكلي المفترض</p>
+                            <p class="fw-bold" dir="ltr">₪{{ trip.totalPrice.toFixed(2) }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="text-muted small mb-1">المبلغ المدفوع</p>
+                            <p class="fw-bold" dir="ltr">₪{{ trip.payedPrice.toFixed(2) }}</p>
+                        </div>
+                        <div class="col-12">
+                            <hr class="my-2">
+                            <h6 class="fw-bold mb-3">توزيع المبلغ المدفوع</h6>
                         </div>
                         <div class="col-6">
                             <p class="text-muted small mb-1">حصة الضابط</p>
@@ -677,7 +764,7 @@
                                                 {{ trip.patientName }}
                                             </p>
                                             <p class="h6 fw-bold m-0 text-dark" dir="ltr">₪{{
-                                                trip.totalAmount.toFixed(2) }}
+                                                trip.payedPrice.toFixed(2) }}
                                             </p>
                                         </div>
 

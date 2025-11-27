@@ -7,6 +7,7 @@ import { StatsComponent } from './admin/stats/stats.component';
 import { FleetComponent } from './admin/fleet/fleet.component';
 import { MaintenanceHistoryComponent } from './admin/maintenance-history/maintenance-history.component';
 import { FuelHistoryComponent } from './admin/fuel-history/fuel-history.component';
+import { TransactionHistoryComponent } from './admin/transaction-history/transaction-history.component';
 import { LoginComponent } from './admin/login/login.component';
 import { StatusUpdateComponent } from './user/status-update/status-update.component';
 import { AcceptTripsComponent } from './user/accept-trips/accept-trips.component';
@@ -54,10 +55,12 @@ export const routes = [
 			{ path: 'vehicles', component: FleetComponent },
 			{ path: 'maintenance-history', component: MaintenanceHistoryComponent },
 			{ path: 'fuel-history', component: FuelHistoryComponent },
+			{ path: 'transactions/:id', component: TransactionHistoryComponent },
 			{ path: 'transportation-types', component: TransportationTypesComponent },
 			{ path: 'maintenance-types', component: MaintenanceTypesComponent },
 			{ path: 'common-locations', component: CommonLocationsComponent },
 			{ path: 'users-management', component: UsersManagementComponent },
+			{ path: 'profile/:id', component: ProfileComponent },
 			{ path: 'profile', component: ProfileComponent },
 		],
 	},

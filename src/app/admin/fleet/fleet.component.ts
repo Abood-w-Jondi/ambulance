@@ -238,17 +238,26 @@ export class FleetComponent implements OnInit {
     saveEditVehicle(): void {
         const vehicle = this.selectedVehicle();
         if (vehicle) {
-
-            this.vehicleService.updateVehicle(vehicle.id, {
+            const updatePayload = {
                 vehicleId: this.vehicleForm.vehicleId,
                 vehicleName: this.vehicleForm.vehicleName,
                 type: vehicle.type,
-                currentDriver: null,
+                currentDriver: null as any,
                 notes: this.vehicleForm.notes,
                 status: this.vehicleForm.status
-            }).subscribe({
+            };
+
+            this.vehicleService.updateVehicle(vehicle.id, updatePayload).subscribe({
                 next: (updatedVehicle) => {
-                    this.selectedVehicle.set(updatedVehicle);
+                    // Merge: old vehicle -> updated data from form -> API response
+                    // This ensures form changes are visible even if API returns partial data
+                    const mergedVehicle = {
+                        ...vehicle,
+                        ...updatePayload,
+                        ...(updatedVehicle && Object.keys(updatedVehicle).length > 0 ? updatedVehicle : {}),
+                        id: vehicle.id // Always preserve the ID
+                    };
+                    this.selectedVehicle.set(mergedVehicle);
                     this.isEditVehicleModalOpen.set(false);
                     this.isViewVehicleModalOpen.set(true);
                     this.toastService.success('تم تحديث المركبة بنجاح');

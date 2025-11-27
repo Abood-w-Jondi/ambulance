@@ -30,20 +30,26 @@ export interface Trip {
     // Patient Information
     patientName: string;
     patientAge: number;
+    patientContact?: string;   // Contact number for sick person (format: 05xx xxx xxx)
 
     // Medical Information
     diagnosis: string;         // Medical diagnosis/reason for transfer
 
-    // YMD fields (number 1-365 + period string: يوم/اسبوع/شهر/سنة)
-    ymdValue?: number;         // Number between 1-365
+    // YMD fields (number 0-365 + period string: يوم/اسبوع/شهر/سنة)
+    ymdValue?: number;         // Number between 0-365 (0 means not specified)
     ymdPeriod?: string;        // One of: يوم, اسبوع, شهر, سنة
 
     // Status & Type
     transferStatus: TransferStatus;
 
+    // Trip Type & Expenses
+    tripType?: TripType;       // Type of trip (داخلي, وسط, خارجي, اخرى)
+    otherExpenses: number;     // Other expenses for the trip
+
     // Financial Information
-    totalAmount: number;       // Total amount charged
-    paramedicShare: number;    // Paramedic's share
+    totalPrice: number;        // Total amount supposed to pay
+    payedPrice: number;        // Amount already paid by patient
+    paramedicShare: number;    // Paramedic's share (deducted first before splitting remaining)
     driverShare: number;       // Driver's share
     eqShare: number;           // Equipment/Company share
 
@@ -53,3 +59,4 @@ export interface Trip {
 
 export type TransferStatus = 'ميداني' | 'تم النقل' | 'بلاغ كاذب' | 'ينقل' | 'لم يتم النقل' | 'صيانة' | 'رفض النقل' | 'اخرى';
 export type FilterStatus = 'All' | TransferStatus;
+export type TripType = 'داخلي' | 'وسط' | 'خارجي' | 'اخرى';

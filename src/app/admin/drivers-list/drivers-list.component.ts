@@ -43,6 +43,13 @@ export class DriversListComponent implements OnInit {
         // Navigate to the profile page with the driver's ID
         this.router.navigate(['/admin/profile', driver.id]);
     }
+
+    viewTransactionHistory(driver: Driver) {
+        // Navigate to the transaction history page with the driver's ID
+        this.router.navigate(['/admin/transactions', driver.id], {
+            queryParams: { type: 'driver', name: driver.arabicName }
+        });
+    }
     
     queryFilterValue = signal<string | null>(null);
     
@@ -255,7 +262,16 @@ export class DriversListComponent implements OnInit {
         }
 
         this.driverService.updateDriver(driver.id, updateData).subscribe({
-            next: () => {
+            next: (updatedDriver) => {
+                // Merge: old driver -> updated data from form -> API response
+                // This ensures form changes are visible even if API returns partial data
+                const mergedDriver = {
+                    ...driver,
+                    ...updateData,
+                    ...(updatedDriver && Object.keys(updatedDriver).length > 0 ? updatedDriver : {}),
+                    id: driver.id // Always preserve the ID
+                };
+                this.driverToEdit.set(mergedDriver);
                 this.toastService.info(`تم تعديل بيانات السائق: ${this.editDriver.arabicName} (${this.editDriver.name})`, 3000);
                 if (this.editDriver.newPassword && this.editDriver.newPassword.trim() !== '') {
                     this.toastService.info(`تم تغيير كلمة مرور السائق: ${this.editDriver.arabicName}`, 3000);

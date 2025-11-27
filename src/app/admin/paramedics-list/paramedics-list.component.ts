@@ -43,6 +43,13 @@ export class ParamedicsListComponent implements OnInit {
         this.router.navigate(['/admin/profile', paramedic.id]);
     }
 
+    viewTransactionHistory(paramedic: Paramedic) {
+        // Navigate to the transaction history page with the paramedic's ID
+        this.router.navigate(['/admin/transactions', paramedic.id], {
+            queryParams: { type: 'paramedic', name: paramedic.arabicName }
+        });
+    }
+
     queryFilterValue = signal<string | null>(null);
 
     searchTermValue: string = '';
@@ -251,7 +258,16 @@ export class ParamedicsListComponent implements OnInit {
         }
 
         this.paramedicService.updateParamedic(paramedic.id, updateData).subscribe({
-            next: () => {
+            next: (updatedParamedic) => {
+                // Merge: old paramedic -> updated data from form -> API response
+                // This ensures form changes are visible even if API returns partial data
+                const mergedParamedic = {
+                    ...paramedic,
+                    ...updateData,
+                    ...(updatedParamedic && Object.keys(updatedParamedic).length > 0 ? updatedParamedic : {}),
+                    id: paramedic.id // Always preserve the ID
+                };
+                this.paramedicToEdit.set(mergedParamedic);
                 this.toastService.info(`تم تعديل بيانات المسعف: ${this.editParamedic.arabicName} (${this.editParamedic.name})`, 3000);
                 if (this.editParamedic.newPassword && this.editParamedic.newPassword.trim() !== '') {
                     this.toastService.info(`تم تغيير كلمة مرور المسعف: ${this.editParamedic.arabicName}`, 3000);

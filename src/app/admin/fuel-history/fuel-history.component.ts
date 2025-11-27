@@ -382,7 +382,7 @@ formatDate(date: Date | string | null | undefined): string {
                 return;
             }
 
-            this.fuelService.updateFuelRecord(record.id, {
+            const updatePayload = {
                 ambulanceName: this.recordForm.ambulanceName,
                 ambulanceNumber: this.recordForm.ambulanceNumber,
                 ambulanceId: this.recordForm.ambulanceId,
@@ -395,12 +395,22 @@ formatDate(date: Date | string | null | undefined): string {
                 fuelAmount: this.recordForm.fuelAmount,
                 cost: this.recordForm.cost,
                 notes: this.recordForm.notes
-            }).subscribe({
+            };
+
+            this.fuelService.updateFuelRecord(record.id, updatePayload).subscribe({
                 next: (updatedRecord) => {
-                    this.selectedRecord.set(updatedRecord);
+                    // Merge: old record -> updated data from form -> API response
+                    // This ensures form changes are visible even if API returns partial data
+                    const mergedRecord = {
+                        ...record,
+                        ...updatePayload,
+                        ...(updatedRecord && Object.keys(updatedRecord).length > 0 ? updatedRecord : {}),
+                        id: record.id // Always preserve the ID
+                    };
+                    this.selectedRecord.set(mergedRecord);
                     this.isEditRecordModalOpen.set(false);
                     this.isViewRecordModalOpen.set(true);
-                    this.toastService.info(`تم تعديل سجل الوقود (${updatedRecord.ambulanceNumber}) للسائق ${updatedRecord.driverName}`, 3000);
+                    this.toastService.info(`تم تعديل سجل الوقود (${this.recordForm.ambulanceNumber}) للسائق ${this.recordForm.driverName}`, 3000);
                     this.loadData();
                 },
                 error: (error) => {

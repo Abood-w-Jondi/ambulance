@@ -11,7 +11,7 @@ import { PaginationComponent } from '../../shared/pagination/pagination.componen
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 import { TRANSFER_STATUS } from '../../shared/constants/status.constants';
-import { Trip, TransferStatus, FilterStatus, DriverReference, ParamedicReference } from '../../shared/models';
+import { Trip, TransferStatus, FilterStatus, DriverReference, ParamedicReference, TripType } from '../../shared/models';
 
 @Component({
     selector: 'app-trips',
@@ -89,11 +89,15 @@ export class TripsComponent implements OnInit {
         start: null as number | null,
         end: null as number | null,
         patientName: '',
-        ymdNumber: 1,
+        patientContact: '',
+        ymdNumber: null as number | null,
         ymdPeriod: 'يوم' as 'يوم' | 'اسبوع' | 'شهر' | 'سنة',
         transferStatus: 'تم النقل' as TransferStatus,
         diagnosis: '',
-        totalAmount: 0,
+        tripType: '' as TripType | '',
+        otherExpenses: 0,
+        totalPrice: 0,
+        payedPrice: 0,
         paramedicShare: 0
     };
 
@@ -113,6 +117,7 @@ export class TripsComponent implements OnInit {
     driversList: DriverReference[] = [];
     paramedicsList: ParamedicReference[] = [];
     transferStatuses: TransferStatus[] = ['ميداني', 'تم النقل', 'بلاغ كاذب', 'ينقل', 'لم يتم النقل', 'صيانة', 'رفض النقل', 'اخرى'];
+    tripTypes: TripType[] = ['داخلي', 'وسط', 'خارجي', 'اخرى'];
 
     // Computed filtered lists
     filteredDriversList = computed(() => {
@@ -210,9 +215,9 @@ export class TripsComponent implements OnInit {
     totalRecords = 0;
     isLoading = signal(false);
 
-    // Calculate money distribution
-    private calculateShares(totalAmount: number, paramedicShare: number) {
-        const remaining = totalAmount - paramedicShare;
+    // Calculate money distribution based on payed price (not total price)
+    private calculateShares(payedPrice: number, paramedicShare: number) {
+        const remaining = payedPrice - paramedicShare;
         const driverShare = remaining / 3;
         const eqShare = remaining - driverShare;
         return { paramedicShare, driverShare, eqShare };
@@ -476,11 +481,15 @@ export class TripsComponent implements OnInit {
             start: null,
             end: null,
             patientName: '',
-            ymdNumber: 1,
+            patientContact: '',
+            ymdNumber: null,
             ymdPeriod: 'يوم',
             transferStatus: 'تم النقل',
             diagnosis: '',
-            totalAmount: 0,
+            tripType: '',
+            otherExpenses: 0,
+            totalPrice: 0,
+            payedPrice: 0,
             paramedicShare: 0
         };
         this.driverSearchTerm.set('');
@@ -488,8 +497,39 @@ export class TripsComponent implements OnInit {
         this.isAddTripModalOpen.set(true);
     }
 
+    /**
+     * Calculate paramedic share based on trip type
+     */
+    calculateParamedicShare(tripType: TripType | '', customShare?: number): number {
+        const shares: Record<string, number> = {
+            'داخلي': 20,
+            'وسط': 60,
+            'خارجي': 80
+        };
+
+        if (tripType === 'اخرى') {
+            return customShare ?? 0;
+        }
+
+        return shares[tripType] ?? 0;
+    }
+
+    /**
+     * Handle trip type change to auto-calculate paramedic share
+     */
+    onTripTypeChange(): void {
+        if (this.tripForm.tripType && this.tripForm.tripType !== 'اخرى') {
+            this.tripForm.paramedicShare = this.calculateParamedicShare(this.tripForm.tripType);
+        } else if (this.tripForm.tripType === 'اخرى') {
+            // Allow user to enter custom value for 'اخرى'
+            // Keep the existing value or reset to 0 if needed
+        } else {
+            this.tripForm.paramedicShare = 0;
+        }
+    }
+
     addTrip(): void {
-        const shares = this.calculateShares(this.tripForm.totalAmount, this.tripForm.paramedicShare);
+        const shares = this.calculateShares(this.tripForm.payedPrice, this.tripForm.paramedicShare);
 
         this.tripService.createTrip({
             day: this.tripForm.day,
@@ -505,11 +545,15 @@ export class TripsComponent implements OnInit {
             end: this.tripForm.end || 0,
             diesel: this.calculatedDiesel,
             patientName: this.tripForm.patientName,
-            ymdValue: this.tripForm.ymdNumber,
+            patientContact: this.tripForm.patientContact || undefined,
+            ymdValue: this.tripForm.ymdNumber || 0,
             ymdPeriod: this.tripForm.ymdPeriod,
             transferStatus: this.tripForm.transferStatus,
             diagnosis: this.tripForm.diagnosis,
-            totalAmount: this.tripForm.totalAmount,
+            tripType: this.tripForm.tripType || undefined,
+            otherExpenses: this.tripForm.otherExpenses,
+            totalPrice: this.tripForm.totalPrice,
+            payedPrice: this.tripForm.payedPrice,
             ...shares
         }).subscribe({
             next: () => {
@@ -540,11 +584,15 @@ export class TripsComponent implements OnInit {
                 start: trip.start === 0 ? null : trip.start,
                 end: trip.end === 0 ? null : trip.end,
                 patientName: trip.patientName,
-                ymdNumber: trip.ymdValue || 1,
+                patientContact: trip.patientContact || '',
+                ymdNumber: (trip.ymdValue && trip.ymdValue > 0) ? trip.ymdValue : null,
                 ymdPeriod: (trip.ymdPeriod as 'يوم' | 'اسبوع' | 'شهر' | 'سنة') || 'يوم',
                 transferStatus: trip.transferStatus,
                 diagnosis: trip.diagnosis,
-                totalAmount: trip.totalAmount,
+                tripType: (trip.tripType as TripType | '') || '',
+                otherExpenses: trip.otherExpenses || 0,
+                totalPrice: trip.totalPrice,
+                payedPrice: trip.payedPrice,
                 paramedicShare: trip.paramedicShare
             };
             this.driverSearchTerm.set('');
@@ -557,7 +605,7 @@ export class TripsComponent implements OnInit {
     saveEditTrip(): void {
         const trip = this.selectedTrip();
         if (trip) {
-            const shares = this.calculateShares(this.tripForm.totalAmount, this.tripForm.paramedicShare);
+            const shares = this.calculateShares(this.tripForm.payedPrice, this.tripForm.paramedicShare);
 
             const updatedData = {
                 day: this.tripForm.day,
@@ -573,26 +621,29 @@ export class TripsComponent implements OnInit {
                 end: this.tripForm.end || 0,
                 diesel: this.calculatedDiesel,
                 patientName: this.tripForm.patientName,
-                ymdValue: this.tripForm.ymdNumber,
+                patientContact: this.tripForm.patientContact || undefined,
+                ymdValue: this.tripForm.ymdNumber || 0,
                 ymdPeriod: this.tripForm.ymdPeriod,
                 transferStatus: this.tripForm.transferStatus,
                 diagnosis: this.tripForm.diagnosis,
-                totalAmount: this.tripForm.totalAmount,
+                tripType: this.tripForm.tripType || undefined,
+                otherExpenses: this.tripForm.otherExpenses,
+                totalPrice: this.tripForm.totalPrice,
+                payedPrice: this.tripForm.payedPrice,
                 ...shares
             };
 
             this.tripService.updateTrip(trip.id, updatedData).subscribe({
                 next: (updatedTrip) => {
-                    // Update the selected trip with the returned data or construct it from the form
-                    if (updatedTrip && Object.keys(updatedTrip).length > 0) {
-                        this.selectedTrip.set(updatedTrip);
-                    } else {
-                        // If API doesn't return updated trip, construct it manually
-                        this.selectedTrip.set({
-                            ...trip,
-                            ...updatedData
-                        });
-                    }
+                    // Merge: old trip -> updated data from form -> API response
+                    // This ensures form changes are visible even if API returns partial data
+                    const mergedTrip = {
+                        ...trip,
+                        ...updatedData,
+                        ...(updatedTrip && Object.keys(updatedTrip).length > 0 ? updatedTrip : {}),
+                        id: trip.id // Always preserve the ID
+                    };
+                    this.selectedTrip.set(mergedTrip);
                     this.isEditTripModalOpen.set(false);
                     this.isViewTripModalOpen.set(true);
                     this.toastService.success('تم تحديث الرحلة بنجاح');
