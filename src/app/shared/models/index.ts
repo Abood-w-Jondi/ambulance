@@ -32,3 +32,6 @@ export * from './payment.model';
 
 // Settings Models (dynamic configuration)
 export * from './settings.model';
+
+// Location Models
+export * from './location.model';

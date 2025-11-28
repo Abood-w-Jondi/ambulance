@@ -71,43 +71,41 @@
                                 </div>
                             </div>
 
-                            <!-- Driver with Search -->
-                            <div class="col-6">
-                                <label for="driver" class="form-label small fw-medium">السائق</label>
+                            <!-- Vehicle Selection -->
+                            <div class="col-12">
+                                <label for="vehicle" class="form-label small fw-medium">المركبة</label>
                                 <input type="text" class="form-control mb-2" placeholder="بحث..."
-                                    [(ngModel)]="driverSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="driver" class="form-select" [(ngModel)]="tripForm.driverId"
-                                    (change)="onDriverSelect($event)" name="driverId" required>
-                                    <option value="">اختر السائق</option>
-                                    @for (driver of filteredDriversList(); track driver.id) {
-                                    <option [value]="driver.id">{{ driver.name }}</option>
+                                    [(ngModel)]="vehicleSearchTerm" [ngModelOptions]="{standalone: true}">
+                                <select id="vehicle" class="form-select" [(ngModel)]="tripForm.vehicleId"
+                                    (change)="onVehicleSelect($event)" name="vehicleId" required>
+                                    <option value="">اختر المركبة</option>
+                                    @for (vehicle of filteredVehiclesList(); track vehicle.id) {
+                                    <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                                     }
                                 </select>
+                                <small class="text-muted">سيتم ملء السائق والضابط من قبل السائق عند القبول</small>
                             </div>
 
-                            <!-- Paramedic with Search -->
-                            <div class="col-6">
-                                <label for="paramedic" class="form-label small fw-medium">ضابط الاسعاف</label>
-                                <input type="text" class="form-control mb-2" placeholder="بحث..."
-                                    [(ngModel)]="paramedicSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="paramedic" class="form-select" [(ngModel)]="tripForm.paramedicId"
-                                    (change)="onParamedicSelect($event)" name="paramedicId" required>
-                                    <option value="">اختر الضابط</option>
-                                    @for (paramedic of filteredParamedicsList(); track paramedic.id) {
-                                    <option [value]="paramedic.id">{{ paramedic.name }}</option>
-                                    }
-                                </select>
+                            <!-- Transfer From Location -->
+                            <div class="col-md-6">
+                                <app-location-search
+                                    label="نقل من (اختياري)"
+                                    placeholder="ابحث عن موقع الانطلاق..."
+                                    [required]="false"
+                                    [selectedLocationName]="tripForm.transferFrom"
+                                    (locationSelected)="onTransferFromSelected($event)">
+                                </app-location-search>
                             </div>
 
+                            <!-- Transfer To Location -->
                             <div class="col-md-6">
-                                <label for="transferFrom" class="form-label small fw-medium">نقل من</label>
-                                <input id="transferFrom" type="text" class="form-control" placeholder="موقع الانطلاق"
-                                    [(ngModel)]="tripForm.transferFrom" name="transferFrom" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="transferTo" class="form-label small fw-medium">نقل الى</label>
-                                <input id="transferTo" type="text" class="form-control" placeholder="موقع الوصول"
-                                    [(ngModel)]="tripForm.transferTo" name="transferTo" required>
+                                <app-location-search
+                                    label="نقل الى (اختياري)"
+                                    placeholder="ابحث عن موقع الوصول..."
+                                    [required]="false"
+                                    [selectedLocationName]="tripForm.transferTo"
+                                    (locationSelected)="onTransferToSelected($event)">
+                                </app-location-search>
                             </div>
                             <div class="col-4">
                                 <label for="start" class="form-label small fw-medium">بدء</label>
@@ -266,43 +264,40 @@
                             </div>
 
                             <!-- Driver with Search -->
-                            <div class="col-md-6">
-                                <label for="editDriver" class="form-label small fw-medium">السائق</label>
+                            <!-- Vehicle Selection -->
+                            <div class="col-12">
+                                <label for="editVehicle" class="form-label small fw-medium">المركبة</label>
                                 <input type="text" class="form-control mb-2" placeholder="بحث..."
-                                    [(ngModel)]="driverSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="editDriver" class="form-select" [(ngModel)]="tripForm.driverId"
-                                    (change)="onDriverSelect($event)" name="driverId" required>
-                                    <option value="">اختر السائق</option>
-                                    @for (driver of filteredDriversList(); track driver.id) {
-                                    <option [value]="driver.id">{{ driver.name }}</option>
+                                    [(ngModel)]="vehicleSearchTerm" [ngModelOptions]="{standalone: true}">
+                                <select id="editVehicle" class="form-select" [(ngModel)]="tripForm.vehicleId"
+                                    (change)="onVehicleSelect($event)" name="vehicleId" required>
+                                    <option value="">اختر المركبة</option>
+                                    @for (vehicle of filteredVehiclesList(); track vehicle.id) {
+                                    <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                                     }
                                 </select>
                             </div>
 
-                            <!-- Paramedic with Search -->
+                            <!-- Transfer From Location -->
                             <div class="col-md-6">
-                                <label for="editParamedic" class="form-label small fw-medium">ضابط الاسعاف</label>
-                                <input type="text" class="form-control mb-2" placeholder="بحث..."
-                                    [(ngModel)]="paramedicSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="editParamedic" class="form-select" [(ngModel)]="tripForm.paramedicId"
-                                    (change)="onParamedicSelect($event)" name="paramedicId" required>
-                                    <option value="">اختر الضابط</option>
-                                    @for (paramedic of filteredParamedicsList(); track paramedic.id) {
-                                    <option [value]="paramedic.id">{{ paramedic.name }}</option>
-                                    }
-                                </select>
+                                <app-location-search
+                                    label="نقل من (اختياري)"
+                                    placeholder="ابحث عن موقع الانطلاق..."
+                                    [required]="false"
+                                    [selectedLocationName]="tripForm.transferFrom"
+                                    (locationSelected)="onTransferFromSelected($event)">
+                                </app-location-search>
                             </div>
 
+                            <!-- Transfer To Location -->
                             <div class="col-md-6">
-                                <label for="editTransferFrom" class="form-label small fw-medium">نقل من</label>
-                                <input id="editTransferFrom" type="text" class="form-control"
-                                    placeholder="موقع الانطلاق" [(ngModel)]="tripForm.transferFrom" name="transferFrom"
-                                    required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="editTransferTo" class="form-label small fw-medium">نقل الى</label>
-                                <input id="editTransferTo" type="text" class="form-control" placeholder="موقع الوصول"
-                                    [(ngModel)]="tripForm.transferTo" name="transferTo" required>
+                                <app-location-search
+                                    label="نقل الى (اختياري)"
+                                    placeholder="ابحث عن موقع الوصول..."
+                                    [required]="false"
+                                    [selectedLocationName]="tripForm.transferTo"
+                                    (locationSelected)="onTransferToSelected($event)">
+                                </app-location-search>
                             </div>
                             <div class="col-4">
                                 <label for="editStart" class="form-label small fw-medium">بدء</label>
@@ -667,51 +662,28 @@
                             </div>
                             }
 
-                            <!-- Driver Filter with Search -->
-                            <div class="col-sm-6 col-12">
-                                <label for="driverFilter" class="form-label small fw-medium">السائق</label>
-                                <input type="text" class="form-control mb-2 text-end" placeholder="بحث..."
-                                    [(ngModel)]="driverFilterSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="driverFilter" class="form-select" [(ngModel)]="driverFilterValue">
-                                    <option value="">جميع السائقين</option>
-                                    @for (driver of filteredDriversListForFilter(); track driver.id) {
-                                    <option [value]="driver.name">{{ driver.name }}</option>
-                                    }
-                                </select>
-                            </div>
-
-                            <!-- Paramedic Filter with Search -->
-                            <div class="col-sm-6 col-12">
-                                <label for="paramedicFilter" class="form-label small fw-medium">ضابط الاسعاف</label>
-                                <input type="text" class="form-control mb-2 text-end" placeholder="بحث..."
-                                    [(ngModel)]="paramedicFilterSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="paramedicFilter" class="form-select" [(ngModel)]="paramedicFilterValue">
-                                    <option value="">جميع الضباط</option>
-                                    @for (paramedic of filteredParamedicsListForFilter(); track paramedic.id) {
-                                    <option [value]="paramedic.name">{{ paramedic.name }}</option>
-                                    }
-                                </select>
-                            </div>
-
                             <!-- Patient Filter -->
-                            <div class="col-6 col-12">
+                            <div class="col-sm-6 col-12">
                                 <label for="patientFilter" class="form-label small fw-medium">المريض</label>
                                 <input id="patientFilter" type="text" class="form-control text-end"
                                     placeholder="اسم المريض..." [(ngModel)]="patientFilterValue">
                             </div>
 
-                            <!-- Location From Filter -->
-                            <div class="col-sm-6 col-12">
-                                <label for="locationFromFilter" class="form-label small fw-medium">نقل من</label>
-                                <input id="locationFromFilter" type="text" class="form-control text-end"
-                                    placeholder="موقع الانطلاق..." [(ngModel)]="locationFromFilterValue">
-                            </div>
-
-                            <!-- Location To Filter -->
+                            <!-- Location To Filter (ONLY) -->
                             <div class="col-sm-6 col-12">
                                 <label for="locationToFilter" class="form-label small fw-medium">نقل الى</label>
                                 <input id="locationToFilter" type="text" class="form-control text-end"
                                     placeholder="موقع الوصول..." [(ngModel)]="locationToFilterValue">
+                            </div>
+
+                            <!-- Location Tag Filter -->
+                            <div class="col-sm-6 col-12">
+                                <label for="locationTagFilter" class="form-label small fw-medium">نوع الموقع</label>
+                                <select id="locationTagFilter" class="form-select" [(ngModel)]="selectedLocationTag">
+                                    <option value="all">الكل</option>
+                                    <option value="common">مواقع شائعة</option>
+                                    <option value="custom">مواقع مخصصة</option>
+                                </select>
                             </div>
                         </div>
 
@@ -770,11 +742,7 @@
 
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <p class="text-muted small m-0">
-                                                السائق:
-                                                <span class="clickable-field" (click)="quickFilterByDriver(trip.driver)"
-                                                    title="انقر للتصفية حسب هذا السائق">
-                                                    {{ trip.driver }}
-                                                </span>
+                                                المركبة: <span class="fw-medium">{{ trip.vehicleName || 'غير محدد' }}</span>
                                             </p>
                                             <p class="text-muted small m-0 clickable-field"
                                                 (click)="quickFilterByDate(trip.day, trip.month, trip.year)"
@@ -783,15 +751,6 @@
                                             </p>
                                         </div>
 
-                                        <p class="text-muted small mb-2">
-                                            الضابط:
-                                            <span class="clickable-field"
-                                                (click)="quickFilterByParamedic(trip.paramedic)"
-                                                title="انقر للتصفية حسب هذا الضابط">
-                                                {{ trip.paramedic }}
-                                            </span>
-                                        </p>
-
                                         <p class="text-muted small mb-3">
                                             <span class="fw-medium">التشخيص:</span> {{ trip.diagnosis }}
                                         </p>
@@ -799,14 +758,14 @@
                                         <div
                                             class="d-flex align-items-center gap-2 small fw-medium text-dark justify-content-end mb-3">
                                             <span class="clickable-field"
-                                                (click)="quickFilterByLocation(trip.transferFrom, 'from')"
-                                                title="انقر للتصفية حسب موقع الانطلاق">
+                                                (click)="quickFilterByLocation(trip.transferFrom)"
+                                                title="انقر للتصفية حسب موقع الوصول (نقل الى)">
                                                 {{ trip.transferFrom }}
                                             </span>
                                             <i class="fa-solid fa-arrow-left"></i>
                                             <span class="clickable-field"
-                                                (click)="quickFilterByLocation(trip.transferTo, 'to')"
-                                                title="انقر للتصفية حسب موقع الوصول">
+                                                (click)="quickFilterByLocation(trip.transferTo)"
+                                                title="انقر للتصفية حسب موقع الوصول (نقل الى)">
                                                 {{ trip.transferTo }}
                                             </span>
                                         </div>

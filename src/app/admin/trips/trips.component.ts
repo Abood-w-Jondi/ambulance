@@ -7,16 +7,19 @@ import { ValidationService } from '../../shared/services/validation.service';
 import { TripService } from '../../shared/services/trip.service';
 import { DriverService } from '../../shared/services/driver.service';
 import { ParamedicService } from '../../shared/services/paramedic.service';
+import { VehicleService } from '../../shared/services/vehicle.service';
+import { LocationService } from '../../shared/services/location.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
+import { LocationSearchComponent, LocationSelection } from '../../shared/location-search/location-search.component';
 import { TRANSFER_STATUS } from '../../shared/constants/status.constants';
-import { Trip, TransferStatus, FilterStatus, DriverReference, ParamedicReference, TripType } from '../../shared/models';
+import { Trip, TransferStatus, FilterStatus, DriverReference, ParamedicReference, TripType, VehicleReference } from '../../shared/models';
 
 @Component({
     selector: 'app-trips',
     standalone: true,
-    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, ConfirmationModalComponent],
+    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, ConfirmationModalComponent, LocationSearchComponent],
     templateUrl: './trips.component.html',
     styleUrl: './trips.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,21 +45,17 @@ export class TripsComponent implements OnInit {
     dateFilterMonthTo: number | null = null;
     dateFilterYearTo: number | null = null;
 
-    driverFilterValue: string = '';
-    paramedicFilterValue: string = '';
     patientFilterValue: string = '';
-    locationFromFilterValue: string = '';
     locationToFilterValue: string = '';
     selectedStatus: FilterStatus = 'All';
+    selectedLocationTag: string = 'all'; // 'all' | 'common' | 'custom'
 
     // Filters for computation
     filterStatus = signal<FilterStatus>('All');
     dateFilter = signal<{ type: 'single' | 'range', single?: Date, from?: Date, to?: Date }>({ type: 'single' });
-    driverNameFilter = signal('');
-    paramedicNameFilter = signal('');
     patientNameFilter = signal('');
-    locationFromFilter = signal('');
     locationToFilter = signal('');
+    locationTagFilter = signal<string>('all');
 
     // Modal Control
     isAddTripModalOpen = signal(false);
@@ -80,12 +79,14 @@ export class TripsComponent implements OnInit {
         day: this.thisday,
         month: this.thismonth,
         year: this.thisyear,
-        driver: '',
-        driverId: '',
-        paramedic: '',
-        paramedicId: '',
+        vehicleId: '',
+        vehicleName: '',
         transferFrom: '',
+        transferFromId: '',
+        transferFromTag: 'common' as 'common' | 'custom',
         transferTo: '',
+        transferToId: '',
+        transferToTag: 'common' as 'common' | 'custom',
         start: null as number | null,
         end: null as number | null,
         patientName: '',
@@ -109,46 +110,18 @@ export class TripsComponent implements OnInit {
     }
 
     // Search filters for dropdowns
-    driverSearchTerm = signal('');
-    paramedicSearchTerm = signal('');
-    driverFilterSearchTerm = signal('');
-    paramedicFilterSearchTerm = signal('');
+    vehicleSearchTerm = signal('');
 
-    driversList: DriverReference[] = [];
-    paramedicsList: ParamedicReference[] = [];
+    vehiclesList: VehicleReference[] = [];
     transferStatuses: TransferStatus[] = ['ميداني', 'تم النقل', 'بلاغ كاذب', 'ينقل', 'لم يتم النقل', 'صيانة', 'رفض النقل', 'اخرى'];
     tripTypes: TripType[] = ['داخلي', 'وسط', 'خارجي', 'اخرى'];
 
     // Computed filtered lists
-    filteredDriversList = computed(() => {
-        const term = this.driverSearchTerm().toLowerCase();
-        return this.driversList.filter((d: any) =>
-            d.arabicName?.toLowerCase().includes(term) ||
-            d.englishName?.toLowerCase().includes(term)
-        );
-    });
-
-    filteredParamedicsList = computed(() => {
-        const term = this.paramedicSearchTerm().toLowerCase();
-        return this.paramedicsList.filter((p: any) =>
-            p.arabicName?.toLowerCase().includes(term) ||
-            p.englishName?.toLowerCase().includes(term)
-        );
-    });
-
-    filteredDriversListForFilter = computed(() => {
-        const term = this.driverFilterSearchTerm().toLowerCase();
-        return this.driversList.filter((d: any) =>
-            d.arabicName?.toLowerCase().includes(term) ||
-            d.englishName?.toLowerCase().includes(term)
-        );
-    });
-
-    filteredParamedicsListForFilter = computed(() => {
-        const term = this.paramedicFilterSearchTerm().toLowerCase();
-        return this.paramedicsList.filter((p: any) =>
-            p.arabicName?.toLowerCase().includes(term) ||
-            p.englishName?.toLowerCase().includes(term)
+    filteredVehiclesList = computed(() => {
+        const term = this.vehicleSearchTerm().toLowerCase();
+        return this.vehiclesList.filter((v: any) =>
+            v.vehicleName?.toLowerCase().includes(term) ||
+            v.vehicleId?.toLowerCase().includes(term)
         );
     });
 
@@ -157,54 +130,32 @@ export class TripsComponent implements OnInit {
         private toastService: ToastService,
         private validationService: ValidationService,
         private tripService: TripService,
-        private driverService: DriverService,
-        private paramedicService: ParamedicService
+        private vehicleService: VehicleService,
+        private locationService: LocationService
     ) {
         this.globalVars.setGlobalHeader('الرحلات والنقليات');
     }
 
     ngOnInit(): void {
-        this.loadDrivers();
-        this.loadParamedics();
+        this.loadVehicles();
         this.loadData();
     }
 
     /**
-     * Load drivers from database
+     * Load vehicles from database
      */
-    loadDrivers(): void {
-        this.driverService.getDrivers({ limit: 1000 }).subscribe({
+    loadVehicles(): void {
+        this.vehicleService.getVehicles({ limit: 1000 }).subscribe({
             next: (response) => {
-                this.driversList = response.data.map((driver: any) => ({
-                    id: driver.id,
-                    name: driver.arabicName || driver.name,
-                    arabicName: driver.arabicName,
-                    englishName: driver.name
+                this.vehiclesList = response.data.map((vehicle: any) => ({
+                    id: vehicle.id,
+                    vehicleId: vehicle.vehicleId,
+                    vehicleName: vehicle.vehicleName
                 }));
             },
             error: (error) => {
-                console.error('Error loading drivers:', error);
-                this.toastService.error('فشل تحميل قائمة السائقين');
-            }
-        });
-    }
-
-    /**
-     * Load paramedics from database
-     */
-    loadParamedics(): void {
-        this.paramedicService.getParamedics({ limit: 1000 }).subscribe({
-            next: (response) => {
-                this.paramedicsList = response.data.map((paramedic: any) => ({
-                    id: paramedic.id,
-                    name: paramedic.arabicName || paramedic.name,
-                    arabicName: paramedic.arabicName,
-                    englishName: paramedic.name
-                }));
-            },
-            error: (error) => {
-                console.error('Error loading paramedics:', error);
-                this.toastService.error('فشل تحميل قائمة ضباط الإسعاف');
+                console.error('Error loading vehicles:', error);
+                this.toastService.error('فشل تحميل قائمة المركبات');
             }
         });
     }
@@ -254,32 +205,14 @@ export class TripsComponent implements OnInit {
         if (this.patientNameFilter()) {
             params.patientName = this.patientNameFilter();
         }
-        if (this.locationFromFilter()) {
-            params.pickupLocation = this.locationFromFilter();
-        }
         if (this.locationToFilter()) {
             params.dropoffLocation = this.locationToFilter();
         }
 
-        // Add driver and paramedic filters by finding their IDs
-        const driverName = this.driverNameFilter();
-        if (driverName) {
-            const driver = this.driversList.find((d: any) =>
-                d.arabicName === driverName || d.englishName === driverName || d.name === driverName
-            );
-            if (driver) {
-                params.driverId = driver.id;
-            }
-        }
-
-        const paramedicName = this.paramedicNameFilter();
-        if (paramedicName) {
-            const paramedic = this.paramedicsList.find((p: any) =>
-                p.arabicName === paramedicName || p.englishName === paramedicName || p.name === paramedicName
-            );
-            if (paramedic) {
-                params.paramedicId = paramedic.id;
-            }
+        // Add location tag filter
+        const locationTag = this.locationTagFilter();
+        if (locationTag && locationTag !== 'all') {
+            params.locationTag = locationTag;
         }
 
         this.tripService.getTrips(params).subscribe({
@@ -323,22 +256,9 @@ export class TripsComponent implements OnInit {
     }
 
     // Quick filter methods (clickable fields)
-    quickFilterByDriver(driverName: string): void {
-        this.driverFilterValue = driverName;
-        this.driverNameFilter.set(driverName);
-        //this.isFilterPanelVisible.set(false);
-    }
-
-    quickFilterByParamedic(paramedicName: string): void {
-        this.paramedicFilterValue = paramedicName;
-        this.paramedicNameFilter.set(paramedicName);
-        //this.isFilterPanelVisible.set(false);
-    }
-
     quickFilterByPatient(patientName: string): void {
         this.patientFilterValue = patientName;
         this.patientNameFilter.set(patientName);
-        //this.isFilterPanelVisible.set(false);
     }
 
     quickFilterByDate(day: number, month: number, year: number): void {
@@ -348,18 +268,14 @@ export class TripsComponent implements OnInit {
         this.dateFilterYear = year;
         const singleDate = new Date(year, month - 1, day);
         this.dateFilter.set({ type: 'single', single: singleDate });
-        //this.isFilterPanelVisible.set(false);
     }
 
-    quickFilterByLocation(location: string, type: 'from' | 'to'): void {
-        if (type === 'from') {
-            this.locationFromFilterValue = location;
-            this.locationFromFilter.set(location);
-        } else {
-            this.locationToFilterValue = location;
-            this.locationToFilter.set(location);
-        }
-        //this.isFilterPanelVisible.set(false);
+    // Always filter by 'To' location when clicking any location
+    quickFilterByLocation(location: string): void {
+        this.locationToFilterValue = location;
+        this.locationToFilter.set(location);
+        this.currentPage = 1;
+        this.loadData();
     }
 
     getStatusColor(status: TransferStatus): string {
@@ -417,11 +333,9 @@ export class TripsComponent implements OnInit {
             this.dateFilter.set({ type: 'single' });
         }
 
-        this.driverNameFilter.set(this.driverFilterValue);
-        this.paramedicNameFilter.set(this.paramedicFilterValue);
         this.patientNameFilter.set(this.patientFilterValue);
-        this.locationFromFilter.set(this.locationFromFilterValue);
         this.locationToFilter.set(this.locationToFilterValue);
+        this.locationTagFilter.set(this.selectedLocationTag);
 
         this.currentPage = 1;
         this.loadData();
@@ -438,20 +352,16 @@ export class TripsComponent implements OnInit {
         this.dateFilterDayTo = null;
         this.dateFilterMonthTo = null;
         this.dateFilterYearTo = null;
-        this.driverFilterValue = '';
-        this.paramedicFilterValue = '';
         this.patientFilterValue = '';
-        this.locationFromFilterValue = '';
         this.locationToFilterValue = '';
         this.selectedStatus = 'All';
+        this.selectedLocationTag = 'all';
 
         this.filterStatus.set('All');
         this.dateFilter.set({ type: 'single' });
-        this.driverNameFilter.set('');
-        this.paramedicNameFilter.set('');
         this.patientNameFilter.set('');
-        this.locationFromFilter.set('');
         this.locationToFilter.set('');
+        this.locationTagFilter.set('all');
         this.currentPage = 1;
         this.loadData();
     }
@@ -472,12 +382,14 @@ export class TripsComponent implements OnInit {
             day: this.thisday,
             month: this.thismonth + 1,
             year: this.thisyear,
-            driver: '',
-            driverId: '',
-            paramedic: '',
-            paramedicId: '',
+            vehicleId: '',
+            vehicleName: '',
             transferFrom: '',
+            transferFromId: '',
+            transferFromTag: 'common',
             transferTo: '',
+            transferToId: '',
+            transferToTag: 'common',
             start: null,
             end: null,
             patientName: '',
@@ -492,8 +404,7 @@ export class TripsComponent implements OnInit {
             payedPrice: 0,
             paramedicShare: 0
         };
-        this.driverSearchTerm.set('');
-        this.paramedicSearchTerm.set('');
+        this.vehicleSearchTerm.set('');
         this.isAddTripModalOpen.set(true);
     }
 
@@ -528,6 +439,78 @@ export class TripsComponent implements OnInit {
         }
     }
 
+    /**
+     * Handle vehicle selection from dropdown
+     */
+    onVehicleSelect(event: Event): void {
+        const target = event.target as HTMLSelectElement;
+        const vehicleId = target.value;
+
+        if (!vehicleId) {
+            this.tripForm.vehicleId = '';
+            this.tripForm.vehicleName = '';
+            return;
+        }
+
+        const vehicle = this.vehiclesList.find((v: any) => v.id === vehicleId);
+        if (vehicle) {
+            this.tripForm.vehicleId = vehicleId;
+            this.tripForm.vehicleName = vehicle.vehicleName;
+        }
+    }
+
+    /**
+     * Handle transfer from location selection
+     */
+    onTransferFromSelected(selection: LocationSelection): void {
+        this.tripForm.transferFrom = selection.name;
+        this.tripForm.transferFromTag = selection.locationType;
+
+        if (selection.isNew) {
+            // Create new custom location
+            this.locationService.createLocation({
+                name: selection.name,
+                locationType: 'custom'
+            }).subscribe({
+                next: (location) => {
+                    this.tripForm.transferFromId = location.id;
+                },
+                error: (error) => {
+                    console.error('Error creating location:', error);
+                    this.toastService.error('فشل إنشاء الموقع');
+                }
+            });
+        } else {
+            this.tripForm.transferFromId = selection.id;
+        }
+    }
+
+    /**
+     * Handle transfer to location selection
+     */
+    onTransferToSelected(selection: LocationSelection): void {
+        this.tripForm.transferTo = selection.name;
+        this.tripForm.transferToTag = selection.locationType;
+
+        if (selection.isNew) {
+            // Create new custom location
+            this.locationService.createLocation({
+                name: selection.name,
+                locationType: 'custom'
+            }).subscribe({
+                next: (location) => {
+                    this.tripForm.transferToId = location.id;
+                },
+                error: (error) => {
+                    console.error('Error creating location:', error);
+                    this.toastService.error('فشل إنشاء الموقع');
+                }
+            });
+        } else {
+            this.tripForm.transferToId = selection.id;
+        }
+    }
+
     addTrip(): void {
         const shares = this.calculateShares(this.tripForm.payedPrice, this.tripForm.paramedicShare);
 
@@ -535,12 +518,16 @@ export class TripsComponent implements OnInit {
             day: this.tripForm.day,
             month: this.tripForm.month,
             year: this.tripForm.year,
-            driver: this.tripForm.driver,
-            driverId: this.tripForm.driverId,
-            paramedic: this.tripForm.paramedic,
-            paramedicId: this.tripForm.paramedicId,
+            vehicleId: this.tripForm.vehicleId,
+            vehicleName: this.tripForm.vehicleName,
+            driver: '', // Will be populated by driver
+            paramedic: '', // Will be populated by driver
             transferFrom: this.tripForm.transferFrom,
+            transferFromId: this.tripForm.transferFromId,
+            transferFromTag: this.tripForm.transferFromTag,
             transferTo: this.tripForm.transferTo,
+            transferToId: this.tripForm.transferToId,
+            transferToTag: this.tripForm.transferToTag,
             start: this.tripForm.start || 0,
             end: this.tripForm.end || 0,
             diesel: this.calculatedDiesel,
@@ -575,12 +562,14 @@ export class TripsComponent implements OnInit {
                 day: trip.day,
                 month: trip.month,
                 year: trip.year,
-                driver: trip.driver,
-                driverId: trip.driverId || '',
-                paramedic: trip.paramedic,
-                paramedicId: trip.paramedicId || '',
+                vehicleId: trip.vehicleId || '',
+                vehicleName: trip.vehicleName || '',
                 transferFrom: trip.transferFrom,
+                transferFromId: trip.transferFromId || '',
+                transferFromTag: (trip.transferFromTag as 'common' | 'custom') || 'common',
                 transferTo: trip.transferTo,
+                transferToId: trip.transferToId || '',
+                transferToTag: (trip.transferToTag as 'common' | 'custom') || 'common',
                 start: trip.start === 0 ? null : trip.start,
                 end: trip.end === 0 ? null : trip.end,
                 patientName: trip.patientName,
@@ -595,8 +584,7 @@ export class TripsComponent implements OnInit {
                 payedPrice: trip.payedPrice,
                 paramedicShare: trip.paramedicShare
             };
-            this.driverSearchTerm.set('');
-            this.paramedicSearchTerm.set('');
+            this.vehicleSearchTerm.set('');
             this.isViewTripModalOpen.set(false);
             this.isEditTripModalOpen.set(true);
         }
@@ -611,12 +599,14 @@ export class TripsComponent implements OnInit {
                 day: this.tripForm.day,
                 month: this.tripForm.month,
                 year: this.tripForm.year,
-                driver: this.tripForm.driver,
-                driverId: this.tripForm.driverId,
-                paramedic: this.tripForm.paramedic,
-                paramedicId: this.tripForm.paramedicId,
+                vehicleId: this.tripForm.vehicleId,
+                vehicleName: this.tripForm.vehicleName,
                 transferFrom: this.tripForm.transferFrom,
+                transferFromId: this.tripForm.transferFromId,
+                transferFromTag: this.tripForm.transferFromTag,
                 transferTo: this.tripForm.transferTo,
+                transferToId: this.tripForm.transferToId,
+                transferToTag: this.tripForm.transferToTag,
                 start: this.tripForm.start || 0,
                 end: this.tripForm.end || 0,
                 diesel: this.calculatedDiesel,
@@ -727,43 +717,4 @@ export class TripsComponent implements OnInit {
         return Array.from({ length: 10 }, (_, i) => currentYear - i);
     }
 
-    /**
-     * Handle driver selection from dropdown
-     */
-    onDriverSelect(event: Event): void {
-        const target = event.target as HTMLSelectElement;
-        const driverId = target.value;
-
-        if (!driverId) {
-            this.tripForm.driverId = '';
-            this.tripForm.driver = '';
-            return;
-        }
-
-        const driver = this.driversList.find((d: any) => d.id === driverId);
-        if (driver) {
-            this.tripForm.driverId = driverId;
-            this.tripForm.driver = (driver as any).arabicName || (driver as any).name;
-        }
-    }
-
-    /**
-     * Handle paramedic selection from dropdown
-     */
-    onParamedicSelect(event: Event): void {
-        const target = event.target as HTMLSelectElement;
-        const paramedicId = target.value;
-
-        if (!paramedicId) {
-            this.tripForm.paramedicId = '';
-            this.tripForm.paramedic = '';
-            return;
-        }
-
-        const paramedic = this.paramedicsList.find((p: any) => p.id === paramedicId);
-        if (paramedic) {
-            this.tripForm.paramedicId = paramedicId;
-            this.tripForm.paramedic = (paramedic as any).arabicName || (paramedic as any).name;
-        }
-    }
 }

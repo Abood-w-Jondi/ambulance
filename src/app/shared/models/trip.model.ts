@@ -11,14 +11,18 @@ export interface Trip {
     year: number;
 
     // Personnel
-    driver: string;            // Driver name (display)
-    driverId?: string;         // Driver ID (backend reference)
-    paramedic: string;         // Paramedic name (display)
-    paramedicId?: string;      // Paramedic ID (backend reference)
+    driver: string;            // Driver name (display) - populated by driver
+    driverId?: string;         // Driver ID (backend reference) - auto-filled from vehicle
+    paramedic: string;         // Paramedic name (display) - chosen by driver
+    paramedicId?: string;      // Paramedic ID (backend reference) - chosen by driver
 
-    // Location Information
-    transferFrom: string;      // Starting location
-    transferTo: string;        // Destination location
+    // Location Information (always populated from database joins)
+    transferFrom: string;      // Starting location name (from locations table join)
+    transferFromId?: string;   // Starting location ID (reference to locations table)
+    transferFromTag?: string;  // Location tag: 'common' or 'custom'
+    transferTo: string;        // Destination location name (from locations table join)
+    transferToId?: string;     // Destination location ID (reference to locations table)
+    transferToTag?: string;    // Location tag: 'common' or 'custom'
 
     // Time & Distance
     start: number;             // Start odometer reading
@@ -53,8 +57,12 @@ export interface Trip {
     driverShare: number;       // Driver's share
     eqShare: number;           // Equipment/Company share
 
-    // Vehicle Information (for backend reference)
-    vehicleId?: string;        // Vehicle used for the trip
+    // Vehicle Information (assigned by admin, name populated from database join)
+    vehicleId?: string;        // Vehicle assigned to the trip (by admin)
+    vehicleName?: string;      // Vehicle name (always populated from vehicles table join)
+
+    // Trip populated mostly by driver after accepting
+    populatedByDriver?: boolean;  // Flag to indicate if driver has filled the data
 }
 
 export type TransferStatus = 'ميداني' | 'تم النقل' | 'بلاغ كاذب' | 'ينقل' | 'لم يتم النقل' | 'صيانة' | 'رفض النقل' | 'اخرى';

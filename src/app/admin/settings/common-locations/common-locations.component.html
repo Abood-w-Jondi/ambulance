@@ -108,6 +108,17 @@
       </div>
       <div class="modal-body">
         <form>
+          <!-- Select from Custom Locations -->
+          <div class="row mb-3">
+            <div class="col-12">
+              <label class="form-label">اختر من المواقع المخصصة (اختياري)</label>
+              <select class="form-select" [(ngModel)]="selectedCustomLocationId" (ngModelChange)="onCustomLocationSelected($event)" name="customLocation">
+                <option value="">-- اكتب يدوياً أو اختر موقع مخصص --</option>
+                <option *ngFor="let loc of customLocations()" [value]="loc.id">{{ loc.name }}</option>
+              </select>
+              <small class="text-muted">إذا اخترت موقع مخصص، سيتم تحويله إلى موقع شائع</small>
+            </div>
+          </div>
           <div class="row">
             <div class="col-md-6 mb-3">
               <label class="form-label">اسم الموقع <span class="text-danger">*</span></label>
@@ -120,7 +131,7 @@
               />
             </div>
             <div class="col-md-6 mb-3">
-              <label class="form-label">نوع الموقع <span class="text-danger">*</span></label>
+              <label class="form-label">نوع الموقع </label>
               <select class="form-select" [(ngModel)]="locationForm.type" name="type">
                 <option *ngFor="let type of locationTypes" [value]="type.value">{{ type.label }}</option>
               </select>
@@ -128,29 +139,29 @@
           </div>
           <div class="row">
             <div class="col-md-8 mb-3">
-              <label class="form-label">العنوان <span class="text-danger">*</span></label>
+              <label class="form-label">العنوان </label>
               <input
                 type="text"
                 class="form-control"
                 [(ngModel)]="locationForm.address"
                 name="address"
-                placeholder="مثال: طريق الملك فهد"
+                placeholder="مثال: شارع فيصل"
               />
             </div>
             <div class="col-md-4 mb-3">
-              <label class="form-label">المدينة <span class="text-danger">*</span></label>
+              <label class="form-label">المدينة </label>
               <input
                 type="text"
                 class="form-control"
                 [(ngModel)]="locationForm.city"
                 name="city"
-                placeholder="مثال: الرياض"
+                placeholder="مثال: نابلس"
               />
             </div>
           </div>
           <div class="row">
             <div class="col-md-6 mb-3">
-              <label class="form-label">رقم الهاتف <span class="text-danger">*</span></label>
+              <label class="form-label">رقم الهاتف </label>
               <input
                 type="tel"
                 class="form-control"
@@ -211,7 +222,7 @@
               />
             </div>
             <div class="col-md-6 mb-3">
-              <label class="form-label">نوع الموقع <span class="text-danger">*</span></label>
+              <label class="form-label">نوع الموقع </label>
               <select class="form-select" [(ngModel)]="locationForm.type" name="type">
                 <option *ngFor="let type of locationTypes" [value]="type.value">{{ type.label }}</option>
               </select>
@@ -219,29 +230,29 @@
           </div>
           <div class="row">
             <div class="col-md-8 mb-3">
-              <label class="form-label">العنوان <span class="text-danger">*</span></label>
+              <label class="form-label">العنوان </label>
               <input
                 type="text"
                 class="form-control"
                 [(ngModel)]="locationForm.address"
                 name="address"
-                placeholder="مثال: طريق الملك فهد"
+                placeholder="مثال: شارع فيصل"
               />
             </div>
             <div class="col-md-4 mb-3">
-              <label class="form-label">المدينة <span class="text-danger">*</span></label>
+              <label class="form-label">المدينة </label>
               <input
                 type="text"
                 class="form-control"
                 [(ngModel)]="locationForm.city"
                 name="city"
-                placeholder="مثال: الرياض"
+                placeholder="مثال: نابلس"
               />
             </div>
           </div>
           <div class="row">
             <div class="col-md-6 mb-3">
-              <label class="form-label">رقم الهاتف <span class="text-danger">*</span></label>
+              <label class="form-label">رقم الهاتف </label>
               <input
                 type="tel"
                 class="form-control"
