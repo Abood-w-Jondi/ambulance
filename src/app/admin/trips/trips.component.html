@@ -669,21 +669,34 @@
                                     placeholder="اسم المريض..." [(ngModel)]="patientFilterValue">
                             </div>
 
-                            <!-- Location To Filter (ONLY) -->
+                            <!-- Location Tag Filter (Common/Custom) -->
                             <div class="col-sm-6 col-12">
-                                <label for="locationToFilter" class="form-label small fw-medium">نقل الى</label>
-                                <input id="locationToFilter" type="text" class="form-control text-end"
-                                    placeholder="موقع الوصول..." [(ngModel)]="locationToFilterValue">
-                            </div>
-
-                            <!-- Location Tag Filter -->
-                            <div class="col-sm-6 col-12">
-                                <label for="locationTagFilter" class="form-label small fw-medium">نوع الموقع</label>
+                                <label for="locationTagFilter" class="form-label small fw-medium">نوع التخزين</label>
                                 <select id="locationTagFilter" class="form-select" [(ngModel)]="selectedLocationTag">
                                     <option value="all">الكل</option>
                                     <option value="common">مواقع شائعة</option>
                                     <option value="custom">مواقع مخصصة</option>
                                 </select>
+                            </div>
+
+                            <!-- Location Type Filter (Hospital/Clinic/etc) -->
+                            <div class="col-sm-6 col-12">
+                                <label for="locationTypeFilter" class="form-label small fw-medium">نوع الموقع</label>
+                                <select id="locationTypeFilter" class="form-select" [(ngModel)]="selectedLocationType">
+                                    <option value="all">الكل</option>
+                                    <option *ngFor="let type of locationTypes" [value]="type.value">
+                                        {{ type.label }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Location Dropdown Filter (by ID) -->
+                            <div class="col-12">
+                                <app-location-search
+                                    [placeholder]="'اختر الموقع...'"
+                                    (locationSelected)="onTransferToFilterSelected($event)">
+                                </app-location-search>
+                                <small class="text-muted">اختر موقع للتصفية بدلاً من الكتابة</small>
                             </div>
                         </div>
 

@@ -8,7 +8,6 @@ import { TripService } from '../../shared/services/trip.service';
 import { DriverService } from '../../shared/services/driver.service';
 import { ParamedicService } from '../../shared/services/paramedic.service';
 import { VehicleService } from '../../shared/services/vehicle.service';
-import { LocationService } from '../../shared/services/location.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
@@ -49,6 +48,8 @@ export class TripsComponent implements OnInit {
     locationToFilterValue: string = '';
     selectedStatus: FilterStatus = 'All';
     selectedLocationTag: string = 'all'; // 'all' | 'common' | 'custom'
+    selectedLocationType: string = 'all'; // 'all' | 'hospital' | 'clinic' | 'emergency' | 'other'
+    filterTransferToId: string = ''; // For location dropdown filter
 
     // Filters for computation
     filterStatus = signal<FilterStatus>('All');
@@ -56,6 +57,14 @@ export class TripsComponent implements OnInit {
     patientNameFilter = signal('');
     locationToFilter = signal('');
     locationTagFilter = signal<string>('all');
+
+    // Location types for filtering
+    locationTypes = [
+        { value: 'hospital', label: 'مستشفى' },
+        { value: 'clinic', label: 'عيادة' },
+        { value: 'emergency', label: 'طوارئ' },
+        { value: 'other', label: 'أخرى' }
+    ];
 
     // Modal Control
     isAddTripModalOpen = signal(false);
@@ -93,7 +102,7 @@ export class TripsComponent implements OnInit {
         patientContact: '',
         ymdNumber: null as number | null,
         ymdPeriod: 'يوم' as 'يوم' | 'اسبوع' | 'شهر' | 'سنة',
-        transferStatus: 'تم النقل' as TransferStatus,
+        transferStatus: 'لم يتم النقل' as TransferStatus,
         diagnosis: '',
         tripType: '' as TripType | '',
         otherExpenses: 0,
@@ -130,8 +139,7 @@ export class TripsComponent implements OnInit {
         private toastService: ToastService,
         private validationService: ValidationService,
         private tripService: TripService,
-        private vehicleService: VehicleService,
-        private locationService: LocationService
+        private vehicleService: VehicleService
     ) {
         this.globalVars.setGlobalHeader('الرحلات والنقليات');
     }
@@ -205,14 +213,21 @@ export class TripsComponent implements OnInit {
         if (this.patientNameFilter()) {
             params.patientName = this.patientNameFilter();
         }
-        if (this.locationToFilter()) {
-            params.dropoffLocation = this.locationToFilter();
+
+        // Use location ID filter instead of text-based search
+        if (this.filterTransferToId) {
+            params.transferToId = this.filterTransferToId;
         }
 
-        // Add location tag filter
+        // Add location tag filter (common/custom)
         const locationTag = this.locationTagFilter();
         if (locationTag && locationTag !== 'all') {
             params.locationTag = locationTag;
+        }
+
+        // Add location type filter (hospital/clinic/emergency/other)
+        if (this.selectedLocationType && this.selectedLocationType !== 'all') {
+            params.locationType = this.selectedLocationType;
         }
 
         this.tripService.getTrips(params).subscribe({
@@ -268,6 +283,17 @@ export class TripsComponent implements OnInit {
         this.dateFilterYear = year;
         const singleDate = new Date(year, month - 1, day);
         this.dateFilter.set({ type: 'single', single: singleDate });
+    }
+
+    // Handler for location dropdown selection
+    onTransferToFilterSelected(selection: LocationSelection | null): void {
+        if (selection) {
+            this.filterTransferToId = selection.id;
+        } else {
+            this.filterTransferToId = '';
+        }
+        this.currentPage = 1;
+        this.loadData();
     }
 
     // Always filter by 'To' location when clicking any location
@@ -396,7 +422,7 @@ export class TripsComponent implements OnInit {
             patientContact: '',
             ymdNumber: null,
             ymdPeriod: 'يوم',
-            transferStatus: 'تم النقل',
+            transferStatus: 'لم يتم النقل',
             diagnosis: '',
             tripType: '',
             otherExpenses: 0,
@@ -461,25 +487,15 @@ export class TripsComponent implements OnInit {
 
     /**
      * Handle transfer from location selection
+     * Note: New locations are NOT created here - only when the trip is saved
      */
     onTransferFromSelected(selection: LocationSelection): void {
         this.tripForm.transferFrom = selection.name;
         this.tripForm.transferFromTag = selection.locationType;
 
         if (selection.isNew) {
-            // Create new custom location
-            this.locationService.createLocation({
-                name: selection.name,
-                locationType: 'custom'
-            }).subscribe({
-                next: (location) => {
-                    this.tripForm.transferFromId = location.id;
-                },
-                error: (error) => {
-                    console.error('Error creating location:', error);
-                    this.toastService.error('فشل إنشاء الموقع');
-                }
-            });
+            // Store empty ID - location will be created when trip is submitted
+            this.tripForm.transferFromId = '';
         } else {
             this.tripForm.transferFromId = selection.id;
         }
@@ -487,25 +503,15 @@ export class TripsComponent implements OnInit {
 
     /**
      * Handle transfer to location selection
+     * Note: New locations are NOT created here - only when the trip is saved
      */
     onTransferToSelected(selection: LocationSelection): void {
         this.tripForm.transferTo = selection.name;
         this.tripForm.transferToTag = selection.locationType;
 
         if (selection.isNew) {
-            // Create new custom location
-            this.locationService.createLocation({
-                name: selection.name,
-                locationType: 'custom'
-            }).subscribe({
-                next: (location) => {
-                    this.tripForm.transferToId = location.id;
-                },
-                error: (error) => {
-                    console.error('Error creating location:', error);
-                    this.toastService.error('فشل إنشاء الموقع');
-                }
-            });
+            // Store empty ID - location will be created when trip is submitted
+            this.tripForm.transferToId = '';
         } else {
             this.tripForm.transferToId = selection.id;
         }

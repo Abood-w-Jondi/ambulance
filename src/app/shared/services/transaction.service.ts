@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Transaction } from '../models/transaction.model';
+import { Transaction, CollectionSummary, AdjustmentHistory } from '../models/transaction.model';
 import { environment } from '../../../environments/environment';
 
 export interface TransactionQueryParams {
@@ -52,5 +52,48 @@ export class TransactionService {
       amount,
       description
     });
+  }
+
+  /**
+   * Create an adjustment transaction (admin only)
+   */
+  createAdjustment(
+    originalTransactionId: string,
+    adjustmentAmount: number,
+    adjustmentReason: string
+  ): Observable<any> {
+    return this.http.post(`${this.apiUrl}/adjustments`, {
+      originalTransactionId,
+      adjustmentAmount,
+      adjustmentReason
+    });
+  }
+
+  /**
+   * Mark a transaction as collected
+   */
+  markAsCollected(
+    transactionId: string,
+    collectionNotes: string,
+    receiptUrl?: string
+  ): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${transactionId}/collect`, {
+      collectionNotes,
+      receiptUrl
+    });
+  }
+
+  /**
+   * Get adjustment history for a transaction
+   */
+  getAdjustmentHistory(transactionId: string): Observable<AdjustmentHistory> {
+    return this.http.get<AdjustmentHistory>(`${this.apiUrl}/${transactionId}/adjustments`);
+  }
+
+  /**
+   * Get collection summary for a user
+   */
+  getCollectionSummary(userId: string): Observable<CollectionSummary> {
+    return this.http.get<CollectionSummary>(`${this.apiUrl}/collection-summary/${userId}`);
   }
 }

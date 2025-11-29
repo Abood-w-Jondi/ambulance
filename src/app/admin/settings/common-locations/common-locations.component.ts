@@ -1,4 +1,4 @@
-import { Component, signal, ChangeDetectionStrategy, computed, OnInit } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,11 +6,12 @@ import { GlobalVarsService } from '../../../global-vars.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { LocationService } from '../../../shared/services/location.service';
 import { CommonLocation, LocationType, Location, LocationReference } from '../../../shared/models';
+import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 
 @Component({
     selector: 'app-common-locations',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PaginationComponent],
     templateUrl: './common-locations.component.html',
     styleUrl: './common-locations.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,35 +49,10 @@ export class CommonLocationsComponent implements OnInit {
     selectedCustomLocationId: string = '';
     isLoading = signal(false);
 
-    // Computed
-    filteredLocations = computed(() => {
-        let locations = this.commonLocations();
-
-        // Filter by type
-        const type = this.filterType();
-        if (type !== 'الكل') {
-            const typeMap: { [key: string]: LocationType } = {
-                'مستشفى': 'hospital',
-                'عيادة': 'clinic',
-                'طوارئ': 'emergency',
-                'أخرى': 'other'
-            };
-            locations = locations.filter(loc => loc.type === typeMap[type]);
-        }
-
-        // Filter by search term
-        const term = this.searchTerm().toLowerCase().trim();
-        if (term) {
-            locations = locations.filter(loc =>
-                loc.name.toLowerCase().includes(term) ||
-                loc.address.toLowerCase().includes(term) ||
-                loc.city.toLowerCase().includes(term) ||
-                loc.phoneNumber.includes(term)
-            );
-        }
-
-        return locations;
-    });
+    // Pagination
+    currentPage = 1;
+    itemsPerPage = 12; // 3 rows x 4 cards
+    totalRecords = 0;
 
     constructor(
         private globalVars: GlobalVarsService,
@@ -94,7 +70,17 @@ export class CommonLocationsComponent implements OnInit {
 
     loadLocations(): void {
         this.isLoading.set(true);
-        this.locationService.getLocations({ locationType: 'common', limit: 1000 }).subscribe({
+
+        // Map filter type from Arabic to English
+        const typeFilter = this.filterType() !== 'الكل' ? this.mapFilterTypeToEnum(this.filterType()) : undefined;
+
+        this.locationService.getLocations({
+            locationType: 'common',
+            page: this.currentPage,
+            limit: this.itemsPerPage,
+            type: typeFilter,
+            searchTerm: this.searchTerm() || undefined
+        }).subscribe({
             next: (response) => {
                 this.commonLocations.set(response.data.map((loc: Location) => ({
                     id: loc.id,
@@ -106,6 +92,7 @@ export class CommonLocationsComponent implements OnInit {
                     isActive: loc.isActive ?? true,
                     createdAt: loc.createdAt || new Date()
                 })));
+                this.totalRecords = response.total;
                 this.isLoading.set(false);
             },
             error: (error) => {
@@ -114,6 +101,32 @@ export class CommonLocationsComponent implements OnInit {
                 this.isLoading.set(false);
             }
         });
+    }
+
+    mapFilterTypeToEnum(arabicType: string): LocationType {
+        const typeMap: { [key: string]: LocationType } = {
+            'مستشفى': 'hospital',
+            'عيادة': 'clinic',
+            'طوارئ': 'emergency',
+            'أخرى': 'other'
+        };
+        return typeMap[arabicType] || 'other';
+    }
+
+    onPageChange(page: number): void {
+        this.currentPage = page;
+        this.loadLocations();
+    }
+
+    onItemsPerPageChange(itemsPerPage: number): void {
+        this.itemsPerPage = itemsPerPage;
+        this.currentPage = 1;
+        this.loadLocations();
+    }
+
+    onFilterChange(): void {
+        this.currentPage = 1;
+        this.loadLocations();
     }
 
     loadCustomLocations(): void {

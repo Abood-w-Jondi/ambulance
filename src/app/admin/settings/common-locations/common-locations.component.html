@@ -23,79 +23,96 @@
           class="form-control"
           placeholder="بحث عن موقع..."
           [(ngModel)]="searchTerm"
-          (ngModelChange)="searchTerm.set($event)"
+          (ngModelChange)="searchTerm.set($event); onFilterChange()"
         />
       </div>
     </div>
     <div class="col-md-4">
-      <select class="form-select" [(ngModel)]="filterType" (ngModelChange)="filterType.set($event)">
+      <select class="form-select" [(ngModel)]="filterType" (ngModelChange)="filterType.set($event); onFilterChange()">
         <option *ngFor="let type of filterTypes" [value]="type">{{ type }}</option>
       </select>
     </div>
   </div>
 
-  <!-- Locations List -->
-  <div class="card">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>اسم الموقع</th>
-              <th>النوع</th>
-              <th>العنوان</th>
-              <th>المدينة</th>
-              <th>رقم الهاتف</th>
-              <th>تاريخ الإضافة</th>
-              <th>الحالة</th>
-              <th class="text-center">الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let location of filteredLocations()">
-              <td class="fw-medium">{{ location.name }}</td>
-              <td>
-                <span class="badge bg-info text-dark">{{ getTypeLabel(location.type) }}</span>
-              </td>
-              <td class="text-muted">{{ location.address }}</td>
-              <td>{{ location.city }}</td>
-              <td dir="ltr" class="text-end">{{ location.phoneNumber }}</td>
-              <td>{{ location.createdAt | date: 'dd/MM/yyyy' }}</td>
-              <td>
-                <span class="badge" [class.bg-success]="location.isActive" [class.bg-secondary]="!location.isActive">
-                  {{ location.isActive ? 'نشط' : 'غير نشط' }}
-                </span>
-              </td>
-              <td>
-                <div class="d-flex justify-content-center gap-2">
-                  <button class="btn btn-sm btn-outline-primary" (click)="openEditModal(location)" title="تعديل">
-                    <i class="fa-solid fa-edit"></i>
-                  </button>
-                  <button
-                    class="btn btn-sm"
-                    [class.btn-outline-success]="!location.isActive"
-                    [class.btn-outline-warning]="location.isActive"
-                    (click)="toggleStatus(location)"
-                    [title]="location.isActive ? 'تعطيل' : 'تفعيل'">
-                    <i class="fa-solid" [class.fa-check]="!location.isActive" [class.fa-ban]="location.isActive"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger" (click)="deleteLocation(location)" title="حذف">
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr *ngIf="filteredLocations().length === 0">
-              <td colspan="8" class="text-center text-muted py-4">
-                <i class="fa-solid fa-inbox fa-2x mb-2 d-block"></i>
-                لا توجد مواقع
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  <!-- Card Grid -->
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4 mb-4">
+    @for (location of commonLocations(); track location.id) {
+      <div class="col">
+        <div class="card shadow-sm rounded-xl h-100 position-relative"
+          [ngClass]="{'opacity-75': !location.isActive}">
+
+          <!-- Action Buttons (top-left corner like drivers) -->
+          <div class="position-absolute top-0 start-0 m-3 d-flex gap-2">
+            <button
+              class="btn btn-sm btn-outline-primary rounded-circle"
+              style="width: 32px; height: 32px; padding: 0;"
+              (click)="openEditModal(location)"
+              title="تعديل">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button
+              class="btn btn-sm rounded-circle"
+              [class.btn-outline-success]="!location.isActive"
+              [class.btn-outline-warning]="location.isActive"
+              style="width: 32px; height: 32px; padding: 0;"
+              (click)="toggleStatus(location)"
+              [title]="location.isActive ? 'تعطيل' : 'تفعيل'">
+              <i class="fa-solid" [class.fa-check]="!location.isActive" [class.fa-ban]="location.isActive"></i>
+            </button>
+            <button
+              class="btn btn-sm btn-outline-danger rounded-circle"
+              style="width: 32px; height: 32px; padding: 0;"
+              (click)="deleteLocation(location)"
+              title="حذف">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+
+          <!-- Card Content -->
+          <div class="card-body pt-5">
+            <h5 class="card-title fw-bold mb-2">{{ location.name }}</h5>
+            <p class="text-muted small mb-2">
+              <i class="fa-solid fa-tag me-1"></i>
+              <span class="badge bg-info text-dark">{{ getTypeLabel(location.type) }}</span>
+            </p>
+            <p class="text-muted small mb-2" *ngIf="location.address">
+              <i class="fa-solid fa-location-dot me-1"></i>
+              {{ location.address }}
+            </p>
+            <p class="text-muted small mb-2" *ngIf="location.city">
+              <i class="fa-solid fa-city me-1"></i>
+              {{ location.city }}
+            </p>
+            <p class="text-muted small mb-2" *ngIf="location.phoneNumber" dir="ltr" class="text-end">
+              <i class="fa-solid fa-phone me-1"></i>
+              {{ location.phoneNumber }}
+            </p>
+            <p class="small mb-0">
+              <span class="badge" [class.bg-success]="location.isActive" [class.bg-secondary]="!location.isActive">
+                {{ location.isActive ? 'نشط' : 'غير نشط' }}
+              </span>
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
+    } @empty {
+      <div class="col-12">
+        <div class="text-center text-muted py-5">
+          <i class="fa-solid fa-inbox fa-3x mb-3 d-block"></i>
+          <p class="fs-5">لا توجد مواقع</p>
+        </div>
+      </div>
+    }
   </div>
+
+  <!-- Pagination -->
+  <app-pagination
+    [currentPage]="currentPage"
+    [itemsPerPage]="itemsPerPage"
+    [totalItems]="totalRecords"
+    (pageChange)="onPageChange($event)"
+    (itemsPerPageChange)="onItemsPerPageChange($event)">
+  </app-pagination>
 </div>
 
 <!-- Add Modal -->

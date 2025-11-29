@@ -1,17 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ToastService } from '../../shared/services/toast.service';
+import { TransactionService } from '../../shared/services/transaction.service';
+import { AuthService } from '../../shared/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-
-
-interface Payment {
-  id: string;
-  date: Date;
-  amount: number;
-  type: 'إيداع' | 'سحب' | 'رحلة' | 'مكافأة';
-  description: string;
-  status: 'مكتمل' | 'معلق' | 'فاشل';
-}
+import { Transaction, CollectionSummary } from '../../shared/models/transaction.model';
 
 interface WalletSummary {
   currentBalance: number;
@@ -28,33 +21,42 @@ interface WalletSummary {
   styleUrls: ['./wallet.component.css']
 })
 export class WalletComponent implements OnInit {
-  
+
   walletSummary: WalletSummary = {
-    currentBalance: 1250.75,
-    pendingBalance: 320.50,
-    totalEarnings: 5680.25,
-    totalWithdrawals: 4500.00,
-    lastPaymentDate: new Date()
+    currentBalance: 0,
+    pendingBalance: 0,
+    totalEarnings: 0,
+    totalWithdrawals: 0,
+    lastPaymentDate: null
   };
   public Math = Math;
 
-  payments: Payment[] = [];
-  filteredPayments: Payment[] = [];
-  
+  collectionSummary: CollectionSummary | null = null;
+  payments: Transaction[] = [];
+  filteredPayments: Transaction[] = [];
+
   selectedType: string = 'All';
   selectedMonth: number = new Date().getMonth() + 1;
   selectedYear: number = new Date().getFullYear();
-  
+
   currentPage: number = 1;
   itemsPerPage: number = 10;
   totalPages: number = 1;
+  totalItems: number = 0;
+
+  loading: boolean = false;
+  userId: string | null = null;
 
   paymentTypes: Array<{value: string, label: string}> = [
     { value: 'All', label: 'جميع العمليات' },
     { value: 'رحلة', label: 'رحلة' },
-    { value: 'إيداع', label: 'إيداع' },
+    { value: 'دفع', label: 'دفع' },
     { value: 'سحب', label: 'سحب' },
-    { value: 'مكافأة', label: 'مكافأة' }
+    { value: 'تعديل', label: 'تعديل' },
+    { value: 'وقود', label: 'وقود' },
+    { value: 'صيانة', label: 'صيانة' },
+    { value: 'مكافأة', label: 'مكافأة' },
+    { value: 'خصم', label: 'خصم' }
   ];
 
   months = [
@@ -78,11 +80,60 @@ export class WalletComponent implements OnInit {
   withdrawAmount: number = 0;
   withdrawMethod: string = 'bank';
 
-  constructor(private toastService: ToastService) { }
+  constructor(
+    private toastService: ToastService,
+    private transactionService: TransactionService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
     this.generateYears();
-    this.loadPayments();
+
+    // Get current user ID
+    const user = this.authService.currentUser();
+    if (user) {
+      this.userId = user.id;
+      this.loadWalletData();
+      this.loadCollectionSummary();
+      this.loadPayments();
+    }
+  }
+
+  loadWalletData(): void {
+    if (!this.userId) return;
+
+    this.loading = true;
+    // Get latest transaction to determine current balance
+    this.transactionService.getUserTransactions(this.userId, { page: 1, limit: 1 })
+      .subscribe({
+        next: (response) => {
+          if (response.data.length > 0) {
+            this.walletSummary.currentBalance = response.data[0].balanceAfter;
+            this.walletSummary.lastPaymentDate = response.data[0].createdAt;
+          }
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Failed to load wallet data:', error);
+          this.toastService.error('فشل تحميل بيانات المحفظة');
+          this.loading = false;
+        }
+      });
+  }
+
+  loadCollectionSummary(): void {
+    if (!this.userId) return;
+
+    this.transactionService.getCollectionSummary(this.userId)
+      .subscribe({
+        next: (summary) => {
+          this.collectionSummary = summary;
+          this.walletSummary.pendingBalance = summary.pendingCollection;
+        },
+        error: (error) => {
+          console.error('Failed to load collection summary:', error);
+        }
+      });
   }
 
   generateYears(): void {
@@ -93,52 +144,74 @@ export class WalletComponent implements OnInit {
   }
 
   loadPayments(): void {
-    // TODO: Load payments from service
-    this.payments = this.generateMockPayments();
-    this.applyFilters();
+    if (!this.userId) return;
+
+    this.loading = true;
+
+    // Build date range from selected month/year
+    const startDate = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}-01`;
+    const lastDay = new Date(this.selectedYear, this.selectedMonth, 0).getDate();
+    const endDate = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}-${lastDay}`;
+
+    this.transactionService.getUserTransactions(this.userId, {
+      page: this.currentPage,
+      limit: this.itemsPerPage,
+      type: this.selectedType !== 'All' ? this.selectedType : undefined,
+      startDate,
+      endDate
+    }).subscribe({
+      next: (response) => {
+        this.payments = response.data;
+        this.totalItems = response.total;
+        this.totalPages = Math.ceil(response.total / this.itemsPerPage);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load payments:', error);
+        this.toastService.error('فشل تحميل سجل العمليات');
+        this.loading = false;
+      }
+    });
   }
 
   applyFilters(): void {
-    this.filteredPayments = this.payments.filter(payment => {
-      const typeMatch = this.selectedType === 'All' || payment.type === this.selectedType;
-      const monthMatch = payment.date.getMonth() + 1 === this.selectedMonth;
-      const yearMatch = payment.date.getFullYear() === this.selectedYear;
-      
-      return typeMatch && monthMatch && yearMatch;
-    });
-
-    this.totalPages = Math.ceil(this.filteredPayments.length / this.itemsPerPage);
     this.currentPage = 1;
+    this.loadPayments();
   }
 
-  getPaginatedPayments(): Payment[] {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    return this.filteredPayments.slice(startIndex, endIndex);
+  getPaginatedPayments(): Transaction[] {
+    return this.payments; // Already paginated from backend
   }
 
   nextPage(): void {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
+      this.loadPayments();
     }
   }
 
   previousPage(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
+      this.loadPayments();
     }
   }
 
   goToPage(page: number): void {
     this.currentPage = page;
+    this.loadPayments();
   }
 
   getPaymentIcon(type: string): string {
     const icons: { [key: string]: string } = {
       'رحلة': 'fa-route',
-      'إيداع': 'fa-arrow-down',
+      'دفع': 'fa-arrow-down',
       'سحب': 'fa-arrow-up',
-      'مكافأة': 'fa-gift'
+      'مكافأة': 'fa-gift',
+      'تعديل': 'fa-edit',
+      'وقود': 'fa-gas-pump',
+      'صيانة': 'fa-wrench',
+      'خصم': 'fa-minus-circle'
     };
     return icons[type] || 'fa-money-bill';
   }
@@ -146,9 +219,13 @@ export class WalletComponent implements OnInit {
   getPaymentColor(type: string): string {
     const colors: { [key: string]: string } = {
       'رحلة': 'text-primary',
-      'إيداع': 'text-success',
+      'دفع': 'text-success',
       'سحب': 'text-danger',
-      'مكافأة': 'text-warning'
+      'مكافأة': 'text-warning',
+      'تعديل': 'text-info',
+      'وقود': 'text-secondary',
+      'صيانة': 'text-secondary',
+      'خصم': 'text-danger'
     };
     return colors[type] || 'text-secondary';
   }
@@ -183,7 +260,7 @@ export class WalletComponent implements OnInit {
 
   submitWithdraw(): void {
     if (this.withdrawAmount > 0 && this.withdrawAmount <= this.walletSummary.currentBalance) {
-      // TODO: Call service to process withdrawal
+      // TODO: Implement withdrawal request functionality
       console.log('طلب سحب:', {
         amount: this.withdrawAmount,
         method: this.withdrawMethod
@@ -191,39 +268,5 @@ export class WalletComponent implements OnInit {
       this.toastService.success(`تم طلب سحب مبلغ ₪${this.withdrawAmount} (${this.withdrawMethod === 'bank' ? 'تحويل بنكي' : 'سحب نقدي'})`, 3000);
       this.closeWithdrawModal();
     }
-  }
-
-  private generateMockPayments(): Payment[] {
-    const mockPayments: Payment[] = [];
-    const types: Array<'إيداع' | 'سحب' | 'رحلة' | 'مكافأة'> = ['رحلة', 'إيداع', 'سحب', 'مكافأة'];
-    const statuses: Array<'مكتمل' | 'معلق' | 'فاشل'> = ['مكتمل', 'معلق', 'فاشل'];
-    
-    for (let i = 1; i <= 30; i++) {
-      const type = types[Math.floor(Math.random() * types.length)];
-      const status = statuses[Math.floor(Math.random() * 3)];
-      const amount = Math.floor(Math.random() * 500) + 50;
-      
-      mockPayments.push({
-        id: `payment_${i}`,
-        date: new Date(this.selectedYear, this.selectedMonth - 1, Math.floor(Math.random() * 28) + 1),
-        amount: type === 'سحب' ? -amount : amount,
-        type: type,
-        description: this.getPaymentDescription(type),
-        status: status
-      });
-    }
-    
-    return mockPayments.sort((a, b) => b.date.getTime() - a.date.getTime());
-  }
-
-  private getPaymentDescription(type: string): string {
-    const descriptions: { [key: string]: string[] } = {
-      'رحلة': ['أجرة رحلة #123', 'أجرة رحلة #124', 'أجرة رحلة #125'],
-      'إيداع': ['إيداع من الشركة', 'تحويل من الإدارة', 'مستحقات شهرية'],
-      'سحب': ['سحب نقدي', 'تحويل بنكي', 'سحب إلى البطاقة'],
-      'مكافأة': ['مكافأة الأداء', 'مكافأة شهرية', 'حافز تشجيعي']
-    };
-    const typeDescriptions = descriptions[type] || ['عملية'];
-    return typeDescriptions[Math.floor(Math.random() * typeDescriptions.length)];
   }
 }

@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Trip, TransferStatus } from '../models';
+import { PatientLoan, PatientLoanFilters } from '../models/patient-loan.model';
 import { PaginatedResponse } from './driver.service';
 
 export interface TripQueryParams {
@@ -64,5 +65,30 @@ export class TripService {
 
   getTripStats(): Observable<any> {
     return this.http.get(`${this.API_URL}/stats`);
+  }
+
+  /**
+   * Mark patient loan as collected
+   */
+  markLoanCollected(tripId: string, notes: string): Observable<any> {
+    return this.http.patch(`${this.API_URL}/${tripId}/loan-collected`, { notes });
+  }
+
+  /**
+   * Get patient loans for a driver
+   */
+  getPatientLoans(driverId: string, filters?: PatientLoanFilters): Observable<PatientLoan[]> {
+    let httpParams = new HttpParams();
+
+    if (filters) {
+      if (filters.status) httpParams = httpParams.set('status', filters.status);
+      if (filters.startDate) httpParams = httpParams.set('startDate', filters.startDate);
+      if (filters.endDate) httpParams = httpParams.set('endDate', filters.endDate);
+    }
+
+    return this.http.get<PatientLoan[]>(
+      `${environment.apiEndpoint}/drivers/${driverId}/patient-loans`,
+      { params: httpParams }
+    );
   }
 }

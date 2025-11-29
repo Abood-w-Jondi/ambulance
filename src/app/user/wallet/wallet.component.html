@@ -162,8 +162,8 @@
           class="list-group-item list-group-item-action">
           <div class="row align-items-center">
             <div class="col-auto">
-              <div class="payment-icon {{ getPaymentColor(payment.type) }}">
-                <i class="fas {{ getPaymentIcon(payment.type) }} fa-2x"></i>
+              <div class="payment-icon {{ getPaymentColor(payment.transactionType) }}">
+                <i class="fas {{ getPaymentIcon(payment.transactionType) }} fa-2x"></i>
               </div>
             </div>
             <div class="col">
@@ -172,15 +172,15 @@
                   <h6 class="mb-1 fw-bold">{{ payment.description }}</h6>
                   <p class="mb-0 small text-muted">
                     <i class="fas fa-calendar me-1"></i>
-                    {{ formatDate(payment.date) }}
+                    {{ formatDate(payment.createdAt) }}
                   </p>
                 </div>
                 <div class="text-end">
                   <h5 class="mb-1 fw-bold" [class.text-success]="payment.amount > 0" [class.text-danger]="payment.amount < 0">
-                    {{ payment.amount > 0 ? '+' : '' }}${{ Math.abs(payment.amount).toFixed(2) }}
+                    {{ payment.amount > 0 ? '+' : '' }}₪{{ Math.abs(payment.amount).toFixed(2) }}
                   </h5>
-                  <span class="badge {{ getStatusBadgeClass(payment.status) }}">
-                    {{ payment.status }}
+                  <span class="badge {{ getStatusBadgeClass(payment.collectionStatus) }}">
+                    {{ payment.collectionStatus }}
                   </span>
                 </div>
               </div>

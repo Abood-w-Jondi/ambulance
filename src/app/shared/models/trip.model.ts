@@ -30,6 +30,7 @@ export interface Trip {
 
     // Fuel
     diesel: number;            // Fuel used in liters
+    calculatedFuelCost?: number; // Auto-calculated: (end - start) * 1 NIS/km
 
     // Patient Information
     patientName: string;
@@ -56,6 +57,13 @@ export interface Trip {
     paramedicShare: number;    // Paramedic's share (deducted first before splitting remaining)
     driverShare: number;       // Driver's share
     eqShare: number;           // Equipment/Company share
+
+    // Loan Tracking (when patient owes driver money)
+    isLoan: boolean;           // True if patient took loan from driver
+    loanAmount: number;        // Amount patient owes driver (totalPrice - payedPrice)
+    loanCollected: boolean;    // True when driver has collected the loan from patient
+    loanCollectedAt?: Date;    // When loan was collected
+    loanCollectionNotes?: string; // Notes about loan collection
 
     // Vehicle Information (assigned by admin, name populated from database join)
     vehicleId?: string;        // Vehicle assigned to the trip (by admin)
