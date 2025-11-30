@@ -51,8 +51,14 @@ export class VehicleService {
     return this.http.delete<void>(`${this.API_URL}/${id}`);
   }
 
-  updateStatus(id: string, status: VehicleStatus): Observable<Vehicle> {
-    return this.http.patch<Vehicle>(`${this.API_URL}/${id}/status`, { status });
+  /**
+   * Update vehicle status with optional manual override
+   * @param id Vehicle ID
+   * @param status New vehicle status
+   * @param manualOverride Set to true to prevent automatic trip status update
+   */
+  updateStatus(id: string, status: VehicleStatus, manualOverride: boolean = false): Observable<Vehicle> {
+    return this.http.patch<Vehicle>(`${this.API_URL}/${id}/status`, { status, manualOverride });
   }
 
   assignDriver(vehicleId: string, driverId: string): Observable<Vehicle> {

@@ -71,6 +71,15 @@ export interface Trip {
     vehicleId?: string;        // Vehicle assigned to the trip (by admin)
     vehicleName?: string;      // Vehicle name (always populated from vehicles table join)
 
+    // Trip Timestamps (NEW - for tracking)
+    acceptedAt?: Date;         // When driver accepted the trip
+    completedAt?: Date;        // When trip status changed to final status
+
+    // Trip Closure System (NEW - for transaction control)
+    isClosed: boolean;         // Trip closed for transaction processing (default: false)
+    closedAt?: Date;           // When trip was closed
+    closedBy?: string;         // User ID who closed the trip
+
     // Trip populated mostly by driver after accepting
     populatedByDriver?: boolean;  // Flag to indicate if driver has filled the data
 }

@@ -91,4 +91,34 @@ export class TripService {
       { params: httpParams }
     );
   }
+
+  // NEW METHODS FOR TRIP CLOSURE AND ACCEPTANCE
+
+  /**
+   * Get available trips for a driver (assigned to their vehicle with status "لم يتم النقل")
+   */
+  getAvailableTrips(driverId: string): Observable<Trip[]> {
+    return this.http.get<Trip[]>(`${environment.apiEndpoint}/drivers/${driverId}/available-trips`);
+  }
+
+  /**
+   * Driver accepts a trip
+   */
+  acceptTrip(tripId: string, driverId: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/${tripId}/accept`, { driverId });
+  }
+
+  /**
+   * Admin closes a trip to trigger transaction creation (admin only)
+   */
+  closeTrip(tripId: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/${tripId}/close`, {});
+  }
+
+  /**
+   * Driver creates their own trip (auto-assigned to their vehicle and auto-accepted)
+   */
+  createDriverTrip(driverId: string, trip: Partial<Trip>): Observable<{ id: string }> {
+    return this.http.post<{ id: string }>(`${environment.apiEndpoint}/drivers/${driverId}/trips`, trip);
+  }
 }

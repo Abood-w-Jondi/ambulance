@@ -71,4 +71,17 @@ export class DashboardService {
   getDashboardStats(): Observable<DashboardStats> {
     return this.http.get<DashboardStats>(this.API_URL);
   }
+
+  /**
+   * Get statistics with caching support (NEW - uses statistics.php endpoint)
+   * @param useCache Whether to use cached data (default: true)
+   * @param cacheMinutes Cache validity in minutes (default: 5)
+   */
+  getStatistics(useCache: boolean = true, cacheMinutes: number = 5): Observable<any> {
+    const params = {
+      cache: useCache.toString(),
+      cacheMinutes: cacheMinutes.toString()
+    };
+    return this.http.get(`${environment.apiEndpoint}/statistics`, { params });
+  }
 }

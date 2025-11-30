@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ToastService } from '../../shared/services/toast.service';
+import { TripService } from '../../shared/services/trip.service';
+import { AuthService } from '../../shared/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Trip } from '../../shared/models/trip.model';
 
 interface PendingTrip {
   id: string;
@@ -25,20 +28,25 @@ interface PendingTrip {
   templateUrl: './accept-trips.component.html',
   styleUrls: ['./accept-trips.component.css']
 })
-export class AcceptTripsComponent implements OnInit {
-  pendingTrips: PendingTrip[] = [];
+export class AcceptTripsComponent implements OnInit, OnDestroy {
+  pendingTrips: any[] = [];  // Changed to use real Trip data
   acceptedTrips: PendingTrip[] = [];
-  
+
   selectedTab: 'pending' | 'accepted' = 'pending';
   isLoading: boolean = false;
-  
-  selectedTrip: PendingTrip | null = null;
+
+  selectedTrip: any | null = null;
   showDetailsModal: boolean = false;
-  
+
   // Sound notification
   notificationSound: HTMLAudioElement | null = null;
+  refreshInterval: any = null;
 
-  constructor(private toastService: ToastService) { }
+  constructor(
+    private toastService: ToastService,
+    private tripService: TripService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
     this.loadTrips();
@@ -48,21 +56,37 @@ export class AcceptTripsComponent implements OnInit {
 
   ngOnDestroy(): void {
     // Stop auto refresh when component is destroyed
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
   }
 
   loadTrips(): void {
     this.isLoading = true;
-    // TODO: Load trips from service
-    setTimeout(() => {
-      this.pendingTrips = this.generateMockPendingTrips();
-      this.acceptedTrips = this.generateMockAcceptedTrips();
+    const driverId = this.authService.currentUser()?.id;
+
+    if (!driverId) {
+      this.toastService.error('Driver ID not found');
       this.isLoading = false;
-    }, 500);
+      return;
+    }
+
+    this.tripService.getAvailableTrips(driverId).subscribe({
+      next: (trips) => {
+        this.pendingTrips = trips;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load available trips:', error);
+        this.toastService.error('فشل تحميل الرحلات المتاحة');
+        this.isLoading = false;
+      }
+    });
   }
 
   startAutoRefresh(): void {
-    // TODO: Implement auto-refresh every 30 seconds
-    setInterval(() => {
+    // Auto-refresh every 30 seconds
+    this.refreshInterval = setInterval(() => {
       this.loadTrips();
     }, 30000);
   }
@@ -78,21 +102,31 @@ export class AcceptTripsComponent implements OnInit {
     }
   }
 
-  acceptTrip(trip: PendingTrip): void {
-  // TODO: Call service to accept trip
-  console.log('قبول الرحلة:', trip.id);
-  trip.status = 'مقبول';
-  this.pendingTrips = this.pendingTrips.filter(t => t.id !== trip.id);
-  this.acceptedTrips.unshift(trip);
-  this.toastService.success(`تم قبول الرحلة للمريض ${trip.patientName} (${trip.pickupLocation} → ${trip.dropoffLocation})`, 3000);
+  acceptTrip(trip: any): void {
+    const driverId = this.authService.currentUser()?.id;
+
+    if (!driverId) {
+      this.toastService.error('Driver ID not found');
+      return;
+    }
+
+    this.tripService.acceptTrip(trip.id, driverId).subscribe({
+      next: () => {
+        this.toastService.success(`تم قبول الرحلة للمريض ${trip.patientName}`);
+        this.loadTrips();  // Reload trips to update the list
+      },
+      error: (error) => {
+        console.error('Failed to accept trip:', error);
+        this.toastService.error(error.error?.message || 'فشل قبول الرحلة');
+      }
+    });
   }
 
-  rejectTrip(trip: PendingTrip): void {
-  // TODO: Call service to reject trip
-  console.log('رفض الرحلة:', trip.id);
-  trip.status = 'مرفوض';
-  this.pendingTrips = this.pendingTrips.filter(t => t.id !== trip.id);
-  this.toastService.info(`تم رفض الرحلة للمريض ${trip.patientName} (${trip.pickupLocation} → ${trip.dropoffLocation})`, 3000);
+  rejectTrip(trip: any): void {
+    // Note: Rejection logic may need to be implemented on backend
+    console.log('رفض الرحلة:', trip.id);
+    this.pendingTrips = this.pendingTrips.filter(t => t.id !== trip.id);
+    this.toastService.info(`تم رفض الرحلة للمريض ${trip.patientName}`);
   }
 
   viewTripDetails(trip: PendingTrip): void {
