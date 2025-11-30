@@ -8,6 +8,7 @@ import { ValidationService } from '../../shared/services/validation.service';
 import { MaintenanceService } from '../../shared/services/maintenance.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
+import { MaintenanceTypeSearchComponent, MaintenanceTypeSelection } from '../../shared/maintenance-type-search/maintenance-type-search.component';
 import { MAINTENANCE_STATUS } from '../../shared/constants/status.constants';
 import { MaintenanceRecord, MaintenanceStatus } from '../../shared/models';
 import { VehicleService } from '../../shared/services/vehicle.service';
@@ -15,7 +16,7 @@ import { Vehicle } from '../../shared/models/vehicle.model';
 @Component({
     selector: 'app-maintenance-history',
     standalone: true,
-    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent],
+    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, MaintenanceTypeSearchComponent],
     templateUrl: './maintenance-history.component.html',
     styleUrl: './maintenance-history.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,7 +52,8 @@ export class MaintenanceHistoryComponent implements OnInit {
         month: 1,
         year: new Date().getFullYear(),
         vehicleId: '',
-        type: '',
+        maintenanceTypeId: '',
+        type: '', // Maintenance type name for display in search component
         cost: 0,
         serviceLocation: '',
         odometerBefore: 0,
@@ -59,6 +61,13 @@ export class MaintenanceHistoryComponent implements OnInit {
         notes: '',
         status: 'مجدولة' as MaintenanceStatus
     };
+
+    // Computed kilometers traveled
+    get calculatedKm(): number {
+        const before = this.recordForm.odometerBefore || 0;
+        const after = this.recordForm.odometerAfter || 0;
+        return Math.max(0, after - before);
+    }
 
     vehiclesList: Vehicle[] = [];
     vehicleSearchTerm = signal('');
@@ -293,12 +302,84 @@ formatDate(date: Date | string | null | undefined): string {
     return dateObject.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
+    /**
+     * Handle maintenance type selection
+     */
+    onMaintenanceTypeSelected(selection: MaintenanceTypeSelection): void {
+        this.recordForm.maintenanceTypeId = selection.id;
+        this.recordForm.type = selection.name;
+
+        // Auto-populate cost and load last odometer if vehicle is selected
+        if (selection.estimatedCost) {
+            this.recordForm.cost = selection.estimatedCost;
+        }
+
+        // Load last odometer reading if vehicle is already selected
+        if (this.recordForm.vehicleId && this.recordForm.maintenanceTypeId) {
+            this.loadLastOdometerReading();
+        }
+    }
+
+    /**
+     * Handle maintenance type selection in filter
+     */
+    onFilterMaintenanceTypeSelected(selection: MaintenanceTypeSelection | null): void {
+        if (selection) {
+            this.selectedMaintenanceType = selection.name;
+            this.maintenanceTypeFilter.set(selection.id);
+        } else {
+            this.selectedMaintenanceType = 'جميع الأنواع';
+            this.maintenanceTypeFilter.set('');
+        }
+    }
+
+    /**
+     * Handle vehicle selection
+     */
+    onVehicleSelected(event: Event): void {
+        const target = event.target as HTMLSelectElement;
+        const vehicleId = target.value;
+
+        this.recordForm.vehicleId = vehicleId;
+
+        // Load last odometer reading if maintenance type is already selected
+        if (this.recordForm.vehicleId && this.recordForm.maintenanceTypeId) {
+            this.loadLastOdometerReading();
+        }
+    }
+
+    /**
+     * Load last odometer reading for auto-population
+     */
+    loadLastOdometerReading(): void {
+        if (!this.recordForm.vehicleId || !this.recordForm.maintenanceTypeId) {
+            return;
+        }
+
+        this.maintenanceService.getLastOdometerReading(this.recordForm.vehicleId, this.recordForm.maintenanceTypeId).subscribe({
+            next: (response) => {
+                if (response.success && response.data.lastOdometerAfter !== null) {
+                    this.recordForm.odometerBefore = response.data.lastOdometerAfter;
+                } else {
+                    // No previous record, leave empty (0)
+                    this.recordForm.odometerBefore = 0;
+                }
+            },
+            error: (error) => {
+                console.error('Error loading last odometer reading:', error);
+                // Don't show error toast, just leave the field empty
+                this.recordForm.odometerBefore = 0;
+            }
+        });
+    }
+
     openAddRecordModal(): void {
         this.recordForm = {
             day: 1,
             month: 1,
             year: new Date().getFullYear(),
             vehicleId: '',
+            maintenanceTypeId: '',
             type: '',
             cost: 0,
             serviceLocation: '',
@@ -316,7 +397,7 @@ formatDate(date: Date | string | null | undefined): string {
        console.log('Adding record with date:', date);
         const validationData = {
             ambulanceId: this.recordForm.vehicleId,
-            type: this.recordForm.type,
+            type: this.recordForm.maintenanceTypeId,
             description: this.recordForm.notes,
             cost: this.recordForm.cost,
             date: date
@@ -335,7 +416,7 @@ formatDate(date: Date | string | null | undefined): string {
         this.maintenanceService.createMaintenanceRecord({
             vehicleId: this.recordForm.vehicleId,
             date: date,
-            type: this.recordForm.type,
+            maintenanceTypeId: this.recordForm.maintenanceTypeId,
             cost: this.recordForm.cost,
             serviceLocation: this.recordForm.serviceLocation,
             odometerBefore: this.recordForm.odometerBefore,
@@ -358,12 +439,16 @@ formatDate(date: Date | string | null | undefined): string {
     openEditRecordModal(): void {
         const record = this.selectedRecord();
         if (record) {
+            // Parse date from string to Date object if needed
+            const dateObj = typeof record.date === 'string' ? new Date(record.date) : record.date;
+
             this.recordForm = {
-                day: record.date.getDate(),
-                month: record.date.getMonth() + 1,
-                year: record.date.getFullYear(),
+                day: dateObj.getDate(),
+                month: dateObj.getMonth() + 1,
+                year: dateObj.getFullYear(),
                 vehicleId: record.vehicleId,
-                type: record.type,
+                maintenanceTypeId: record.maintenanceTypeId || '',
+                type: record.maintenanceTypeName || record.type || '',
                 cost: record.cost,
                 serviceLocation: record.serviceLocation,
                 odometerBefore: record.odometerBefore,
@@ -379,13 +464,18 @@ formatDate(date: Date | string | null | undefined): string {
     saveEditRecord(): void {
         const record = this.selectedRecord();
         if (record) {
+            // Format date as string like in addRecord
+            let date: any = new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day);
+            date = date.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            console.log('Updating record with date:', date);
+
             // Validate the maintenance record
             const validationData = {
                 ambulanceId: this.recordForm.vehicleId,
-                type: this.recordForm.type,
+                type: this.recordForm.maintenanceTypeId,
                 description: this.recordForm.notes,
                 cost: this.recordForm.cost,
-                date: new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day)
+                date: date
             };
 
             const validationResult = this.validationService.validateMaintenanceRecord(validationData);
@@ -400,8 +490,8 @@ formatDate(date: Date | string | null | undefined): string {
 
             const updatePayload = {
                 vehicleId: this.recordForm.vehicleId,
-                date: new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day),
-                type: this.recordForm.type,
+                date: date,
+                maintenanceTypeId: this.recordForm.maintenanceTypeId,
                 cost: this.recordForm.cost,
                 serviceLocation: this.recordForm.serviceLocation,
                 odometerBefore: this.recordForm.odometerBefore,

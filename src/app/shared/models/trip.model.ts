@@ -38,7 +38,9 @@ export interface Trip {
     patientContact?: string;   // Contact number for sick person (format: 05xx xxx xxx)
 
     // Medical Information
-    diagnosis: string;         // Medical diagnosis/reason for transfer
+    diagnosis: string;         // Medical diagnosis/reason for transfer (legacy field)
+    transportationTypeId?: string;   // Transportation type ID (FK to transportation_types)
+    transportationTypeName?: string; // Transportation type name (populated from join)
 
     // YMD fields (number 0-365 + period string: يوم/اسبوع/شهر/سنة)
     ymdValue?: number;         // Number between 0-365 (0 means not specified)

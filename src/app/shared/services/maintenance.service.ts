@@ -69,4 +69,19 @@ export class MaintenanceService {
   deleteMaintenanceRecord(id: string): Observable<void> {
     return this.http.delete<void>(`${this.API_URL}/${id}`);
   }
+
+  /**
+   * Get last odometer reading for a specific vehicle and maintenance type
+   * Used for auto-populating odometerBefore field
+   */
+  getLastOdometerReading(vehicleId: string, maintenanceTypeId: string): Observable<{success: boolean, data: {lastOdometerAfter: number | null}}> {
+    let httpParams = new HttpParams()
+      .set('vehicleId', vehicleId)
+      .set('maintenanceTypeId', maintenanceTypeId);
+
+    return this.http.get<{success: boolean, data: {lastOdometerAfter: number | null}}>(
+      `${this.API_URL}/last-odometer`,
+      { params: httpParams }
+    );
+  }
 }

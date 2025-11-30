@@ -12,13 +12,14 @@ import { PaginationComponent } from '../../shared/pagination/pagination.componen
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 import { LocationSearchComponent, LocationSelection } from '../../shared/location-search/location-search.component';
+import { TransportationTypeSearchComponent, TransportationTypeSelection } from '../../shared/transportation-type-search/transportation-type-search.component';
 import { TRANSFER_STATUS } from '../../shared/constants/status.constants';
 import { Trip, TransferStatus, FilterStatus, DriverReference, ParamedicReference, TripType, VehicleReference } from '../../shared/models';
 
 @Component({
     selector: 'app-trips',
     standalone: true,
-    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, ConfirmationModalComponent, LocationSearchComponent],
+    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, ConfirmationModalComponent, LocationSearchComponent, TransportationTypeSearchComponent],
     templateUrl: './trips.component.html',
     styleUrl: './trips.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -104,6 +105,8 @@ export class TripsComponent implements OnInit {
         ymdPeriod: 'يوم' as 'يوم' | 'اسبوع' | 'شهر' | 'سنة',
         transferStatus: 'لم يتم النقل' as TransferStatus,
         diagnosis: '',
+        transportationTypeId: '',
+        transportationTypeName: '',
         tripType: '' as TripType | '',
         otherExpenses: 0,
         totalPrice: 0,
@@ -424,6 +427,8 @@ export class TripsComponent implements OnInit {
             ymdPeriod: 'يوم',
             transferStatus: 'لم يتم النقل',
             diagnosis: '',
+            transportationTypeId: '',
+            transportationTypeName: '',
             tripType: '',
             otherExpenses: 0,
             totalPrice: 0,
@@ -517,6 +522,14 @@ export class TripsComponent implements OnInit {
         }
     }
 
+    /**
+     * Handle transportation type selection
+     */
+    onTransportationTypeSelected(selection: TransportationTypeSelection): void {
+        this.tripForm.transportationTypeId = selection.id;
+        this.tripForm.transportationTypeName = selection.name;
+    }
+
     addTrip(): void {
         const shares = this.calculateShares(this.tripForm.payedPrice, this.tripForm.paramedicShare);
 
@@ -543,6 +556,8 @@ export class TripsComponent implements OnInit {
             ymdPeriod: this.tripForm.ymdPeriod,
             transferStatus: this.tripForm.transferStatus,
             diagnosis: this.tripForm.diagnosis,
+            transportationTypeId: this.tripForm.transportationTypeId || undefined,
+            transportationTypeName: this.tripForm.transportationTypeName || undefined,
             tripType: this.tripForm.tripType || undefined,
             otherExpenses: this.tripForm.otherExpenses,
             totalPrice: this.tripForm.totalPrice,
@@ -584,6 +599,8 @@ export class TripsComponent implements OnInit {
                 ymdPeriod: (trip.ymdPeriod as 'يوم' | 'اسبوع' | 'شهر' | 'سنة') || 'يوم',
                 transferStatus: trip.transferStatus,
                 diagnosis: trip.diagnosis,
+                transportationTypeId: trip.transportationTypeId || '',
+                transportationTypeName: trip.transportationTypeName || '',
                 tripType: (trip.tripType as TripType | '') || '',
                 otherExpenses: trip.otherExpenses || 0,
                 totalPrice: trip.totalPrice,
@@ -622,6 +639,8 @@ export class TripsComponent implements OnInit {
                 ymdPeriod: this.tripForm.ymdPeriod,
                 transferStatus: this.tripForm.transferStatus,
                 diagnosis: this.tripForm.diagnosis,
+                transportationTypeId: this.tripForm.transportationTypeId || undefined,
+                transportationTypeName: this.tripForm.transportationTypeName || undefined,
                 tripType: this.tripForm.tripType || undefined,
                 otherExpenses: this.tripForm.otherExpenses,
                 totalPrice: this.tripForm.totalPrice,

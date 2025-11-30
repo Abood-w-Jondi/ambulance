@@ -46,7 +46,7 @@ export class AppComponent implements OnInit {
       // Show bottom bar only for user routes AND when vehicle is selected
       const isUserRoute = url.startsWith('/user');
       const hasVehicle = this.vehicleCookieService.hasSelectedVehicle();
-      this.showBottomBar = isUserRoute && hasVehicle;
+      this.showBottomBar = isUserRoute;
     });
 
     // Subscribe to toast service

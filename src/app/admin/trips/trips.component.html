@@ -135,9 +135,13 @@
                                     style="direction: ltr;">
                             </div>
                             <div class="col-md-12">
-                                <label for="diagnosis" class="form-label small fw-medium">التشخيص</label>
-                                <input id="diagnosis" type="text" class="form-control" placeholder="التشخيص"
-                                    [(ngModel)]="tripForm.diagnosis" name="diagnosis" required>
+                                <app-transportation-type-search
+                                    [label]="'التشخيص'"
+                                    [placeholder]="'ابحث عن التشخيص...'"
+                                    [selectedTypeId]="tripForm.transportationTypeId"
+                                    [selectedTypeName]="tripForm.transportationTypeName"
+                                    (typeSelected)="onTransportationTypeSelected($event)">
+                                </app-transportation-type-search>
                             </div>
                             <div class="col-md-6">
                                 <label for="transferStatus" class="form-label small fw-medium">النقل</label>
@@ -327,9 +331,13 @@
                                     style="direction: ltr;">
                             </div>
                             <div class="col-md-12">
-                                <label for="editDiagnosis" class="form-label small fw-medium">التشخيص</label>
-                                <input id="editDiagnosis" type="text" class="form-control" placeholder="التشخيص"
-                                    [(ngModel)]="tripForm.diagnosis" name="diagnosis" required>
+                                <app-transportation-type-search
+                                    [label]="'التشخيص'"
+                                    [placeholder]="'ابحث عن التشخيص...'"
+                                    [selectedTypeId]="tripForm.transportationTypeId"
+                                    [selectedTypeName]="tripForm.transportationTypeName"
+                                    (typeSelected)="onTransportationTypeSelected($event)">
+                                </app-transportation-type-search>
                             </div>
                             <div class="col-md-6">
                                 <label for="editTransferStatus" class="form-label small fw-medium">النقل</label>
@@ -453,7 +461,7 @@
                         </div>
                         <div class="col-12">
                             <p class="text-muted small mb-1">التشخيص</p>
-                            <p class="fw-bold">{{ trip.diagnosis }}</p>
+                            <p class="fw-bold">{{ trip.transportationTypeName || trip.diagnosis || 'غير محدد' }}</p>
                         </div>
                         <div class="col-12">
                             <p class="text-muted small mb-1">النقل</p>
@@ -765,7 +773,7 @@
                                         </div>
 
                                         <p class="text-muted small mb-3">
-                                            <span class="fw-medium">التشخيص:</span> {{ trip.diagnosis }}
+                                            <span class="fw-medium">التشخيص:</span> {{ trip.transportationTypeName || trip.diagnosis || 'غير محدد' }}
                                         </p>
 
                                         <div

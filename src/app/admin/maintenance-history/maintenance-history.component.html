@@ -48,7 +48,8 @@
                                     placeholder="بحث عن مركبة..."
                                     [(ngModel)]="vehicleSearchTerm"
                                     [ngModelOptions]="{standalone: true}">
-                                <select id="vehicleId" class="form-select" [(ngModel)]="recordForm.vehicleId" name="vehicleId" required>
+                                <select id="vehicleId" class="form-select" [(ngModel)]="recordForm.vehicleId" name="vehicleId"
+                                    (change)="onVehicleSelected($event)" required>
                                     <option value="">اختر المركبة</option>
                                     @for (vehicle of filteredVehicles(); track vehicle.id) {
                                         <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
@@ -58,15 +59,15 @@
                                     عرض {{ filteredVehicles().length }} من {{ vehiclesList.length }} مركبة
                                 </small>
                             </div>
-                            
+
                             <div class="col-12">
-                                <label for="type" class="form-label small fw-medium">نوع الصيانة</label>
-                                <select id="type" class="form-select" [(ngModel)]="recordForm.type" name="type" required>
-                                    <option value="">اختر النوع</option>
-                                    @for (type of maintenanceTypes; track type) {
-                                    <option [value]="type">{{ type }}</option>
-                                    }
-                                </select>
+                                <app-maintenance-type-search
+                                    [label]="'نوع الصيانة'"
+                                    [placeholder]="'ابحث عن نوع الصيانة...'"
+                                    [selectedTypeId]="''"
+                                    [selectedTypeName]="recordForm.type"
+                                    (typeSelected)="onMaintenanceTypeSelected($event)">
+                                </app-maintenance-type-search>
                             </div>
                             
                             <div class="col-6">
@@ -95,12 +96,21 @@
                                 <input id="odometerBefore" type="number" class="form-control text-end" placeholder="0"
                                     [(ngModel)]="recordForm.odometerBefore" name="odometerBefore" min="0" style="direction: ltr;" required>
                             </div>
-                            
+
                             <div class="col-6">
                                 <label for="odometerAfter" class="form-label small fw-medium">عداد المسافات (بعد)</label>
                                 <input id="odometerAfter" type="number" class="form-control text-end" placeholder="0"
                                     [(ngModel)]="recordForm.odometerAfter" name="odometerAfter" min="0" style="direction: ltr;" required>
                             </div>
+
+                            @if (calculatedKm > 0) {
+                                <div class="col-12">
+                                    <div class="alert alert-info mb-0 py-2">
+                                        <i class="fa fa-road me-2"></i>
+                                        <strong>الكيلومترات المقطوعة:</strong> {{ calculatedKm }} كم
+                                    </div>
+                                </div>
+                            }
                             
                             <div class="col-12">
                                 <label for="notes" class="form-label small fw-medium">ملاحظات</label>
@@ -180,12 +190,13 @@
                             </div>
                             
                             <div class="col-12">
-                                <label for="editType" class="form-label small fw-medium">نوع الصيانة</label>
-                                <select id="editType" class="form-select" [(ngModel)]="recordForm.type" name="type" required>
-                                    @for (type of maintenanceTypes; track type) {
-                                    <option [value]="type">{{ type }}</option>
-                                    }
-                                </select>
+                                <app-maintenance-type-search
+                                    [label]="'نوع الصيانة'"
+                                    [placeholder]="'ابحث عن نوع الصيانة...'"
+                                    [selectedTypeId]="recordForm.maintenanceTypeId"
+                                    [selectedTypeName]="recordForm.type"
+                                    (typeSelected)="onMaintenanceTypeSelected($event)">
+                                </app-maintenance-type-search>
                             </div>
                             
                             <div class="col-6">
@@ -272,7 +283,7 @@
                         </div>
                         <div class="col-6">
                             <p class="text-muted small mb-1">نوع الصيانة</p>
-                            <p class="fw-bold">{{ record.type }}</p>
+                            <p class="fw-bold">{{ record.maintenanceTypeName || record.type || 'غير محدد' }}</p>
                         </div>
                         <div class="col-12">
                             <p class="text-muted small mb-1">التكلفة</p>
@@ -407,13 +418,14 @@
                     
                     <!-- Maintenance Type Filter -->
                     <div class="col-md-6">
-                        <label for="maintenanceTypeFilter" class="form-label small fw-medium">نوع الصيانة</label>
-                        <select id="maintenanceTypeFilter" class="form-select" [(ngModel)]="selectedMaintenanceType">
-                            <option value="جميع الأنواع">جميع الأنواع</option>
-                            @for (type of maintenanceTypes; track type) {
-                            <option [value]="type">{{ type }}</option>
-                            }
-                        </select>
+                        <app-maintenance-type-search
+                            [label]="'نوع الصيانة'"
+                            [placeholder]="'ابحث عن نوع الصيانة... (اختياري)'"
+                            [required]="false"
+                            [selectedTypeId]="maintenanceTypeFilter()"
+                            [selectedTypeName]="selectedMaintenanceType"
+                            (typeSelected)="onFilterMaintenanceTypeSelected($event)">
+                        </app-maintenance-type-search>
                     </div>
                 </div>
                 
@@ -456,8 +468,8 @@
                                 <div class="col-6">
                                     <p class="text-muted small mb-1">نوع الصيانة</p>
                                     <p class="fw-semibold mb-0">
-                                        <span class="cursor-pointer text-primary-hover" (click)="filterByMaintenanceType(record.type, $event)" title="فلترة حسب هذا النوع">{{ record.type }}</span>
-                                        <i class="fa-solid fa-filter ms-1 text-muted cursor-pointer" style="font-size: 0.7rem;" (click)="filterByMaintenanceType(record.type, $event)" title="فلترة حسب هذا النوع"></i>
+                                        <span class="cursor-pointer text-primary-hover" (click)="filterByMaintenanceType(record.maintenanceTypeId, $event)" title="فلترة حسب هذا النوع">{{ record.maintenanceTypeName || record.type || 'غير محدد' }}</span>
+                                        <i class="fa-solid fa-filter ms-1 text-muted cursor-pointer" style="font-size: 0.7rem;" (click)="filterByMaintenanceType(record.maintenanceTypeId, $event)" title="فلترة حسب هذا النوع"></i>
                                     </p>
                                 </div>
                                 <div class="col-6">

@@ -14,7 +14,9 @@ export interface MaintenanceRecord {
     date: Date;
 
     // Maintenance Details
-    type: string;              // Dynamic maintenance type from database
+    type?: string;                     // Legacy maintenance type (for backward compatibility)
+    maintenanceTypeId?: string;        // Maintenance type ID (FK to maintenance_types)
+    maintenanceTypeName?: string;      // Maintenance type name (populated from join)
 
     // Cost Information
     cost: number;              // Total cost
