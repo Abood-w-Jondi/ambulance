@@ -9,11 +9,15 @@ import { MaintenanceHistoryComponent } from './admin/maintenance-history/mainten
 import { FuelHistoryComponent } from './admin/fuel-history/fuel-history.component';
 import { TransactionHistoryComponent } from './admin/transaction-history/transaction-history.component';
 import { LoginComponent } from './admin/login/login.component';
+import { VehicleMapComponent } from './admin/vehicle-map/vehicle-map.component';
 import { StatusUpdateComponent } from './user/status-update/status-update.component';
 import { AcceptTripsComponent } from './user/accept-trips/accept-trips.component';
 import { TripsHistoryComponent } from './user/trips-history/trips-history.component';
 import { WalletComponent } from './user/wallet/wallet.component';
 import { DriverDashboardComponent } from './user/driver-dashboard/driver-dashboard.component';
+import { MyTripsComponent } from './user/my-trips/my-trips.component';
+import { TripFormComponent } from './user/trip-form/trip-form.component';
+import { LoanCollectionComponent } from './user/loan-collection/loan-collection.component';
 import { MaintenanceTypesComponent } from './admin/settings/maintenance-types/maintenance-types.component';
 import { TransportationTypesComponent } from './admin/settings/transportation-types/transportation-types.component';
 import { CommonLocationsComponent } from './admin/settings/common-locations/common-locations.component';
@@ -60,6 +64,7 @@ export const routes = [
 			{ path: 'maintenance-types', component: MaintenanceTypesComponent },
 			{ path: 'common-locations', component: CommonLocationsComponent },
 			{ path: 'users-management', component: UsersManagementComponent },
+			{ path: 'vehicle-map', component: VehicleMapComponent },
 			{ path: 'profile/:id', component: ProfileComponent },
 			{ path: 'profile', component: ProfileComponent },
 		],
@@ -75,7 +80,11 @@ export const routes = [
 			{ path: 'status-update', component: StatusUpdateComponent },
 			{ path: 'accept-trips', component: AcceptTripsComponent },
 			{ path: 'trips-history', component: TripsHistoryComponent },
+			{ path: 'my-trips', component: MyTripsComponent },
+			{ path: 'trip-form', component: TripFormComponent },
+			{ path: 'trip-form/:id', component: TripFormComponent },
 			{ path: 'wallet', component: WalletComponent },
+			{ path: 'loan-collection', component: LoanCollectionComponent },
 			{ path: 'profile', component: ProfileComponent },
 		],
 	},

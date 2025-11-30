@@ -19,6 +19,7 @@ export class TransportationTypeSearchComponent implements OnInit {
   @Input() label: string = 'التشخيص';
   @Input() placeholder: string = 'ابحث عن التشخيص...';
   @Input() required: boolean = false;
+  @Input() disabled: boolean = false;
   @Input() selectedTypeId: string = '';
   @Input() selectedTypeName: string = '';
 

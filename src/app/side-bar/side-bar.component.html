@@ -57,6 +57,12 @@
         </a>
       </li>
       <li>
+        <a (click)="navigateTo('vehicle-map')" [class.active]="isActive('vehicle-map')">
+          <i class="fa-solid fa-map-location-dot nav-icon"></i>
+          <span>خريطة المركبات</span>
+        </a>
+      </li>
+      <li>
         <a (click)="navigateTo('maintenance-history')" [class.active]="isActive('maintenance-history')">
           <i class="fa-solid fa-wrench nav-icon"></i>
           <span>سجل الصيانة</span>

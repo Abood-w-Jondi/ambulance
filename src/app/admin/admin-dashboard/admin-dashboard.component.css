@@ -1,0 +1,183 @@
+/* Custom CSS for a more modern and professional look (RTL) */
+
+/* General Layout & Typography */
+.font-inter {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.min-vh-100 {
+    background-color: #f7f9fc !important; /* Very light background for contrast */
+}
+
+/* Card Styling: Focus on modern, clean aesthetic */
+.card {
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border: none !important; /* Remove borders */
+    border-radius: 1.25rem !important; /* Softer rounded corners */
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02); /* Lighter initial shadow */
+}
+
+/* Main Stats Cards (Top Row) */
+.stat-card {
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-7px); /* Slightly deeper lift on hover */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04) !important; /* More pronounced shadow on hover */
+}
+
+.card-body p.mb-2 {
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: #6c757d !important; /* Muted text color */
+}
+
+.card-body h2.display-6 {
+    font-size: 2.25rem; /* Slightly larger main number */
+    font-weight: 800; /* Extra bold for impact */
+}
+
+/* Icon Circles in Top Cards */
+.icon-box {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.bg-primary-subtle { background-color: #e0f2ff !important; }
+.bg-info-subtle { background-color: #e2f7ff !important; }
+.bg-success-subtle { background-color: #d1f7e0 !important; }
+.bg-danger-subtle { background-color: #ffeaea !important; }
+
+
+.greenC {
+    background-color: #10B981 !important;
+    color: white !important;
+    transition: background-color 0.3s ease;
+    &:hover {
+        background-color: #0c946a !important;
+        color: white !important;
+    }
+}
+
+.blueC {
+    background-color: #0d6efd !important;
+    color: white !important;
+    transition: background-color 0.3s ease;
+    &:hover {
+        background-color: #0a58bd !important;
+        color: white !important;
+    }
+}
+
+.yellowC {
+    background-color: #f9a200 !important;
+    color: white !important;
+    transition: background-color 0.3s ease;
+    &:hover {
+        background-color: #e0a800 !important;
+        color: white !important;
+    }
+}
+.border-start-custom .small {
+    font-weight: 600 !important;
+    color: #495057 !important;
+}
+
+.border-start-custom .h3 {
+    font-weight: 800 !important;
+    margin-top: 0.5rem !important;
+}
+
+/* Quick Actions Buttons */
+.action-btn {
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1) !important;
+}
+
+.action-btn i {
+    transition: transform 0.3s ease;
+}
+
+/* Recent Trips List */
+.list-group-item {
+    border-right: none !important;
+    border-left: none !important;
+    border-color: #e9ecef !important;
+    padding: 1rem 1.5rem !important;
+}
+
+.list-group-item:first-child {
+    border-top: none !important;
+}
+
+.list-group-item:last-child {
+    border-bottom: none !important;
+}
+
+.list-group-item-action:hover {
+    background-color: #f0f3f8 !important; /* Slightly deeper hover color */
+}
+
+/* Revenue Distribution Card */
+.p-3.bg-success-subtle.rounded-3 {
+    padding: 1rem !important;
+    border-radius: 0.75rem !important;
+    background-color: #d1f7e0 !important;
+}
+
+/* Maintenance Status Card */
+.badge {
+    font-size: 0.85rem;
+    padding: 0.4em 0.8em;
+}
+
+/* General Text & Spacing */
+h5.fw-bold, h6.fw-bold {
+    color: #212529;
+}
+
+.text-muted.small.fw-bold {
+    color: #adb5bd !important;
+}
+
+/* Responsive Tweaks */
+@media (max-width: 768px) {
+    .display-6 {
+        font-size: 1.75rem !important;
+    }
+    
+    .icon-box {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .icon-box i {
+        font-size: 1.25rem !important;
+    }
+
+    .border-start-custom {
+        padding: 1rem !important;
+    }
+
+    .action-btn {
+        padding: 0.8rem !important;
+        font-size: 0.9rem;
+    }
+}

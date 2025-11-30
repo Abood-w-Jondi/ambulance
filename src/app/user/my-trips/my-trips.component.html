@@ -1,0 +1,437 @@
+<div class="container-fluid py-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">
+          <i class="fas fa-route me-2"></i>
+          رحلاتي
+        </h2>
+        <button class="btn btn-primary" (click)="createNewTrip()">
+          <i class="fas fa-plus me-2"></i>
+          إنشاء رحلة جديدة
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a 
+        class="nav-link" 
+        [class.active]="selectedTab === 'available'"
+        (click)="switchTab('available')"
+        style="cursor: pointer;">
+        <i class="fas fa-inbox me-2"></i>
+        الرحلات المتاحة
+        <span class="badge bg-primary ms-2" *ngIf="availableTrips.length > 0">
+          {{ availableTrips.length }}
+        </span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a 
+        class="nav-link" 
+        [class.active]="selectedTab === 'active'"
+        (click)="switchTab('active')"
+        style="cursor: pointer;">
+        <i class="fas fa-play-circle me-2"></i>
+        الرحلات النشطة
+        <span class="badge bg-info ms-2" *ngIf="activeTrips.length > 0">
+          {{ activeTrips.length }}
+        </span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a 
+        class="nav-link" 
+        [class.active]="selectedTab === 'history'"
+        (click)="switchTab('history')"
+        style="cursor: pointer;">
+        <i class="fas fa-history me-2"></i>
+        السجل
+      </a>
+    </li>
+  </ul>
+
+  <!-- Available Trips Tab -->
+  <div *ngIf="selectedTab === 'available'">
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>
+          هذه هي الرحلات المخصصة لمركبتك والتي لم يتم قبولها بعد
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="isLoadingAvailable" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">جاري التحميل...</span>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoadingAvailable && availableTrips.length === 0" class="text-center py-5">
+      <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+      <p class="text-muted">لا توجد رحلات متاحة حالياً</p>
+    </div>
+
+    <div class="row" *ngIf="!isLoadingAvailable">
+      <div class="col-md-6 col-lg-4 mb-3" *ngFor="let trip of availableTrips">
+        <div class="card trip-card h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <h5 class="card-title mb-0">
+                <i class="fas fa-user-injured me-2"></i>
+                {{ trip.patientName || 'غير محدد' }}
+              </h5>
+              <span class="badge" [ngClass]="getStatusBadgeClass(trip.transferStatus)">
+                {{ trip.transferStatus }}
+              </span>
+            </div>
+
+            <div class="trip-info">
+              <div class="info-item">
+                <i class="fas fa-map-marker-alt text-success me-2"></i>
+                <strong>من:</strong> {{ trip.transferFrom || 'غير محدد' }}
+              </div>
+              <div class="info-item">
+                <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                <strong>إلى:</strong> {{ trip.transferTo || 'غير محدد' }}
+              </div>
+              <div class="info-item" *ngIf="trip.diagnosis">
+                <i class="fas fa-notes-medical me-2"></i>
+                <strong>التشخيص:</strong> {{ trip.diagnosis }}
+              </div>
+              <div class="info-item">
+                <i class="fas fa-calendar me-2"></i>
+                <strong>التاريخ:</strong> {{ formatDate(trip) }}
+              </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+              <button 
+                class="btn btn-success flex-fill"
+                (click)="acceptTrip(trip)">
+                <i class="fas fa-check me-2"></i>
+                قبول الرحلة
+              </button>
+              <button 
+                class="btn btn-outline-primary"
+                (click)="viewTripDetails(trip)">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Trips Tab -->
+  <div *ngIf="selectedTab === 'active'">
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>
+          هذه هي رحلاتك النشطة التي قبلتها أو أنشأتها
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="isLoadingActive" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">جاري التحميل...</span>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoadingActive && activeTrips.length === 0" class="text-center py-5">
+      <i class="fas fa-play-circle fa-3x text-muted mb-3"></i>
+      <p class="text-muted">لا توجد رحلات نشطة حالياً</p>
+    </div>
+
+    <div class="row" *ngIf="!isLoadingActive">
+      <div class="col-md-6 col-lg-4 mb-3" *ngFor="let trip of activeTrips">
+        <div class="card trip-card h-100 border-primary">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <h5 class="card-title mb-0">
+                <i class="fas fa-user-injured me-2"></i>
+                {{ trip.patientName || 'غير محدد' }}
+              </h5>
+              <span class="badge" [ngClass]="getStatusBadgeClass(trip.transferStatus)">
+                {{ trip.transferStatus }}
+              </span>
+            </div>
+
+            <div class="trip-info">
+              <div class="info-item">
+                <i class="fas fa-map-marker-alt text-success me-2"></i>
+                <strong>من:</strong> {{ trip.transferFrom || 'غير محدد' }}
+              </div>
+              <div class="info-item">
+                <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                <strong>إلى:</strong> {{ trip.transferTo || 'غير محدد' }}
+              </div>
+              <div class="info-item" *ngIf="trip.diagnosis">
+                <i class="fas fa-notes-medical me-2"></i>
+                <strong>التشخيص:</strong> {{ trip.diagnosis }}
+              </div>
+              <div class="info-item">
+                <i class="fas fa-calendar me-2"></i>
+                <strong>التاريخ:</strong> {{ formatDate(trip) }}
+              </div>
+              <div class="info-item">
+                <i class="fas fa-road me-2"></i>
+                <strong>المسافة:</strong> {{ formatDistance(trip) }} كم
+              </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+              <button 
+                class="btn btn-primary flex-fill"
+                (click)="editTrip(trip)">
+                <i class="fas fa-edit me-2"></i>
+                تعديل
+              </button>
+              <button 
+                class="btn btn-success"
+                *ngIf="canCloseTrip(trip)"
+                (click)="openCloseConfirmModal(trip)">
+                <i class="fas fa-lock me-2"></i>
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Tab -->
+  <div *ngIf="selectedTab === 'history'">
+    <div class="row mb-3">
+      <div class="col-12 col-md-6 mb-3 mb-md-0">
+        <div class="alert alert-info mb-0">
+          <i class="fas fa-info-circle me-2"></i>
+          <span class="d-none d-md-inline">{{ historyView === 'vehicle' ? 'سجل رحلات المركبة (جميع السائقين)' : 'سجل رحلاتي (جميع المركبات)' }}</span>
+          <span class="d-md-none">{{ historyView === 'vehicle' ? 'رحلات المركبة' : 'رحلاتي' }}</span>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="d-flex gap-2 justify-content-end">
+          <div class="btn-group flex-shrink-0" role="group">
+            <button 
+              type="button" 
+              class="btn btn-sm btn-outline-primary"
+              [class.active]="historyView === 'vehicle'"
+              (click)="historyView = 'vehicle'; loadHistoricalTrips()">
+              <i class="fas fa-car"></i>
+              <span class="d-none d-md-inline ms-2">المركبة</span>
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-sm btn-outline-primary"
+              [class.active]="historyView === 'driver'"
+              (click)="historyView = 'driver'; loadHistoricalTrips()">
+              <i class="fas fa-user"></i>
+              <span class="d-none d-md-inline ms-2">رحلاتي</span>
+            </button>
+          </div>
+          <button 
+            class="btn btn-sm btn-outline-secondary flex-shrink-0"
+            (click)="toggleHistoryFilters()">
+            <i class="fas fa-filter me-1"></i>
+            <span class="d-none d-md-inline">فلتر</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="card mb-3" *ngIf="historyFilters.showFilters">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label small">الفترة الزمنية</label>
+            <select class="form-select form-select-sm" [(ngModel)]="historyFilters.dateType" (change)="applyHistoryFilters()">
+              <option value="all">كل الأوقات</option>
+              <option value="today">اليوم</option>
+              <option value="week">آخر أسبوع</option>
+              <option value="month">آخر شهر</option>
+              <option value="custom">فترة مخصصة</option>
+            </select>
+          </div>
+          
+          <div class="col-6 col-md-3 col-lg-2" *ngIf="historyFilters.dateType === 'custom'">
+            <label class="form-label small">من</label>
+            <input 
+              type="date" 
+              class="form-control form-control-sm" 
+              [(ngModel)]="historyFilters.dateFrom"
+              (change)="applyHistoryFilters()">
+          </div>
+          
+          <div class="col-6 col-md-3 col-lg-2" *ngIf="historyFilters.dateType === 'custom'">
+            <label class="form-label small">إلى</label>
+            <input 
+              type="date" 
+              class="form-control form-control-sm" 
+              [(ngModel)]="historyFilters.dateTo"
+              (change)="applyHistoryFilters()">
+          </div>
+          
+          <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label small">الحالة</label>
+            <select class="form-select form-select-sm" [(ngModel)]="historyFilters.status" (change)="applyHistoryFilters()">
+              <option value="all">جميع الحالات</option>
+              <option *ngFor="let status of transferStatuses" [value]="status">{{ status }}</option>
+            </select>
+          </div>
+          
+          <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label small">الموقع (من/إلى)</label>
+            <input 
+              type="text" 
+              class="form-control form-control-sm" 
+              placeholder="ابحث عن موقع..."
+              [(ngModel)]="historyFilters.location"
+              (input)="applyHistoryFilters()">
+          </div>
+          
+          <div class="col-12 d-flex gap-2">
+            <button class="btn btn-sm btn-primary" (click)="applyHistoryFilters()">
+              <i class="fas fa-search me-1"></i>
+              بحث
+            </button>
+            <button class="btn btn-sm btn-secondary" (click)="resetHistoryFilters()">
+              <i class="fas fa-redo me-1"></i>
+              إعادة تعيين
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="isLoadingHistory" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">جاري التحميل...</span>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoadingHistory && historicalTrips.length === 0" class="text-center py-5">
+      <i class="fas fa-history fa-3x text-muted mb-3"></i>
+      <p class="text-muted">لا توجد رحلات سابقة</p>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="row row-cols-1 g-3" *ngIf="!isLoadingHistory && historicalTrips.length > 0">
+      <div class="col" *ngFor="let trip of getPaginatedHistory()">
+        <div class="card shadow-sm rounded-xl overflow-hidden cursor-pointer" dir="rtl">
+          <div class="d-flex">
+            <div class="flex-shrink-0" style="width: 8px;" [ngStyle]="{'background-color': getStatusColor(trip.transferStatus)}"></div>
+            
+            <div class="card-body p-3 p-md-4 flex-grow-1 text-end">
+              <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-2">
+                <p class="h6 fw-bold m-0 text-dark">{{ trip.patientName || 'غير محدد' }}</p>
+                <p class="h6 fw-bold m-0 text-dark" dir="ltr">
+                  <span *ngIf="trip.payedPrice !== undefined && trip.payedPrice !== null">
+                    ₪{{ trip.payedPrice.toFixed(2) }}
+                  </span>
+                </p>
+              </div>
+
+              <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-2 gap-2">
+                <p class="text-muted small m-0">
+                  المركبة: <span class="fw-medium">{{ trip.vehicleName || 'غير محدد' }}</span>
+                </p>
+                <p class="text-muted small m-0">
+                  {{ getFormattedDate(trip.day, trip.month, trip.year) }}
+                </p>
+              </div>
+
+              <p class="text-muted small mb-3">
+                <span class="fw-medium">التشخيص:</span> {{ trip.transportationTypeName || trip.diagnosis || 'غير محدد' }}
+              </p>
+
+              <div class="d-flex align-items-center gap-2 small fw-medium text-dark justify-content-end mb-3 flex-wrap">
+                <span class="text-truncate">{{ trip.transferFrom || 'غير محدد' }}</span>
+                <i class="fa-solid fa-arrow-left flex-shrink-0"></i>
+                <span class="text-truncate">{{ trip.transferTo || 'غير محدد' }}</span>
+              </div>
+
+              <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+                <button 
+                  class="btn btn-sm btn-outline-primary rounded-pill w-100 w-sm-auto"
+                  (click)="viewTripDetails(trip)">
+                  <i class="fa-solid fa-info-circle me-1"></i>
+                  التفاصيل
+                </button>
+                <span class="badge rounded-pill fw-bold" [ngClass]="getStatusBadgeClass(trip.transferStatus)">
+                  {{ trip.transferStatus }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-center mt-4" *ngIf="!isLoadingHistory && historicalTrips.length > itemsPerPage">
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" (click)="changePage(currentPage - 1)" style="cursor: pointer;">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+          <li class="page-item" *ngFor="let page of [].constructor(totalHistoryPages); let i = index" [class.active]="currentPage === i + 1">
+            <a class="page-link" (click)="changePage(i + 1)" style="cursor: pointer;">{{ i + 1 }}</a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalHistoryPages">
+            <a class="page-link" (click)="changePage(currentPage + 1)" style="cursor: pointer;">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Close Trip Confirmation Modal -->
+<div class="modal fade" [class.show]="showCloseConfirmModal" [style.display]="showCloseConfirmModal ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-lock me-2"></i>
+          تأكيد إغلاق الرحلة
+        </h5>
+        <button type="button" class="btn-close" (click)="closeConfirmModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong>تحذير:</strong> بعد إغلاق الرحلة، سيتم معالجة المعاملات المالية ولن يمكن التراجع عن ذلك.
+        </div>
+        <p *ngIf="selectedTripForClose">
+          هل أنت متأكد من رغبتك في إغلاق الرحلة للمريض <strong>{{ selectedTripForClose.patientName }}</strong>؟
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeConfirmModal()">
+          <i class="fas fa-times me-2"></i>
+          إلغاء
+        </button>
+        <button type="button" class="btn btn-success" (click)="confirmCloseTrip()">
+          <i class="fas fa-check me-2"></i>
+          تأكيد الإغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showCloseConfirmModal" *ngIf="showCloseConfirmModal"></div>
+

@@ -52,7 +52,7 @@ export class FleetComponent implements OnInit {
         vehicleId: '',
         vehicleName: '',
         notes: '',
-        status: 'متاحة' as VehicleStatus
+        status: 'متاح' as VehicleStatus
     };
 
     // Pagination
@@ -61,7 +61,7 @@ export class FleetComponent implements OnInit {
     totalRecords = 0;
     isLoading = signal(false);
 
-    vehicleStatuses: VehicleStatus[] = ['متاحة', 'في الخدمة', 'صيانة'];
+    vehicleStatuses: VehicleStatus[] = ['متاح', 'في الخدمة', 'صيانة'];
     colors: string[] = ['White', 'Red', 'Yellow', 'Silver', 'Blue'];
 
     constructor(
@@ -152,7 +152,7 @@ export class FleetComponent implements OnInit {
 
     getStatusColor(status: VehicleStatus): string {
         switch (status) {
-            case 'متاحة':
+            case 'متاح':
                 return '#28A745';
             case 'في الخدمة':
                 return '#17A2B8';
@@ -165,7 +165,7 @@ export class FleetComponent implements OnInit {
 
     getStatusBadgeClass(status: VehicleStatus): string {
         switch (status) {
-            case 'متاحة':
+            case 'متاح':
                 return 'text-bg-success';
             case 'في الخدمة':
                 return 'text-bg-info';
@@ -178,7 +178,7 @@ export class FleetComponent implements OnInit {
 
     getStatusIcon(status: VehicleStatus): string {
         switch (status) {
-            case 'متاحة':
+            case 'متاح':
                 return 'fa-circle-check';
             case 'في الخدمة':
                 return 'fa-truck-medical';
@@ -194,7 +194,7 @@ export class FleetComponent implements OnInit {
             vehicleId: '',
             vehicleName: '',
             notes: '',
-            status: 'متاحة'
+            status: 'متاح'
         };
         this.isAddVehicleModalOpen.set(true);
     }

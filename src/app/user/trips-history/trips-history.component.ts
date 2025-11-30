@@ -1,33 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-
-type TransferStatus = 'ميداني' | 'تم النقل' | 'بلاغ كاذب' | 'ينقل' | 'لم يتم النقل' | 'صيانة' | 'رفض النقل' | 'اخرى';
-type FilterStatus = 'All' | TransferStatus;
-
-interface Trip {
-  id: string;
-  day: number;
-  month: number;
-  year: number;
-  driver: string;
-  paramedic: string;
-  transferFrom: string;
-  transferTo: string;
-  start: number;
-  end: number;
-  diesel: number;
-  patientName: string;
-  patientAge: number;
-  ymdValue?: number;
-  ymdPeriod?: string;
-  transferStatus: TransferStatus;
-  diagnosis: string;
-  totalAmount: number;
-  paramedicShare: number;
-  driverShare: number;
-  eqShare: number;
-}
+import { Router } from '@angular/router';
+import { TripService } from '../../shared/services/trip.service';
+import { AuthService } from '../../shared/services/auth.service';
+import { ToastService } from '../../shared/services/toast.service';
+import { VehicleCookieService } from '../../shared/services/vehicle-cookie.service';
+import { Trip, TransferStatus, FilterStatus } from '../../shared/models';
 
 @Component({
   selector: 'app-trips-history',
@@ -42,6 +21,16 @@ export class TripsHistoryComponent implements OnInit {
   searchTerm: string = '';
   selectedMonth: number = new Date().getMonth() + 1;
   selectedYear: number = new Date().getFullYear();
+  
+  // History view toggle
+  historyView: 'vehicle' | 'driver' = 'vehicle';
+  
+  // IDs
+  vehicleId: string = '';
+  driverId: string = '';
+  
+  // Loading state
+  isLoading: boolean = false;
   
   // Statistics
   totalTrips: number = 0;
@@ -81,7 +70,17 @@ export class TripsHistoryComponent implements OnInit {
 
   years: number[] = [];
 
-  constructor() { }
+  constructor(
+    private tripService: TripService,
+    private authService: AuthService,
+    private toastService: ToastService,
+    private vehicleCookieService: VehicleCookieService,
+    private router: Router
+  ) {
+    const currentUser = this.authService.currentUser();
+    this.driverId = currentUser?.id || '';
+    this.vehicleId = this.vehicleCookieService.getSelectedVehicleId() || '';
+  }
 
   ngOnInit(): void {
     this.generateYears();
@@ -95,12 +94,37 @@ export class TripsHistoryComponent implements OnInit {
     }
   }
 
+  toggleHistoryView(): void {
+    this.historyView = this.historyView === 'vehicle' ? 'driver' : 'vehicle';
+    this.loadTrips();
+  }
+
   loadTrips(): void {
-    // TODO: Load trips from service
-    // Mock data for demonstration
-    this.trips = this.generateMockTrips();
-    this.applyFilters();
-    this.calculateStatistics();
+    this.isLoading = true;
+    
+    const observable = this.historyView === 'vehicle'
+      ? this.tripService.getVehicleHistoricalTrips(this.vehicleId)
+      : this.tripService.getDriverHistoricalTrips(this.driverId);
+    
+    observable.subscribe({
+      next: (trips) => {
+        this.trips = trips;
+        this.applyFilters();
+        this.calculateStatistics();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load trips:', error);
+        this.toastService.error('فشل تحميل الرحلات السابقة');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  viewTripDetails(trip: Trip): void {
+    this.router.navigate(['/user/trip-form', trip.id], {
+      queryParams: { mode: 'view' }
+    });
   }
 
   applyFilters(): void {
@@ -123,7 +147,7 @@ export class TripsHistoryComponent implements OnInit {
   calculateStatistics(): void {
     this.totalTrips = this.filteredTrips.length;
     this.completedTrips = this.filteredTrips.filter(t => t.transferStatus === 'تم النقل').length;
-    this.totalEarnings = this.filteredTrips.reduce((sum, trip) => sum + trip.driverShare, 0);
+    this.totalEarnings = this.filteredTrips.reduce((sum, trip) => sum + (trip.driverShare || 0), 0);
   }
 
   getPaginatedTrips(): Trip[] {
@@ -186,34 +210,7 @@ export class TripsHistoryComponent implements OnInit {
     return `${day}/${month}/${year}`;
   }
 
-  private generateMockTrips(): Trip[] {
-    // Generate mock data
-    const mockTrips: Trip[] = [];
-    for (let i = 1; i <= 50; i++) {
-      mockTrips.push({
-        id: `trip_${i}`,
-        day: Math.floor(Math.random() * 28) + 1,
-        month: this.selectedMonth,
-        year: this.selectedYear,
-        driver: 'جون دو',
-        paramedic: 'أحمد محمد',
-        transferFrom: 'مستشفى الملك فيصل',
-        transferTo: 'مستشفى الجامعة',
-        start: Math.floor(Math.random() * 1440),
-        end: Math.floor(Math.random() * 1440),
-        diesel: Math.floor(Math.random() * 50) + 10,
-        patientName: `مريض ${i}`,
-        patientAge: Math.floor(Math.random() * 80) + 1,
-        ymdValue: Math.floor(Math.random() * 30) + 1,
-        ymdPeriod: ['يوم', 'اسبوع', 'شهر', 'سنة'][Math.floor(Math.random() * 4)],
-        transferStatus: this.transferStatuses[Math.floor(Math.random() * this.transferStatuses.length)],
-        diagnosis: 'كسر في الساق',
-        totalAmount: Math.floor(Math.random() * 500) + 100,
-        paramedicShare: Math.floor(Math.random() * 100) + 50,
-        driverShare: Math.floor(Math.random() * 100) + 50,
-        eqShare: Math.floor(Math.random() * 100) + 50
-      });
-    }
-    return mockTrips;
+  formatDistance(trip: Trip): number {
+    return trip.end - trip.start;
   }
 }

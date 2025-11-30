@@ -7,7 +7,7 @@ import { LocationReference, LocationTag } from '../models/location.model';
 export interface LocationSelection {
   id: string;
   name: string;
-  locationType: LocationTag;
+  tag: LocationTag;
   isNew: boolean;
 }
 
@@ -22,6 +22,7 @@ export class LocationSearchComponent implements OnInit {
   @Input() label: string = 'الموقع';
   @Input() placeholder: string = 'ابحث عن موقع...';
   @Input() required: boolean = false;
+  @Input() disabled: boolean = false;
   @Input() selectedLocationId: string = '';
   @Input() selectedLocationName: string = '';
 
@@ -100,7 +101,7 @@ export class LocationSearchComponent implements OnInit {
     this.locationSelected.emit({
       id: location.id,
       name: location.name,
-      locationType: location.locationType,
+      tag: location.locationType,
       isNew: false
     });
   }
@@ -132,7 +133,7 @@ export class LocationSearchComponent implements OnInit {
           this.locationSelected.emit({
             id: '',
             name: term,
-            locationType: 'custom',
+            tag: 'custom',
             isNew: true
           });
         }

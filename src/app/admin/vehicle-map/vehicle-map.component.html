@@ -1,0 +1,160 @@
+<div class="vehicle-map-container" dir="rtl">
+  
+  <div id="vehicle-map" class="map-view"></div>
+
+  @if (isLoading()) {
+    <div class="loading-overlay">
+      <div class="spinner-border text-primary" role="status"></div>
+      <span class="mt-2 fw-medium">جاري تحديث المواقع...</span>
+    </div>
+  }
+
+  <button class="btn btn-primary btn-float-toggle shadow" 
+          [class.show]="!isSidebarOpen()" 
+          (click)="toggleSidebar()"
+          title="عرض القائمة">
+    <i class="fas fa-list-ul"></i>
+  </button>
+
+  <div class="floating-sidebar" [class.closed]="!isSidebarOpen()">
+    
+    <div class="sidebar-header">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-dark">مراقبة المركبات</h5>
+        
+        <div class="d-flex gap-2">
+          <button class="btn btn-icon btn-light shadow-sm" (click)="loadVehicleLocations()" [disabled]="isLoading()" title="تحديث">
+            <i class="fas fa-sync-alt" [class.fa-spin]="isLoading()"></i>
+          </button>
+          
+          <button class="btn btn-icon btn-light shadow-sm mobile-toggle" (click)="toggleSidebar()" title="إخفاء">
+            <i class="fas" [class.fa-chevron-right]="!isMobileView" [class.fa-chevron-down]="isMobileView"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="search-box mb-3">
+        <i class="fas fa-search text-muted"></i>
+        <input type="text" 
+               class="form-control" 
+               placeholder="بحث عن مركبة أو سائق..." 
+               [ngModel]="searchText()"
+               (ngModelChange)="searchText.set($event)">
+      </div>
+
+      <div class="d-flex gap-2 overflow-auto pb-2 stats-scroller">
+        <span class="badge bg-white text-dark border shadow-sm">
+          الكل: {{ vehicles().length }}
+        </span>
+        <span class="badge bg-success bg-opacity-10 text-success border-success border-opacity-10">
+          نشط: {{ getVehiclesWithLocation().length }}
+        </span>
+        @if (lastUpdate()) {
+          <span class="badge bg-light text-muted border" dir="ltr">
+            {{ formatLastUpdate() }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <div class="vehicle-list-wrapper custom-scrollbar">
+      
+      @if (filteredVehiclesWithLocation().length > 0) {
+        <div class="list-group-label">على الخريطة</div>
+        @for (vehicle of filteredVehiclesWithLocation(); track vehicle.id) {
+          <div class="vehicle-card" 
+               [class.selected]="selectedVehicle()?.id === vehicle.id"
+               (click)="centerOnVehicle(vehicle)">
+            
+            <div class="d-flex align-items-center gap-3">
+              <div class="status-indicator">
+                <div class="status-dot" [style.background-color]="getStatusColor(vehicle.status)"></div>
+              </div>
+              
+              <div class="flex-grow-1 min-width-0">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h6 class="vehicle-name mb-0">{{ vehicle.vehicleName }}</h6>
+                  <span class="status-badge" [style.color]="getStatusColor(vehicle.status)">
+                    {{ vehicle.status }}
+                  </span>
+                </div>
+                <small class="text-muted text-truncate d-block">
+                  <i class="fas fa-user-circle me-1"></i>
+                  {{ vehicle.driverName || 'بدون سائق' }}
+                </small>
+              </div>
+            </div>
+          </div>
+        }
+      }
+
+      @if (filteredVehiclesWithoutLocation().length > 0) {
+        <div class="list-group-label mt-3">غير متصل / بدون موقع</div>
+        @for (vehicle of filteredVehiclesWithoutLocation(); track vehicle.id) {
+          <div class="vehicle-card offline">
+            <div class="d-flex align-items-center gap-3">
+              <div class="status-indicator">
+                <div class="status-dot bg-secondary"></div>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="vehicle-name mb-0 text-muted">{{ vehicle.vehicleName }}</h6>
+                <small class="text-muted">لا توجد بيانات موقع</small>
+              </div>
+            </div>
+          </div>
+        }
+      }
+
+      @if (vehicles().length === 0 && !isLoading()) {
+        <div class="text-center py-5 text-muted">
+          <i class="fas fa-truck-medical fa-3x mb-3 opacity-25"></i>
+          <p>لا توجد مركبات</p>
+        </div>
+      }
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="btn btn-primary w-100 shadow-sm" (click)="centerOnPalestine()">
+        <i class="fas fa-expand-arrows-alt me-2"></i>
+        عرض كل الخريطة
+      </button>
+    </div>
+  </div>
+
+  @if (selectedVehicle()) {
+    <div class="vehicle-detail-card fade-in-up">
+      <button class="btn-close-card" (click)="selectedVehicle.set(null)">
+        <i class="fas fa-times"></i>
+      </button>
+      
+      <div class="detail-header">
+        <div class="icon-box" [style.background-color]="getStatusColor(selectedVehicle()!.status) + '20'">
+          <i class="fas fa-ambulance" [style.color]="getStatusColor(selectedVehicle()!.status)"></i>
+        </div>
+        <div>
+          <h5 class="mb-0 fw-bold">{{ selectedVehicle()!.vehicleName }}</h5>
+          <span class="badge rounded-pill" [style.background-color]="getStatusColor(selectedVehicle()!.status)">
+            {{ selectedVehicle()!.status }}
+          </span>
+        </div>
+      </div>
+
+      <div class="detail-body mt-3">
+        <div class="info-row">
+          <i class="fas fa-user text-muted"></i>
+          <span>{{ selectedVehicle()!.driverName || 'سائق غير معروف' }}</span>
+        </div>
+        <div class="info-row">
+          <i class="fas fa-clock text-muted"></i>
+          <span>آخر تحديث: {{ selectedVehicle()!.lastLocationUpdate | date:'mediumTime':'':'ar-EG' }}</span>
+        </div>
+        <div class="info-row">
+          <i class="fas fa-map-marker-alt text-muted"></i>
+          <span class="coordinates" dir="ltr">
+            {{ selectedVehicle()!.latitude | number:'1.4-4' }}, {{ selectedVehicle()!.longitude | number:'1.4-4' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  }
+</div>

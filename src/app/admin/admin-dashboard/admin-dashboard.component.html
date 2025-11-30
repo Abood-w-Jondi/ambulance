@@ -1,103 +1,262 @@
-<div class="container-fluid p-0 font-inter" dir="rtl">
-  
-  <div class="mx-auto w-100">
-    <div class="pb-5">
-        <div class="container">
-      <div class="row g-3">
-        <div class="col-6 col-lg-3">
-          <div class="card shadow-sm p-3">
-            <p class="text-muted small fw-medium mb-1">عمليات النقل اليومية</p>
-            <p class="h3 fw-bold m-0">14</p>
+<div class="container-fluid bg-light min-vh-100 font-inter" dir="rtl">
+  <div class="container py-4">
+    
+    @if (isLoading()) {
+      <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+      </div>
+    }
+
+    @if (dashboardStats()) {
+      
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+              <div>
+                <p class="text-muted small fw-bold text-uppercase mb-2">عمليات النقل اليوم</p>
+                <h2 class="fw-bolder text-dark mb-0 display-6">{{ dashboardStats()!.trips.today }}</h2>
+              </div>
+              <div class="icon-box bg-primary-subtle text-primary rounded-circle">
+                <i class="fa-solid fa-route fs-4"></i>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="col-6 col-lg-3">
-          <div class="card shadow-sm p-3">
-            <p class="text-muted small fw-medium mb-1">السائقون النشطون</p>
-            <p class="h3 fw-bold m-0">8 / 12</p>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+              <div>
+                <p class="text-muted small fw-bold text-uppercase mb-2">السائقون النشطون</p>
+                <h2 class="fw-bolder text-dark mb-0 display-6">
+                  {{ dashboardStats()!.drivers.available }} <span class="fs-6 text-muted">/ {{ dashboardStats()!.drivers.total }}</span>
+                </h2>
+              </div>
+              <div class="icon-box bg-info-subtle text-info rounded-circle">
+                <i class="fa-solid fa-id-card fs-4"></i>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="col-6 col-lg-3">
-          <div class="card shadow-sm p-3">
-            <p class="text-muted small fw-medium mb-1">الإيرادات اليومية</p>
-            <p class="h3 fw-bold text-success m-0">₪4,200</p>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+              <div>
+                <p class="text-muted small fw-bold text-uppercase mb-2">الإيرادات الشهرية</p>
+                <h2 class="fw-bolder text-success mb-0 display-6">₪{{ dashboardStats()!.financial.totalRevenue | number:'1.0-0' }}</h2>
+              </div>
+              <div class="icon-box bg-success-subtle text-success rounded-circle">
+                <i class="fa-solid fa-sack-dollar fs-4"></i>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="col-6 col-lg-3">
-          <div class="card shadow-sm p-3">
-            <p class="text-muted small fw-medium mb-1">التكاليف اليومية</p>
-            <p class="h3 fw-bold text-danger m-0">₪750</p>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+              <div>
+                <p class="text-muted small fw-bold text-uppercase mb-2">تكاليف الوقود</p>
+                <h2 class="fw-bolder text-danger mb-0 display-6">₪{{ dashboardStats()!.fuel.totalCost | number:'1.0-0' }}</h2>
+              </div>
+              <div class="icon-box bg-danger-subtle text-danger rounded-circle">
+                <i class="fa-solid fa-gas-pump fs-4"></i>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      </div>
 
-      <div class="d-grid d-lg-flex gap-3 p-3 px-5">
-        
-        <button class="btn btn-primary rounded-3 fw-bold py-3 d-flex justify-content-center align-items-center w-100 flex-lg-fill">
-          <i class="fa-solid fa-plus ms-2"></i>
-          <span>إضافة نقل جديد</span>
-        </button>
-        
-        <button class="btn btn-secondary rounded-3 fw-bold py-3 d-flex justify-content-center align-items-center w-100 flex-lg-fill">
-          <i class="fa-solid fa-file-invoice-dollar ms-2"></i>
-          <span>إضافة تكلفة خارجية</span>
-        </button>
-        
-        <button class="btn btn-secondary rounded-3 fw-bold py-3 d-flex justify-content-center align-items-center w-100 flex-lg-fill">
-          <i class="fa-solid fa-users ms-2"></i>
-          <span>عرض حسابات السائقين</span>
-        </button>
-      </div>
-
-      <h3 class="h6 fw-bold px-3 pt-3 pb-1">النشاطات الأخيرة</h3>
-      <div class="container">
-
-          <ul class="list-group list-group-flush">
-              <li class="list-group-item d-flex align-items-center py-3" style="cursor: pointer;">
-                  <div class="rounded-circle d-flex align-items-center justify-content-center ms-3" style="width: 40px; height: 40px; background-color: rgba(40, 167, 69, 0.1); color: #28A745;">
-             <i class="fa-solid fa-check fs-5"></i>
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 h-100 border-start-custom border-primary">
+            <div class="d-flex flex-column">
+              <span class="text-muted small fw-bold">رحلات الشهر</span>
+              <span class="h3 fw-bold mt-2 mb-0">{{ dashboardStats()!.trips.thisMonth }}</span>
+            </div>
           </div>
-          <div class="flex-grow-1">
-            <p class="fw-medium mb-0 ">تم الانتهاء من النقل رقم 123 إلى مستشفى المدينة</p>
-            <p class="text-muted small mb-0">منذ 2 دقيقة</p>
-          </div>
-          <i class="fa-solid fa-chevron-left text-muted"></i>
-        </li>
-        
-        <li class="list-group-item d-flex align-items-center py-3" style="cursor: pointer;">
-          <div class="rounded-circle d-flex align-items-center justify-content-center ms-3" style="width: 40px; height: 40px; background-color: rgba(220, 53, 69, 0.1); color: #DC3545;">
-            <i class="fa-solid fa-gas-pump fs-5"></i>
-          </div>
-          <div class="flex-grow-1">
-            <p class="fw-medium mb-0">تكلفة خارجية جديدة: وقود للوحدة 04</p>
-            <p class="text-muted small mb-0">منذ 15 دقيقة</p>
-          </div>
-          <i class="fa-solid fa-chevron-left text-muted"></i>
-        </li>
-        
-        <li class="list-group-item d-flex align-items-center py-3" style="cursor: pointer;">
-          <div class="rounded-circle d-flex align-items-center justify-content-center ms-3" style="width: 40px; height: 40px; background-color: rgba(255, 193, 7, 0.1); color: #FFC107;">
-            <i class="fa-solid fa-clock fs-5"></i>
         </div>
-          <div class="flex-grow-1">
-            <p class="fw-medium mb-0">النقل رقم 124 إلى عيادة وسط المدينة قيد التنفيذ</p>
-            <p class="text-muted small mb-0">منذ 25 دقيقة</p>
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 h-100 border-start-custom border-info">
+            <div class="d-flex flex-column">
+              <span class="text-muted small fw-bold">المركبات المتاحة</span>
+              <span class="h3 fw-bold mt-2 mb-0">{{ dashboardStats()!.vehicles.available }} / {{ dashboardStats()!.vehicles.total }}</span>
+            </div>
           </div>
-          <i class="fa-solid fa-chevron-left text-muted"></i>
-        </li>
-        
-        <li class="list-group-item d-flex align-items-center py-3" style="cursor: pointer;">
-          <div class="rounded-circle d-flex align-items-center justify-content-center ms-3" style="width: 40px; height: 40px; background-color: rgba(0, 123, 255, 0.1); color: #007BFF;">
-            <i class="fa-solid fa-right-to-bracket fs-5"></i>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 h-100 border-start-custom border-warning">
+            <div class="d-flex flex-column">
+              <span class="text-muted small fw-bold">طلبات معلقة</span>
+              <span class="h3 fw-bold mt-2 mb-0">{{ dashboardStats()!.pendingTrips.total }}</span>
+            </div>
           </div>
-          <div class="flex-grow-1">
-            <p class="fw-medium mb-0">بدأ السائق جون دو دوامه</p>
-            <p class="text-muted small mb-0">منذ ساعة واحدة</p>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 h-100 border-start-custom border-secondary">
+            <div class="d-flex flex-column">
+              <span class="text-muted small fw-bold">صيانة مجدولة</span>
+              <span class="h3 fw-bold mt-2 mb-0">{{ dashboardStats()!.maintenance.scheduled }}</span>
+            </div>
           </div>
-          <i class="fa-solid fa-chevron-left text-muted"></i>
-        </li>
-    </ul>
-</div>
-    </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-8">
+          
+          <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+              <h5 class="fw-bold mb-3">إجراءات سريعة</h5>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <button class="btn w-100 p-3 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 action-btn greenC" (click)="navigateToTrips()">
+                    <i class="fa-solid fa-plus-circle fs-5"></i>
+                    <span class="fw-bold">إضافة نقل جديد</span>
+                  </button>
+                </div>
+                <div class="col-md-4">
+                  <button class="btn text-white w-100 p-3 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 action-btn blueC" (click)="navigateToVehicleMap()">
+                    <i class="fa-solid fa-map-location-dot fs-5"></i>
+                    <span class="fw-bold">خريطة المركبات</span>
+                  </button>
+                </div>
+                <div class="col-md-4">
+                  <button class="btn w-100 p-3 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 action-btn yellowC" (click)="navigateToDrivers()">
+                    <i class="fa-solid fa-users fs-5"></i>
+                    <span class="fw-bold">قائمة السائقين</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-0 p-4 pb-0 d-flex justify-content-between align-items-center">
+              <h5 class="fw-bold mb-0">الرحلات الأخيرة</h5>
+              <a [routerLink]="['/admin/trips']" class="text-decoration-none small fw-bold">عرض الكل</a>
+            </div>
+            <div class="card-body p-0">
+              @if (dashboardStats()?.recentTrips?.length) {
+                <div class="list-group list-group-flush">
+                  @for (trip of dashboardStats()!.recentTrips.slice(0, 5); track trip.id) {
+                    <div class="list-group-item border-0 border-bottom py-3 px-4 list-group-item-action d-flex align-items-center gap-3" 
+                         style="cursor: pointer;" [routerLink]="['/admin/trips']">
+                      
+                      <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" 
+                           [style.width.px]="48" [style.height.px]="48"
+                           [style.background-color]="getRecentTripColor(trip.transferStatus) + '1A'"
+                           [style.color]="getRecentTripColor(trip.transferStatus)">
+                        <i class="fa-solid {{ getRecentTripIcon(trip.transferStatus) }} fs-5"></i>
+                      </div>
+
+                      <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                          <h6 class="fw-bold mb-0 text-dark">{{ trip.patientName }}</h6>
+                          <span class="badge rounded-pill fw-normal" 
+                                [style.background-color]="getRecentTripColor(trip.transferStatus)">
+                            {{ trip.transferStatus }}
+                          </span>
+                        </div>
+                        <div class="d-flex align-items-center text-muted small">
+                          <i class="fa-solid fa-location-dot me-1 ms-1 text-primary-subtle"></i> 
+                          <span class="me-3">إلى: {{ trip.transferTo }}</span>
+                          
+                          <i class="fa-regular fa-id-badge me-1 ms-1 text-primary-subtle"></i>
+                          <span>{{ trip.driver || '---' }}</span>
+                        </div>
+                      </div>
+
+                      <div class="text-end ps-2 border-end">
+                        <small class="text-muted fw-bold d-block w-100" style="min-width: 80px;">
+                          {{ formatTripDate(trip.tripDate) }}
+                        </small>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="text-center py-5 text-muted">
+                  <div class="mb-3"><i class="fas fa-inbox fa-3x opacity-25"></i></div>
+                  <p class="mb-0 fw-medium">لا توجد رحلات حديثة</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          
+          <div class="card border-0 shadow-sm rounded-4 mb-3">
+            <div class="card-body p-4">
+              <h6 class="text-uppercase text-muted fw-bold small mb-4">توزيع الإيرادات</h6>
+              
+              <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
+                <span class="text-secondary"><i class="fa-solid fa-user-tie ms-2 opacity-50"></i>حصة السائقين</span>
+                <span class="fw-bold font-monospace">₪{{ dashboardStats()!.financial.totalDriverShare | number:'1.0-0' }}</span>
+              </div>
+              
+              <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
+                <span class="text-secondary"><i class="fa-solid fa-user-nurse ms-2 opacity-50"></i>حصة المسعفين</span>
+                <span class="fw-bold font-monospace">₪{{ dashboardStats()!.financial.totalParamedicShare | number:'1.0-0' }}</span>
+              </div>
+              
+              <div class="d-flex justify-content-between align-items-center p-3 bg-success-subtle rounded-3">
+                <span class="text-success fw-bold">حصة الشركة</span>
+                <span class="fw-bolder text-success h5 mb-0">₪{{ dashboardStats()!.financial.totalCompanyShare | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm rounded-4 mb-3">
+            <div class="card-body p-4">
+              <h6 class="text-uppercase text-muted fw-bold small mb-3">ملخص الوقود</h6>
+              <div class="row g-2 text-center">
+                <div class="col-6">
+                  <div class="p-2 bg-light rounded-3">
+                    <small class="d-block text-muted mb-1">عدد التعبئات</small>
+                    <span class="fw-bold">{{ dashboardStats()!.fuel.recordsCount }}</span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-2 bg-light rounded-3">
+                    <small class="d-block text-muted mb-1">الكمية (لتر)</small>
+                    <span class="fw-bold">{{ dashboardStats()!.fuel.totalAmount | number:'1.0-0' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+              <h6 class="text-uppercase text-muted fw-bold small mb-3">حالة الصيانة</h6>
+              <div class="progress-stacked mb-3" style="height: 10px;">
+                </div>
+              
+              <div class="d-flex justify-content-between mb-2">
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10">مكتملة</span>
+                <span class="fw-bold">{{ dashboardStats()!.maintenance.completed }}</span>
+              </div>
+              <div class="d-flex justify-content-between mb-3">
+                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-10">قيد التنفيذ</span>
+                <span class="fw-bold">{{ dashboardStats()!.maintenance.inProgress }}</span>
+              </div>
+               <div class="pt-2 border-top">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="small text-muted">إجمالي التكلفة</span>
+                    <span class="text-danger fw-bold">₪{{ dashboardStats()!.maintenance.totalCost | number:'1.0-0' }}</span>
+                  </div>
+               </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    }
   </div>
 </div>

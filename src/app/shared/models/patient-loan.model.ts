@@ -24,4 +24,6 @@ export interface PatientLoanFilters {
     status?: 'collected' | 'uncollected' | 'all';
     startDate?: string;
     endDate?: string;
+    sortBy?: 'date' | 'amount' | 'patient';
+    sortOrder?: 'asc' | 'desc';
 }

@@ -1,0 +1,282 @@
+<div class="container-fluid py-4" dir="rtl">
+  <!-- Header -->
+  <div class="d-flex align-items-center mb-4">
+    <button class="btn btn-outline-secondary rounded-circle me-3" (click)="goBack()">
+      <i class="fas fa-arrow-right"></i>
+    </button>
+    <h2 class="fw-bold mb-0">تحصيل الديون</h2>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm bg-primary text-white">
+        <div class="card-body text-center py-3">
+          <p class="small mb-1 opacity-75">إجمالي الديون</p>
+          <h3 class="fw-bold mb-0">{{ stats().totalUncollectedAmount | number:'1.0-2' }} ₪</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-3">
+          <p class="text-muted small mb-1">غير محصّل</p>
+          <h3 class="fw-bold text-warning mb-0">{{ stats().uncollectedCount }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-3">
+          <p class="text-muted small mb-1">محصّل</p>
+          <h3 class="fw-bold text-success mb-0">{{ stats().collectedCount }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-3">
+          <p class="text-muted small mb-1">تم تحصيله</p>
+          <h3 class="fw-bold text-success mb-0">{{ stats().totalCollectedAmount | number:'1.0-2' }} ₪</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-center">
+        <!-- Status Filter -->
+        <div class="col-12 col-md-6">
+          <div class="btn-group w-100" role="group">
+            @for (filter of quickFilters; track filter.value) {
+              <button 
+                type="button" 
+                class="btn"
+                [class.btn-primary]="filterStatus() === filter.value"
+                [class.btn-outline-secondary]="filterStatus() !== filter.value"
+                (click)="onFilterChange(filter.value)">
+                {{ filter.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Sort Dropdown -->
+        <div class="col-12 col-md-6">
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+              <i class="fas fa-sort me-2"></i>
+              {{ getCurrentSortLabel() }}
+            </button>
+            <ul class="dropdown-menu w-100">
+              @for (option of sortOptions; track option.label) {
+                <li>
+                  <a class="dropdown-item" 
+                     [class.active]="sortBy() === option.sortBy && sortOrder() === option.sortOrder"
+                     (click)="onSortChange(option)">
+                    {{ option.label }}
+                  </a>
+                </li>
+              }
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">جاري التحميل...</span>
+      </div>
+      <p class="text-muted mt-3">جاري تحميل الديون...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading() && loans().length === 0) {
+    <div class="text-center py-5">
+      <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+      <h4 class="text-muted">لا توجد ديون</h4>
+      <p class="text-muted">
+        @if (filterStatus() === 'uncollected') {
+          جميع الديون تم تحصيلها!
+        } @else if (filterStatus() === 'collected') {
+          لا توجد ديون محصّلة بعد
+        } @else {
+          لا توجد ديون مسجلة
+        }
+      </p>
+    </div>
+  }
+
+  <!-- Loans List -->
+  @if (!isLoading() && loans().length > 0) {
+    <div class="loan-list">
+      @for (loan of loans(); track loan.tripId) {
+        <div class="card border-0 shadow-sm mb-3" [class.border-success]="loan.isCollected" [class.border-start]="loan.isCollected" [style.border-width.px]="loan.isCollected ? 3 : 0">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <h5 class="fw-bold mb-1">{{ loan.patientName }}</h5>
+                <p class="text-muted small mb-0">
+                  <i class="fas fa-map-marker-alt me-1"></i>
+                  {{ loan.transferFrom }} → {{ loan.transferTo }}
+                </p>
+              </div>
+              <div class="text-end">
+                <h4 class="fw-bold mb-0" [class.text-success]="loan.isCollected" [class.text-primary]="!loan.isCollected">
+                  {{ loan.loanAmount | number:'1.0-2' }} ₪
+                </h4>
+                @if (loan.isCollected) {
+                  <span class="badge bg-success">محصّل</span>
+                } @else {
+                  <span class="badge bg-warning text-dark">غير محصّل</span>
+                }
+              </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <small class="text-muted d-block">تاريخ الرحلة</small>
+                <span>{{ formatDate(loan.tripDate) }}</span>
+              </div>
+              <div class="col-6">
+                <small class="text-muted d-block">المدة</small>
+                <span [class]="getAgingClass(loan.daysSinceLoan)">
+                  {{ getAgingLabel(loan.daysSinceLoan) }}
+                </span>
+              </div>
+              <div class="col-6">
+                <small class="text-muted d-block">السعر الإجمالي</small>
+                <span>{{ loan.totalPrice | number:'1.0-2' }} ₪</span>
+              </div>
+              <div class="col-6">
+                <small class="text-muted d-block">المدفوع</small>
+                <span>{{ loan.payedPrice | number:'1.0-2' }} ₪</span>
+              </div>
+            </div>
+
+            @if (loan.collectionNotes) {
+              <div class="alert alert-light py-2 mb-3">
+                <small class="text-muted">
+                  <i class="fas fa-sticky-note me-1"></i>
+                  {{ loan.collectionNotes }}
+                </small>
+              </div>
+            }
+
+            <!-- Actions -->
+            @if (!loan.isCollected) {
+              <div class="d-flex gap-2">
+                @if (loan.patientContact) {
+                  <button class="btn btn-outline-success flex-fill" (click)="callPatient(loan.patientContact)">
+                    <i class="fas fa-phone me-1"></i>
+                    اتصال
+                  </button>
+                }
+                <button class="btn btn-outline-primary flex-fill" (click)="openEditModal(loan)">
+                  <i class="fas fa-edit me-1"></i>
+                  تعديل المبلغ
+                </button>
+                <button class="btn btn-success flex-fill" (click)="openCollectModal(loan)">
+                  <i class="fas fa-check me-1"></i>
+                  تحصيل
+                </button>
+              </div>
+            } @else {
+              <div class="text-center text-success">
+                <i class="fas fa-check-circle me-1"></i>
+                تم التحصيل في {{ formatDate(loan.collectedAt!) }}
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Edit Amount Modal -->
+@if (isEditModalOpen()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" dir="rtl">
+        <div class="modal-header">
+          <h5 class="modal-title">تعديل مبلغ الدين</h5>
+          <button type="button" class="btn-close" (click)="closeEditModal()"></button>
+        </div>
+        <div class="modal-body">
+          @if (selectedLoan()) {
+            <div class="mb-3">
+              <p class="mb-1"><strong>المريض:</strong> {{ selectedLoan()!.patientName }}</p>
+              <p class="mb-0 text-muted"><small>المبلغ الحالي: {{ selectedLoan()!.loanAmount | number:'1.0-2' }} ₪</small></p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">المبلغ الجديد (₪)</label>
+              <input type="number" class="form-control form-control-lg text-center" 
+                     [(ngModel)]="editAmount" min="0" step="0.01">
+              <div class="form-text">أدخل 0 لإغلاق الدين (تم التحصيل)</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">ملاحظات (اختياري)</label>
+              <textarea class="form-control" [(ngModel)]="editNotes" rows="2" 
+                        placeholder="سبب التعديل..."></textarea>
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeEditModal()">إلغاء</button>
+          <button type="button" class="btn btn-primary" (click)="saveEditAmount()">
+            <i class="fas fa-save me-1"></i>
+            حفظ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Collect Modal -->
+@if (isCollectModalOpen()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" dir="rtl">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-check-circle me-2"></i>
+            تأكيد التحصيل
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeCollectModal()"></button>
+        </div>
+        <div class="modal-body">
+          @if (selectedLoan()) {
+            <div class="text-center mb-4">
+              <h3 class="fw-bold text-success">{{ selectedLoan()!.loanAmount | number:'1.0-2' }} ₪</h3>
+              <p class="text-muted mb-0">من {{ selectedLoan()!.patientName }}</p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">ملاحظات التحصيل <span class="text-danger">*</span></label>
+              <textarea class="form-control" [(ngModel)]="collectNotes" rows="3" 
+                        placeholder="طريقة الدفع، تاريخ التحصيل الفعلي، أو أي ملاحظات أخرى..." required></textarea>
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeCollectModal()">إلغاء</button>
+          <button type="button" class="btn btn-success" (click)="confirmCollect()">
+            <i class="fas fa-check me-1"></i>
+            تأكيد التحصيل
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+

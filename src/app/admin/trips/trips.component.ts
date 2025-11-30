@@ -496,7 +496,7 @@ export class TripsComponent implements OnInit {
      */
     onTransferFromSelected(selection: LocationSelection): void {
         this.tripForm.transferFrom = selection.name;
-        this.tripForm.transferFromTag = selection.locationType;
+        this.tripForm.transferFromTag = selection.tag;
 
         if (selection.isNew) {
             // Store empty ID - location will be created when trip is submitted
@@ -512,7 +512,7 @@ export class TripsComponent implements OnInit {
      */
     onTransferToSelected(selection: LocationSelection): void {
         this.tripForm.transferTo = selection.name;
-        this.tripForm.transferToTag = selection.locationType;
+        this.tripForm.transferToTag = selection.tag;
 
         if (selection.isNew) {
             // Store empty ID - location will be created when trip is submitted

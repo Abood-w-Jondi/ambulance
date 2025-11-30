@@ -14,6 +14,20 @@ export interface VehicleQueryParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+export interface VehicleLocation {
+  id: string;
+  vehicleId: string;
+  vehicleName: string;
+  type: string;
+  status: string;
+  latitude: number | null;
+  longitude: number | null;
+  lastLocationUpdate: string | null;
+  driverName: string | null;
+  driverId: string | null;
+  driverStatus: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -75,5 +89,19 @@ export class VehicleService {
 
   getVehicleFuel(id: string): Observable<any> {
     return this.http.get(`${this.API_URL}/${id}/fuel`);
+  }
+
+  /**
+   * Update vehicle's current GPS location
+   */
+  updateLocation(vehicleId: string, latitude: number, longitude: number): Observable<any> {
+    return this.http.patch(`${this.API_URL}/${vehicleId}/location`, { latitude, longitude });
+  }
+
+  /**
+   * Get all vehicle locations for real-time map (admin only)
+   */
+  getAllVehicleLocations(): Observable<VehicleLocation[]> {
+    return this.http.get<VehicleLocation[]>(`${this.API_URL}/locations`);
   }
 }

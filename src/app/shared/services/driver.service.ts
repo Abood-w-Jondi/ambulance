@@ -135,4 +135,18 @@ export class DriverService {
   getDriverEarnings(id: string): Observable<any> {
     return this.http.get(`${this.API_URL}/${id}/earnings`);
   }
+
+  /**
+   * Get driver record by user ID
+   */
+  getDriverByUserId(userId: string): Observable<Driver> {
+    return this.http.get<Driver>(`${this.API_URL}/user/${userId}`);
+  }
+
+  /**
+   * Get current logged-in driver's record
+   */
+  getCurrentDriver(): Observable<Driver> {
+    return this.http.get<Driver>(`${this.API_URL}/me`);
+  }
 }

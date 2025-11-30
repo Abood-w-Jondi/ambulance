@@ -1,0 +1,486 @@
+<div class="container-fluid py-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">
+          <i class="fas" [ngClass]="{'fa-plus': isCreateMode, 'fa-edit': isEditMode, 'fa-eye': isViewMode}" class="me-2"></i>
+          {{ pageTitle }}
+        </h2>
+        <button class="btn btn-secondary" (click)="cancel()">
+          <i class="fas fa-arrow-right me-2"></i>
+          رجوع
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">جاري التحميل...</span>
+    </div>
+  </div>
+
+  <form *ngIf="!isLoading" (ngSubmit)="save()">
+    <div class="row">
+      <!-- Patient Information Section -->
+      <div class="col-12 mb-4">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-user-injured me-2"></i>
+              معلومات المريض
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">اسم المريض<span class="text-danger">*</span></label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.patientName"
+                    name="patientName"
+                    [disabled]="isViewMode"
+                    required>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">رقم الهاتف</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.patientContact"
+                    name="patientContact"
+                    [disabled]="isViewMode"
+                    placeholder="05XX-XXX-XXX">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">التشخيص</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.diagnosis"
+                    name="diagnosis"
+                    [disabled]="isViewMode">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="mb-3">
+                  <label class="form-label">نوع النقل</label>
+                  <app-transportation-type-search
+                    [disabled]="isViewMode"
+                    [selectedTypeName]="tripForm.transportationTypeName"
+                    (typeSelected)="onTransportationTypeSelected($event)">
+                  </app-transportation-type-search>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trip Information Section -->
+      <div class="col-12 mb-4">
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-route me-2"></i>
+              معلومات الرحلة
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">اليوم</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.day"
+                    name="day"
+                    [disabled]="isViewMode"
+                    min="1" max="31">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">الشهر</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.month"
+                    name="month"
+                    [disabled]="isViewMode"
+                    min="1" max="12">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">السنة</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.year"
+                    name="year"
+                    [disabled]="isViewMode">
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">من (موقع الإنطلاق)</label>
+                  <app-location-search
+                    [disabled]="isViewMode"
+                    [selectedLocationName]="tripForm.transferFrom"
+                    (locationSelected)="onLocationFromSelected($event)">
+                  </app-location-search>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">إلى (الوجهة)</label>
+                  <app-location-search
+                    [disabled]="isViewMode"
+                    [selectedLocationName]="tripForm.transferTo"
+                    (locationSelected)="onLocationToSelected($event)">
+                  </app-location-search>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">قراءة العداد - البداية</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.start"
+                    name="start"
+                    [disabled]="isViewMode"
+                    min="0">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">قراءة العداد - النهاية</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.end"
+                    name="end"
+                    [disabled]="isViewMode"
+                    min="0">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">الديزل المستخدم (لتر)</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.diesel"
+                    name="diesel"
+                    [disabled]="isViewMode"
+                    min="0"
+                    step="0.01">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">نوع الرحلة</label>
+                  <select 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.tripType"
+                    name="tripType"
+                    [disabled]="isViewMode">
+                    <option [ngValue]="null">اختر نوع الرحلة</option>
+                    <option *ngFor="let type of tripTypes" [ngValue]="type">{{ type }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">حالة النقل</label>
+                  <select 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.transferStatus"
+                    name="transferStatus"
+                    [disabled]="isViewMode">
+                    <option *ngFor="let status of transferStatuses" [ngValue]="status">{{ status }}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">قيمة YMD</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.ymdValue"
+                    name="ymdValue"
+                    [disabled]="isViewMode"
+                    min="0" max="365">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">فترة YMD</label>
+                  <select 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.ymdPeriod"
+                    name="ymdPeriod"
+                    [disabled]="isViewMode">
+                    <option value="">اختر الفترة</option>
+                    <option *ngFor="let period of ymdPeriods" [value]="period">{{ period }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personnel & Vehicle Section -->
+      <div class="col-12 mb-4">
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-users me-2"></i>
+              الطاقم والمركبة
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">السائق</label>
+                  <select 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.driverId"
+                    name="driverId"
+                    [disabled]="isViewMode">
+                    <option value="">اختر السائق</option>
+                    <option *ngFor="let driver of drivers" [value]="driver.id">
+                      {{ driver.arabicName }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">المسعف</label>
+                  <select 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.paramedicId"
+                    name="paramedicId"
+                    [disabled]="isViewMode">
+                    <option value="">اختر المسعف</option>
+                    <option *ngFor="let paramedic of paramedics" [value]="paramedic.id">
+                      {{ paramedic.arabicName }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">المركبة<span class="text-danger">*</span></label>
+                  <select 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.vehicleId"
+                    name="vehicleId"
+                    [disabled]="isViewMode || isEditMode"
+                    (change)="onVehicleChange()"
+                    required>
+                    <option value="">اختر المركبة</option>
+                    <option *ngFor="let vehicle of vehicles" [value]="vehicle.id">
+                      {{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Information Section -->
+      <div class="col-12 mb-4">
+        <div class="card">
+          <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">
+              <i class="fas fa-dollar-sign me-2"></i>
+              المعلومات المالية
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">السعر الكلي</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.totalPrice"
+                    name="totalPrice"
+                    [disabled]="isViewMode"
+                    min="0"
+                    step="0.01">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">المبلغ المدفوع</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.payedPrice"
+                    name="payedPrice"
+                    [disabled]="isViewMode"
+                    min="0"
+                    step="0.01">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">حصة المسعف</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.paramedicShare"
+                    name="paramedicShare"
+                    [disabled]="isViewMode"
+                    min="0"
+                    step="0.01">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">المصاريف الأخرى</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.otherExpenses"
+                    name="otherExpenses"
+                    [disabled]="isViewMode"
+                    min="0"
+                    step="0.01">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">حصة السائق</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.driverShare"
+                    name="driverShare"
+                    [disabled]="isViewMode"
+                    min="0"
+                    step="0.01">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">حصة المعدات/الشركة</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="tripForm.eqShare"
+                    name="eqShare"
+                    [disabled]="isViewMode"
+                    min="0"
+                    step="0.01">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row" *ngIf="!isViewMode">
+      <div class="col-12">
+        <div class="d-flex justify-content-between">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="cancel()"
+            [disabled]="isSaving">
+            <i class="fas fa-times me-2"></i>
+            إلغاء
+          </button>
+          <div class="d-flex gap-2">
+            <button 
+              type="button" 
+              class="btn btn-success"
+              *ngIf="canCloseTrip()"
+              (click)="openCloseConfirmModal()"
+              [disabled]="isSaving">
+              <i class="fas fa-lock me-2"></i>
+              إغلاق الرحلة
+            </button>
+            <button 
+              type="submit" 
+              class="btn btn-primary"
+              [disabled]="isSaving">
+              <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-2"></span>
+              <i *ngIf="!isSaving" class="fas fa-save me-2"></i>
+              {{ isCreateMode ? 'إنشاء' : 'حفظ التعديلات' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Close Trip Confirmation Modal -->
+<div class="modal fade" [class.show]="showCloseConfirmModal" [style.display]="showCloseConfirmModal ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-lock me-2"></i>
+          تأكيد إغلاق الرحلة
+        </h5>
+        <button type="button" class="btn-close" (click)="closeConfirmModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong>تحذير:</strong> بعد إغلاق الرحلة، سيتم معالجة المعاملات المالية ولن يمكن التراجع عن ذلك.
+        </div>
+        <p>
+          هل أنت متأكد من رغبتك في إغلاق هذه الرحلة؟
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeConfirmModal()">
+          <i class="fas fa-times me-2"></i>
+          إلغاء
+        </button>
+        <button type="button" class="btn btn-success" (click)="confirmCloseTrip()">
+          <i class="fas fa-check me-2"></i>
+          تأكيد الإغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showCloseConfirmModal" *ngIf="showCloseConfirmModal"></div>
+
