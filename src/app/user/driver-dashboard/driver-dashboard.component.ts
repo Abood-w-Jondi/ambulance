@@ -115,7 +115,7 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
         html: `
           <div class="marker-pulse"></div>
           <div class="marker-dot">
-            <i class="fas fa-ambulance"></i>
+            <i class="fas fa-ambulance" style="font-size: 1.5rem;"></i>
           </div>
         `,
         iconSize: [40, 40],

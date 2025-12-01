@@ -52,7 +52,7 @@ export class VehicleMapComponent implements OnInit, AfterViewInit, OnDestroy {
   // Status Colors
   private readonly STATUS_COLORS: Record<string, string> = {
     'متاح': '#28a745',          
-    'في الطريق للمريض': '#ffc107', 
+    'في الطريق للمريض': '#e2af19ff', 
     'في الموقع': '#17a2b8',        
     'في الطريق للمستشفى': '#fd7e14', 
     'في الوجهة': '#6f42c1',        
@@ -179,8 +179,8 @@ export class VehicleMapComponent implements OnInit, AfterViewInit, OnDestroy {
       html: `
         <div style="position: relative;">
           ${pulseHtml}
-          <div class="marker-pin-modern" style="background-color: ${color}; border-color: white;">
-            <i class="fas fa-ambulance"></i>
+          <div class="marker-pin-modern" style="color: ${color}; border-color: white;">
+            <i class="fas fa-ambulance" style="font-size: 1.5rem;"></i>
           </div>
         </div>
       `,
