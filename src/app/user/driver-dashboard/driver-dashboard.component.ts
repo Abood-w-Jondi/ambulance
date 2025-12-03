@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ToastService } from '../../shared/services/toast.service';
@@ -48,6 +48,9 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
   
   // Subscriptions
   private subscriptions: Subscription[] = [];
+
+  // Admin detection
+  isAdmin = computed(() => this.authService.isAdmin());
 
   constructor(
     private router: Router,
@@ -254,9 +257,26 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   endShift(): void {
-    this.driverStatus.set('غير متاح');
-    this.locationTrackingService.stopTracking();
-    this.toastService.info('تم إنهاء الدوام');
+    const confirmed = confirm('هل أنت متأكد من إنهاء الدوام؟ سيتم تسجيل خروجك وتحديث حالتك إلى "غير متصل".');
+
+    if (!confirmed) return;
+
+    // Call logout API which will:
+    // 1. Update driver status to غير متصل
+    // 2. Log the action in audit logs
+    // 3. Clear authentication tokens
+    // 4. Redirect to login
+    this.authService.logout().subscribe({
+      next: () => {
+        this.locationTrackingService.stopTracking();
+        this.toastService.success('تم إنهاء الدوام بنجاح');
+        // Router will handle redirect to login
+      },
+      error: (err) => {
+        console.error('Logout failed:', err);
+        this.toastService.error('فشل إنهاء الدوام');
+      }
+    });
   }
 
   openFuelModal(): void {
@@ -301,5 +321,9 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     const pos = this.currentPosition();
     if (!pos) return 'غير محدد';
     return `${pos.latitude.toFixed(6)}, ${pos.longitude.toFixed(6)}`;
+  }
+
+  returnToAdmin(): void {
+    this.router.navigate(['/admin/admin-dashboard']);
   }
 }

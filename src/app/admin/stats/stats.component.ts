@@ -1,6 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { GlobalVarsService } from '../../global-vars.service';
+import { StatsService, StatisticsResponse } from '../../shared/services/stats.service';
+import { ToastService } from '../../shared/services/toast.service';
 
 // واجهة لبطاقات الملخص الإحصائي
 interface StatCard {
@@ -29,108 +32,150 @@ interface CostItem {
   selector: 'app-stats',
   standalone: true,
   templateUrl: './stats.component.html',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   styleUrl: './stats.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StatsComponent {
-  constructor(private globalVarsService: GlobalVarsService) {
+export class StatsComponent implements OnInit {
+  constructor(
+    private globalVarsService: GlobalVarsService,
+    private statsService: StatsService,
+    private toastService: ToastService
+  ) {
     this.globalVarsService.setGlobalHeader('الإحصائيات');
+  }
+
+  ngOnInit(): void {
+    this.loadStats();
   }
 
   // --- الحالة والبيانات ---
   selectedRange = signal<'week' | 'month' | 'custom'>('week');
-  
-  // بيانات الأسبوع (البيانات الأصلية)
-  private statsWeek: StatCard[] = [
-    { title: 'إجمالي الرحلات', value: '1,204', trend: '+5%', trendClass: 'text-success-up' },
-    { title: 'إجمالي الإيرادات', value: '₪180.6K', trend: '+8%', trendClass: 'text-success-up' },
-    { title: 'إجمالي التكاليف', value: '₪95.5K', trend: '-2%', trendClass: 'text-danger-down' },
-    { title: 'صافي الأرباح', value: '₪85.1K', trend: '+15%', trendClass: 'text-success-up' },
-  ];
+  customStartDate = signal<string>('');
+  customEndDate = signal<string>('');
+  isLoading = signal<boolean>(false);
+  statsData = signal<StatisticsResponse | null>(null);
 
-  private transportationsWeek: TransportationDay[] = [
-    { day: 'أحد', countPercentage: 70, isPeak: false },
-    { day: 'إثن', countPercentage: 80, isPeak: false },
-    { day: 'ثلث', countPercentage: 60, isPeak: false },
-    { day: 'أرب', countPercentage: 90, isPeak: false },
-    { day: 'خم', countPercentage: 40, isPeak: false },
-    { day: 'جمعة', countPercentage: 100, isPeak: true }, // الذروة
-    { day: 'سبت', countPercentage: 80, isPeak: false },
-  ];
+  // Load statistics from API
+  loadStats(): void {
+    this.isLoading.set(true);
+    const range = this.selectedRange();
 
-  private costBreakdownWeek: CostItem[] = [
-    { label: 'الوقود', value: '₪42.9K', percentage: 45, color: 'info' },
-    { label: 'الصيانة', value: '₪28.6K', percentage: 30, color: 'success' },
-    { label: 'الرواتب', value: '₪14.3K', percentage: 15, color: 'warning' },
-    { label: 'أخرى', value: '₪9.7K', percentage: 10, color: 'secondary' }
-  ];
-  
-  // بيانات الشهر (بيانات وهمية للتجربة)
-  private statsMonth: StatCard[] = [
-    { title: 'إجمالي الرحلات', value: '4,500', trend: '+12%', trendClass: 'text-success-up' },
-    { title: 'إجمالي الإيرادات', value: '₪720.5K', trend: '+18%', trendClass: 'text-success-up' },
-    { title: 'إجمالي التكاليف', value: '₪380.1K', trend: '+5%', trendClass: 'text-danger-down' },
-    { title: 'صافي الأرباح', value: '₪340.4K', trend: '+30%', trendClass: 'text-success-up' },
-  ];
+    let params: any = { period: range };
 
-  private transportationsMonth: TransportationDay[] = [
-    // بيانات شهرية وهمية
-    { day: 'أسب1', countPercentage: 70, isPeak: false },
-    { day: 'أسب2', countPercentage: 85, isPeak: false },
-    { day: 'أسب3', countPercentage: 95, isPeak: true }, 
-    { day: 'أسب4', countPercentage: 65, isPeak: false },
-  ];
+    if (range === 'custom') {
+      const start = this.customStartDate();
+      const end = this.customEndDate();
 
-  private costBreakdownMonth: CostItem[] = [
-    { label: 'الوقود', value: '₪171.1K', percentage: 40, color: 'info' }, 
-    { label: 'الصيانة', value: '₪114.0K', percentage: 25, color: 'success' },
-    { label: 'الرواتب', value: '₪76.0K', percentage: 20, color: 'warning' },
-    { label: 'أخرى', value: '₪19.0K', percentage: 15, color: 'secondary' }
-  ];
+      if (!start || !end) {
+        this.toastService.error('الرجاء تحديد تاريخ البداية والنهاية');
+        this.isLoading.set(false);
+        return;
+      }
 
-  // بيانات مخصصة (قابلة للتغيير عند تحديد نطاق مخصص)
-  private statsCustom: StatCard[] = [
-    { title: 'إجمالي الرحلات', value: 'N/A', trend: 'N/A', trendClass: 'text-secondary' },
-    // ...
-  ];
-  
-  // بيانات محسوبة بناءً على النطاق المحدد
-  stats = computed(() => {
-    switch (this.selectedRange()) {
-      case 'month':
-        return this.statsMonth;
-      case 'custom':
-        // يمكنك هنا استدعاء خدمة لجلب بيانات مخصصة بناءً على مدخلات المستخدم
-        return this.statsCustom;
-      case 'week':
-      default:
-        return this.statsWeek;
+      params.startDate = start;
+      params.endDate = end;
     }
+
+    this.statsService.getStatistics(params).subscribe({
+      next: (data) => {
+        this.statsData.set(data);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading statistics:', error);
+        this.toastService.error('فشل تحميل الإحصائيات');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  // بيانات محسوبة بناءً على البيانات الحقيقية من API
+  stats = computed((): StatCard[] => {
+    const data = this.statsData();
+    if (!data) {
+      return [
+        { title: 'إجمالي الرحلات', value: '...', trend: '...', trendClass: 'text-secondary' },
+        { title: 'إجمالي الإيرادات', value: '...', trend: '...', trendClass: 'text-secondary' },
+        { title: 'إجمالي التكاليف', value: '...', trend: '...', trendClass: 'text-secondary' },
+        { title: 'صافي الأرباح', value: '...', trend: '...', trendClass: 'text-secondary' },
+      ];
+    }
+
+    const totalCosts = (data.fuel.totalCost || 0) + (data.maintenance.totalCost || 0);
+    const netProfit = (data.revenue.totalPayed || 0) - totalCosts;
+
+    return [
+      {
+        title: 'إجمالي الرحلات',
+        value: (data.trips.total || 0).toString(),
+        trend: 'N/A',
+        trendClass: 'text-secondary'
+      },
+      {
+        title: 'إجمالي الإيرادات',
+        value: `₪${((data.revenue.totalRevenue || 0) / 1000).toFixed(1)}K`,
+        trend: 'N/A',
+        trendClass: 'text-secondary'
+      },
+      {
+        title: 'إجمالي التكاليف',
+        value: `₪${(totalCosts / 1000).toFixed(1)}K`,
+        trend: 'N/A',
+        trendClass: 'text-secondary'
+      },
+      {
+        title: 'صافي الأرباح',
+        value: `₪${(netProfit / 1000).toFixed(1)}K`,
+        trend: 'N/A',
+        trendClass: netProfit >= 0 ? 'text-success-up' : 'text-danger-down'
+      },
+    ];
   });
 
-  transportations = computed(() => {
-    switch (this.selectedRange()) {
-      case 'month':
-        return this.transportationsMonth;
-      case 'custom':
-        return []; // بيانات مخصصة فارغة افتراضياً
-      case 'week':
-      default:
-        return this.transportationsWeek;
-    }
+  transportations = computed((): TransportationDay[] => {
+    // Placeholder for now - would need time-series data from backend
+    return [];
   });
 
-  costBreakdown = computed(() => {
-    switch (this.selectedRange()) {
-      case 'month':
-        return this.costBreakdownMonth;
-      case 'custom':
-        return []; // بيانات مخصصة فارغة افتراضياً
-      case 'week':
-      default:
-        return this.costBreakdownWeek;
-    }
+  costBreakdown = computed((): CostItem[] => {
+    const data = this.statsData();
+    if (!data) return [];
+
+    const fuelCost = data.fuel.totalCost || 0;
+    const maintenanceCost = data.maintenance.totalCost || 0;
+    const salaryCost = (data.revenue.totalDriverShare || 0) + (data.revenue.totalParamedicShare || 0);
+    const otherCost = 0; // Could include other expenses from trips
+
+    const total = fuelCost + maintenanceCost + salaryCost + otherCost;
+    if (total === 0) return [];
+
+    return [
+      {
+        label: 'الوقود',
+        value: `₪${(fuelCost / 1000).toFixed(1)}K`,
+        percentage: Math.round((fuelCost / total) * 100),
+        color: 'info'
+      },
+      {
+        label: 'الصيانة',
+        value: `₪${(maintenanceCost / 1000).toFixed(1)}K`,
+        percentage: Math.round((maintenanceCost / total) * 100),
+        color: 'success'
+      },
+      {
+        label: 'الرواتب',
+        value: `₪${(salaryCost / 1000).toFixed(1)}K`,
+        percentage: Math.round((salaryCost / total) * 100),
+        color: 'warning'
+      },
+      {
+        label: 'أخرى',
+        value: `₪${(otherCost / 1000).toFixed(1)}K`,
+        percentage: Math.round((otherCost / total) * 100),
+        color: 'secondary'
+      }
+    ].filter(item => item.percentage > 0);
   });
 
   // عنوان ديناميكي للرسم البياني العمودي
@@ -152,6 +197,47 @@ export class StatsComponent {
       return costs ? costs.value : '₪0K';
   });
 
+  // --- Methods ---
+
+  /**
+   * Called when user selects a different range (week/month/custom)
+   */
+  onRangeChange(range: 'week' | 'month' | 'custom'): void {
+    this.selectedRange.set(range);
+    if (range !== 'custom') {
+      // Load stats immediately for week/month
+      this.loadStats();
+    }
+    // For custom, wait for user to click "تطبيق" button
+  }
+
+  /**
+   * Apply custom date range filter
+   */
+  applyCustomRange(): void {
+    const start = this.customStartDate();
+    const end = this.customEndDate();
+
+    if (!start || !end) {
+      this.toastService.error('الرجاء تحديد تاريخ البداية والنهاية');
+      return;
+    }
+
+    if (new Date(start) > new Date(end)) {
+      this.toastService.error('تاريخ البداية يجب أن يكون قبل تاريخ النهاية');
+      return;
+    }
+
+    this.loadStats();
+  }
+
+  /**
+   * Refresh current stats
+   */
+  refreshStats(): void {
+    this.loadStats();
+  }
+
   // --- دالة لحساب الإزاحة لـ SVG (stroke-dashoffset) ---
   /**
    * تحسب الإزاحة لـ stroke-dashoffset لكل جزء من الرسم البياني الدائري.
@@ -159,7 +245,7 @@ export class StatsComponent {
   calculateOffset(label: string): string {
     const data = this.costBreakdown();
     let offset = 0;
-    
+
     // إيجاد فهرس العنصر الحالي
     const currentIndex = data.findIndex(item => item.label === label);
 
@@ -169,7 +255,7 @@ export class StatsComponent {
     for (let i = 0; i < currentIndex; i++) {
         offset += data[i].percentage;
     }
-    
+
     // الإزاحة هي سالب النسبة المئوية التراكمية للأجزاء السابقة
     return '-' + offset;
   }

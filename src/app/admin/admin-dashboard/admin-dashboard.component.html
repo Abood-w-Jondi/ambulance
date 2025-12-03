@@ -1,6 +1,21 @@
 <div class="container-fluid bg-light min-vh-100 font-inter" dir="rtl">
   <div class="container py-4">
-    
+
+    <!-- Admin Actions Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="fw-bold mb-0">لوحة التحكم</h2>
+      <div class="btn-group" role="group">
+        <button class="btn btn-outline-primary" (click)="switchToDriverView()">
+          <i class="fas fa-ambulance me-2"></i>
+          عرض السائق
+        </button>
+        <button class="btn btn-outline-danger" (click)="logout()">
+          <i class="fas fa-sign-out-alt me-2"></i>
+          تسجيل الخروج
+        </button>
+      </div>
+    </div>
+
     @if (isLoading()) {
       <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
         <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">

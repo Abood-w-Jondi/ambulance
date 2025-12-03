@@ -3,15 +3,26 @@ import { ToastService } from '../../shared/services/toast.service';
 import { CommonModule } from '@angular/common';
 import { GlobalVarsService } from '../../global-vars.service';
 import { VehicleService } from '../../shared/services/vehicle.service';
-import { VehicleStatus } from '../../shared/models'; // Assuming VehicleStatus is defined in models
+import { DriverService } from '../../shared/services/driver.service';
+import { VehicleStatus, DriverStatus } from '../../shared/models'; // Assuming VehicleStatus is defined in models
 import {VehicleCookieService} from "../../shared/services/vehicle-cookie.service";
-// Interface definition to represent each status button
+
+// Interface definition to represent each vehicle status button
 interface StatusAction {
   label: string;
   icon: string;
   btnClass: string; // Bootstrap class for color
   textClass?: string; // Text color class (optional)
   status: VehicleStatus; // API status value
+}
+
+// Interface for driver status buttons
+interface DriverStatusAction {
+  label: string;
+  icon: string;
+  btnClass: string;
+  textClass?: string;
+  status: DriverStatus;
 }
 
 @Component({
@@ -25,31 +36,46 @@ interface StatusAction {
 })
 export class StatusUpdateComponent implements OnInit {
   constructor(
-    private globalVarsService: GlobalVarsService, 
+    private globalVarsService: GlobalVarsService,
     private toastService: ToastService,
-    private vehicleService: VehicleService, // Inject the service
+    private vehicleService: VehicleService,
+    private driverService: DriverService,
     private vehicleCookieService: VehicleCookieService
   ) {
-    this.globalVarsService.setGlobalHeader('الحالة الحالية');
+    this.globalVarsService.setGlobalHeader('تحديث الحالة');
     this.vehicleId = this.vehicleCookieService.getSelectedVehicleId() || '';
   }
-  private vehicleId: string = ''
-  // ⚠️ Placeholder: In a real app, this ID would come from the Auth/Driver service
-  // For demonstration, we'll use a hardcoded value.
+  private vehicleId: string = '';
+  private driverId: string = '';
 
-  // Current status data
-  currentStatus = {
+  // Driver personal status
+  currentDriverStatus = {
     title: 'جاري التحميل...',
-    description: 'جاري جلب الحالة الحالية للمركبة.',
+    description: 'جاري جلب حالتك الشخصية.',
     icon: 'fa-solid fa-spinner fa-spin',
-    alertClass: 'alert-primary' // Bootstrap class for background
+    alertClass: 'alert-primary'
   };
-  
+
+  // Vehicle status
+  currentVehicleStatus = {
+    title: 'جاري التحميل...',
+    description: 'جاري جلب حالة المركبة.',
+    icon: 'fa-solid fa-spinner fa-spin',
+    alertClass: 'alert-primary'
+  };
+
   // Additional info - will be updated on load
   additionalInfo = {
     startTime: 'N/A',
     currentLocation: 'جاري التحديث'
   }
+
+  // Driver status action buttons
+  driverStatusActions: DriverStatusAction[] = [
+    { label: 'متاح', icon: 'fa-solid fa-user-check', btnClass: 'btn-success', textClass: 'text-white', status: 'متاح' },
+    { label: 'في رحلة', icon: 'fa-solid fa-truck-medical', btnClass: 'btn-info', textClass: 'text-white', status: 'في رحلة' },
+    { label: 'غير متصل', icon: 'fa-solid fa-user-slash', btnClass: 'btn-secondary', textClass: 'text-white', status: 'غير متصل' }
+  ];
 
   // Main action buttons array - **Updated with API status values (VehicleStatus)**
   mainActions: StatusAction[] = [
@@ -69,13 +95,34 @@ export class StatusUpdateComponent implements OnInit {
 
 
   ngOnInit(): void {
-    this.loadCurrentStatus();
+    this.loadDriverStatus();
+    this.loadVehicleStatus();
+  }
+
+  // Load driver personal status
+  loadDriverStatus(): void {
+    this.driverService.getCurrentDriver().subscribe({
+      next: (driver) => {
+        this.driverId = driver.id;
+        this.updateDriverUIStatus(driver.driver_status);
+      },
+      error: (err) => {
+        console.error('Failed to load driver status:', err);
+        this.currentDriverStatus = {
+          title: 'فشل التحميل',
+          description: 'تعذر جلب حالتك الشخصية من الخادم.',
+          icon: 'fa-solid fa-wifi-slash',
+          alertClass: 'alert-danger'
+        };
+        this.toastService.error('فشل جلب الحالة الشخصية.', 5000);
+      }
+    });
   }
 
   // Function to load the current vehicle status
-  loadCurrentStatus(): void {
+  loadVehicleStatus(): void {
     if (!this.vehicleId) {
-      this.currentStatus = {
+      this.currentVehicleStatus = {
         title: 'خطأ',
         description: 'لم يتم العثور على مُعرف المركبة.',
         icon: 'fa-solid fa-triangle-exclamation',
@@ -87,119 +134,159 @@ export class StatusUpdateComponent implements OnInit {
 
     this.vehicleService.getVehicleById(this.vehicleId).subscribe({
       next: (vehicle) => {
-        this.updateUIStatus(vehicle.status);
-        // Note: Start time and location are simulated here as they are not returned 
+        this.updateVehicleUIStatus(vehicle.status);
+        // Note: Start time and location are simulated here as they are not returned
         // in the current getVehicleById API response.
-        this.additionalInfo.startTime = '14:30'; 
+        this.additionalInfo.startTime = '14:30';
         this.additionalInfo.currentLocation = 'مُحدد بواسطة GPS';
       },
       error: (err) => {
         console.error('Failed to load vehicle status:', err);
-        this.currentStatus = {
+        this.currentVehicleStatus = {
           title: 'فشل التحميل',
           description: 'تعذر جلب حالة المركبة من الخادم.',
           icon: 'fa-solid fa-wifi-slash',
           alertClass: 'alert-danger'
         };
-        this.toastService.error('فشل جلب الحالة الحالية.', 5000);
+        this.toastService.error('فشل جلب حالة المركبة.', 5000);
       }
     });
   }
 
-  // Helper to map API status to UI display properties
-  private getStatusDisplayProps(status: VehicleStatus): { title: string, icon: string, alertClass: string } {
-    const allActions = [...this.mainActions, ...this.offDutyActions];
-    const action = allActions.find(a => a.status === status);
-    
+  // Helper to map driver status to UI display properties
+  private getDriverStatusDisplayProps(status: DriverStatus): { title: string, icon: string, alertClass: string } {
+    const action = this.driverStatusActions.find(a => a.status === status);
+
     if (action) {
-      // Find the corresponding button and use its label, icon, and btnClass (as alertClass)
       let alertClassMap = action.btnClass.replace('btn-', 'alert-');
-      if (alertClassMap === 'alert-warning') {
-        alertClassMap = 'alert-warning'; // Keep the warning class for yellow
-      } else if (alertClassMap === 'alert-info') {
-        alertClassMap = 'alert-info'; // Keep info for blue
-      } else if (alertClassMap === 'alert-danger') {
-        alertClassMap = 'alert-danger';
-      } else if (alertClassMap === 'alert-success') {
-        alertClassMap = 'alert-success';
-      } else {
-         alertClassMap = 'alert-secondary'; // Default for secondary/other
-      }
-      
-      return { 
-        title: action.label, 
-        icon: action.icon, 
+      return {
+        title: action.label,
+        icon: action.icon,
         alertClass: alertClassMap
       };
     }
-    
-    // Default fallback if status is unknown
-    return { 
-      title: status, 
-      icon: 'fa-solid fa-question-circle', 
-      alertClass: 'alert-secondary' 
+
+    return {
+      title: status,
+      icon: 'fa-solid fa-question-circle',
+      alertClass: 'alert-secondary'
     };
   }
 
-  // Updates the component's state based on the provided VehicleStatus
-  private updateUIStatus(newStatus: VehicleStatus): void {
-    const props = this.getStatusDisplayProps(newStatus);
-    this.currentStatus.title = props.title;
-    this.currentStatus.icon = props.icon;
-    this.currentStatus.alertClass = props.alertClass;
-    
-    // Set description based on status title
+  // Updates driver UI status
+  private updateDriverUIStatus(newStatus: DriverStatus): void {
+    const props = this.getDriverStatusDisplayProps(newStatus);
+    this.currentDriverStatus.title = props.title;
+    this.currentDriverStatus.icon = props.icon;
+    this.currentDriverStatus.alertClass = props.alertClass;
+
     switch(newStatus) {
       case 'متاح':
-        this.currentStatus.description = 'المركبة جاهزة للاستجابة للحالات.';
+        this.currentDriverStatus.description = 'أنت متاح لاستقبال الرحلات.';
         break;
-      case 'في الطريق للمريض':
-        this.currentStatus.description = 'أنت حالياً في الطريق إلى مريض.';
+      case 'في رحلة':
+        this.currentDriverStatus.description = 'أنت حالياً في رحلة نشطة.';
         break;
-      case 'في الموقع':
-        this.currentStatus.description = 'أنت متواجد حالياً في موقع المريض.';
-        break;
-      case 'في الطريق للمستشفى':
-        this.currentStatus.description = 'أنت حالياً في الطريق لنقل المريض إلى المستشفى/الوجهة.';
-        break;
-      case 'في الوجهة':
-        this.currentStatus.description = 'وصلت إلى المستشفى/الوجهة.';
-        break;
-      case 'خارج الخدمة':
-        this.currentStatus.description = 'المركبة غير متاحة مؤقتاً (استراحة، صيانة، إلخ).';
-        break;
-      case 'إنهاء الخدمة':
-        this.currentStatus.description = 'تم إنهاء المناوبة لهذا اليوم.';
+      case 'غير متصل':
+        this.currentDriverStatus.description = 'أنت غير متصل حالياً.';
         break;
       default:
-        this.currentStatus.description = 'حالة غير معروفة.';
+        this.currentDriverStatus.description = 'حالة غير معروفة.';
+    }
+  }
+
+  // Helper to map vehicle status to UI display properties
+  private getVehicleStatusDisplayProps(status: VehicleStatus): { title: string, icon: string, alertClass: string } {
+    const allActions = [...this.mainActions, ...this.offDutyActions];
+    const action = allActions.find(a => a.status === status);
+
+    if (action) {
+      let alertClassMap = action.btnClass.replace('btn-', 'alert-');
+      return {
+        title: action.label,
+        icon: action.icon,
+        alertClass: alertClassMap
+      };
+    }
+
+    return {
+      title: status,
+      icon: 'fa-solid fa-question-circle',
+      alertClass: 'alert-secondary'
+    };
+  }
+
+  // Updates vehicle UI status
+  private updateVehicleUIStatus(newStatus: VehicleStatus): void {
+    const props = this.getVehicleStatusDisplayProps(newStatus);
+    this.currentVehicleStatus.title = props.title;
+    this.currentVehicleStatus.icon = props.icon;
+    this.currentVehicleStatus.alertClass = props.alertClass;
+
+    switch(newStatus) {
+      case 'متاح':
+        this.currentVehicleStatus.description = 'المركبة جاهزة للاستجابة للحالات.';
+        break;
+      case 'في الطريق للمريض':
+        this.currentVehicleStatus.description = 'المركبة في الطريق إلى مريض.';
+        break;
+      case 'في الموقع':
+        this.currentVehicleStatus.description = 'المركبة متواجدة في موقع المريض.';
+        break;
+      case 'في الطريق للمستشفى':
+        this.currentVehicleStatus.description = 'المركبة في الطريق للمستشفى/الوجهة.';
+        break;
+      case 'في الوجهة':
+        this.currentVehicleStatus.description = 'المركبة وصلت إلى المستشفى/الوجهة.';
+        break;
+      case 'خارج الخدمة':
+        this.currentVehicleStatus.description = 'المركبة غير متاحة مؤقتاً (استراحة، صيانة، إلخ).';
+        break;
+      case 'إنهاء الخدمة':
+        this.currentVehicleStatus.description = 'تم إنهاء خدمة المركبة لهذا اليوم.';
+        break;
+      default:
+        this.currentVehicleStatus.description = 'حالة غير معروفة.';
     }
   }
 
 
-  // تحديث الحالة مع إشعار Toast وباستدعاء الـ API
-  updateStatus(action: StatusAction) {
+  // Update driver personal status
+  updateDriverStatus(action: DriverStatusAction) {
+    if (!this.driverId) {
+      this.toastService.error('تعذر تحديث الحالة: مُعرف السائق مفقود.', 5000);
+      return;
+    }
+
+    this.driverService.updateStatus(this.driverId, action.status).subscribe({
+      next: () => {
+        this.updateDriverUIStatus(action.status);
+        this.toastService.success(`تم تحديث حالتك إلى: ${action.label}`, 3000);
+      },
+      error: (err) => {
+        console.error('Driver status update failed:', err);
+        this.toastService.error(`فشل تحديث الحالة إلى ${action.label}.`, 5000);
+      }
+    });
+  }
+
+  // Update vehicle status
+  updateVehicleStatus(action: StatusAction) {
     if (!this.vehicleId) {
       this.toastService.error('تعذر تحديث الحالة: مُعرف المركبة مفقود.', 5000);
       return;
     }
-    
-    // Determine if manualOverride is needed (e.g., for off-duty status that shouldn't affect a trip)
-    // Here, we assume status updates in the UI are manual and should override automatic trip status logic 
-    // for statuses like 'خارج الخدمة' or if an admin explicitly wants to control it.
-    // For this implementation, we will use 'manualOverride = false' for trip statuses to allow backend logic,
-    // and 'manualOverride = true' for end-of-shift statuses to explicitly decouple them from active trips.
+
     let manualOverride = ['خارج الخدمة', 'إنهاء الخدمة'].includes(action.status);
-    
+
     this.vehicleService.updateStatus(this.vehicleId, action.status, manualOverride).subscribe({
       next: () => {
-        // Update UI only after successful API call
-        this.updateUIStatus(action.status);
-        this.toastService.success(`تم تحديث الحالة إلى: ${action.label}`, 3000);
+        this.updateVehicleUIStatus(action.status);
+        this.toastService.success(`تم تحديث حالة المركبة إلى: ${action.label}`, 3000);
       },
       error: (err) => {
-        console.error('Status update failed:', err);
-        this.toastService.error(`فشل تحديث الحالة إلى ${action.label}.`, 5000);
+        console.error('Vehicle status update failed:', err);
+        this.toastService.error(`فشل تحديث حالة المركبة إلى ${action.label}.`, 5000);
       }
     });
   }

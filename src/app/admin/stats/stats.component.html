@@ -1,25 +1,77 @@
 <div class="d-flex flex-column min-vh-100 bg-white text-right" style="font-family: 'Inter', sans-serif;" dir="rtl">
 
   <main class="flex-grow-1 p-4" style="background-color: #f8f9fa;">
-    <div class="d-flex gap-2 overflow-auto pb-3 flex-nowrap">
-      <button class="btn rounded-pill px-4" 
-              [ngClass]="{'btn-primary': selectedRange() === 'week', 'btn-light text-dark': selectedRange() !== 'week'}" 
-              (click)="selectedRange.set('week')">
+    <!-- Range Selection Buttons -->
+    <div class="d-flex gap-2 overflow-auto pb-3 flex-nowrap align-items-center">
+      <button class="btn rounded-pill px-4"
+              [ngClass]="{'btn-primary': selectedRange() === 'week', 'btn-light text-dark': selectedRange() !== 'week'}"
+              (click)="onRangeChange('week')"
+              [disabled]="isLoading()">
         هذا الأسبوع
       </button>
-      <button class="btn rounded-pill px-4" 
-              [ngClass]="{'btn-primary': selectedRange() === 'month', 'btn-light text-dark': selectedRange() !== 'month'}" 
-              (click)="selectedRange.set('month')">
+      <button class="btn rounded-pill px-4"
+              [ngClass]="{'btn-primary': selectedRange() === 'month', 'btn-light text-dark': selectedRange() !== 'month'}"
+              (click)="onRangeChange('month')"
+              [disabled]="isLoading()">
         هذا الشهر
       </button>
-      
+
       <button class="btn btn-light rounded-pill px-4 text-dark d-flex align-items-center gap-2"
-              [ngClass]="{'btn-primary': selectedRange() === 'custom', 'btn-light text-dark': selectedRange() !== 'custom'}" 
-              (click)="selectedRange.set('custom')">
+              [ngClass]="{'btn-primary': selectedRange() === 'custom', 'btn-light text-dark': selectedRange() !== 'custom'}"
+              (click)="onRangeChange('custom')"
+              [disabled]="isLoading()">
         نطاق مخصص
         <i class="fas fa-calendar-alt"></i>
       </button>
+
+      <!-- Refresh Button -->
+      <button class="btn btn-outline-primary rounded-pill px-3 me-auto"
+              (click)="refreshStats()"
+              [disabled]="isLoading()">
+        <i class="fas fa-sync-alt" [class.fa-spin]="isLoading()"></i>
+        <span class="me-2">تحديث</span>
+      </button>
     </div>
+
+    <!-- Custom Date Range Picker -->
+    @if (selectedRange() === 'custom') {
+      <div class="card shadow-sm rounded-3 p-3 mb-3">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label fw-medium">من تاريخ</label>
+            <input type="date"
+                   class="form-control"
+                   [(ngModel)]="customStartDate"
+                   [disabled]="isLoading()">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-medium">إلى تاريخ</label>
+            <input type="date"
+                   class="form-control"
+                   [(ngModel)]="customEndDate"
+                   [disabled]="isLoading()">
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-primary w-100"
+                    (click)="applyCustomRange()"
+                    [disabled]="isLoading()">
+              <i class="fas fa-check me-2"></i>
+              تطبيق
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+        <p class="mt-3 text-secondary">جاري تحميل الإحصائيات...</p>
+      </div>
+    }
 
     <section class="row g-3 mb-4">
       @for (stat of stats(); track stat.title) {

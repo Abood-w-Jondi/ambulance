@@ -1,4 +1,16 @@
 <div class="container-fluid py-4" dir="rtl">
+  <!-- Admin Alert - Show only for admins -->
+  <div *ngIf="isAdmin()" class="alert alert-info d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <i class="fas fa-user-shield me-2"></i>
+      <strong>أنت مسجل كمسؤول</strong> - تعرض حالياً واجهة السائق
+    </div>
+    <button class="btn btn-sm btn-primary" (click)="returnToAdmin()">
+      <i class="fas fa-arrow-left me-2"></i>
+      العودة إلى لوحة الإدارة
+    </button>
+  </div>
+
   <!-- حالة السائق -->
   <div class="row mb-4">
     <div class="col-12">

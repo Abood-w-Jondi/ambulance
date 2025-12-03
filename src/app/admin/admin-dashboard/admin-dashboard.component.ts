@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { DashboardService, DashboardStats } from '../../shared/services/dashboard.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { GlobalVarsService } from '../../global-vars.service';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -20,7 +21,8 @@ export class AdminDashboardComponent implements OnInit {
     private dashboardService: DashboardService,
     private toastService: ToastService,
     private globalVars: GlobalVarsService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.globalVars.setGlobalHeader('لوحة التحكم');
   }
@@ -55,6 +57,23 @@ export class AdminDashboardComponent implements OnInit {
 
   navigateToVehicleMap(): void {
     this.router.navigate(['/admin/vehicle-map']);
+  }
+
+  switchToDriverView(): void {
+    this.router.navigate(['/user/driver-dashboard']);
+  }
+
+  logout(): void {
+    const confirmed = confirm('هل أنت متأكد من تسجيل الخروج؟');
+    if (!confirmed) return;
+
+    this.authService.logout().subscribe({
+      next: () => this.toastService.success('تم تسجيل الخروج بنجاح'),
+      error: (err) => {
+        console.error('Logout failed:', err);
+        this.toastService.error('فشل تسجيل الخروج');
+      }
+    });
   }
 
   getRecentTripIcon(status: string): string {

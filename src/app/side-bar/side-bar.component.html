@@ -92,6 +92,12 @@
           <span>المواقع الشائعة</span>
         </a>
       </li>
+      <li>
+        <a (click)="navigateTo('audit-logs')" [class.active]="isActive('audit-logs')">
+          <i class="fa-solid fa-location-dot nav-icon"></i>
+          <span>سجل التدقيق</span>
+        </a>
+      </li>
     </ul>
 
     <ul class="nav-group nav-group-footer">

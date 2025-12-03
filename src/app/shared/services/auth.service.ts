@@ -63,23 +63,23 @@ export class AuthService {
   logout(): Observable<void> {
     const token = this.getAccessToken();
 
-    // Always clear local data first
-    this.clearAuthData();
-
-    // If we have a valid token, notify the server
+    // If we have a valid token, notify the server BEFORE clearing local data
     if (token) {
       return this.http.post<void>(`${this.API_URL}/auth/logout`, {}).pipe(
         tap(() => {
+          this.clearAuthData();
           this.router.navigate(['/login']);
         }),
         catchError(() => {
-          // Even if server logout fails, we've already cleared local data
+          // Even if server logout fails, clear local data and navigate
+          this.clearAuthData();
           this.router.navigate(['/login']);
           return throwError(() => new Error('Logout failed'));
         })
       );
     } else {
-      // No token, just navigate to login
+      // No token, just clear and navigate to login
+      this.clearAuthData();
       this.router.navigate(['/login']);
       return new Observable(observer => {
         observer.next();

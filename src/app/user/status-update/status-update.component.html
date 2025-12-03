@@ -1,20 +1,41 @@
 <div dir="rtl">
 
   <main class="container-fluid main-content-padding">
-    
+
     <div class="desktop-layout">
-      
+
+      <!-- Status Column - Shows both driver and vehicle status -->
       <div class="status-column">
-        <div class="status-card">
-          <div class="alert {{ currentStatus.alertClass }} d-flex align-items-center current-status-alert" role="alert">
-            
-            <div class="status-icon-wrapper {{ currentStatus.alertClass }} me-3">
-              <i class="{{ currentStatus.icon }} fa-xl"></i>
+        <!-- Driver Personal Status -->
+        <div class="status-card mb-4">
+          <h3 class="fs-5 fw-bold mb-3">
+            <i class="fa-solid fa-user me-2"></i>
+            حالتي الشخصية
+          </h3>
+          <div class="alert {{ currentDriverStatus.alertClass }} d-flex align-items-center current-status-alert" role="alert">
+            <div class="status-icon-wrapper {{ currentDriverStatus.alertClass }} me-3">
+              <i class="{{ currentDriverStatus.icon }} fa-xl"></i>
             </div>
-            
             <div>
-              <h3 class="alert-heading fs-6 fw-bold mb-1">{{ currentStatus.title }}</h3>
-              <p class="mb-0">{{ currentStatus.description }}</p>
+              <h4 class="alert-heading fs-6 fw-bold mb-1">{{ currentDriverStatus.title }}</h4>
+              <p class="mb-0">{{ currentDriverStatus.description }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vehicle Status -->
+        <div class="status-card">
+          <h3 class="fs-5 fw-bold mb-3">
+            <i class="fa-solid fa-ambulance me-2"></i>
+            حالة المركبة
+          </h3>
+          <div class="alert {{ currentVehicleStatus.alertClass }} d-flex align-items-center current-status-alert" role="alert">
+            <div class="status-icon-wrapper {{ currentVehicleStatus.alertClass }} me-3">
+              <i class="{{ currentVehicleStatus.icon }} fa-xl"></i>
+            </div>
+            <div>
+              <h4 class="alert-heading fs-6 fw-bold mb-1">{{ currentVehicleStatus.title }}</h4>
+              <p class="mb-0">{{ currentVehicleStatus.description }}</p>
             </div>
           </div>
 
@@ -40,31 +61,55 @@
       </div>
 
       <div class="actions-column">
-        
+
+        <!-- Driver Status Actions -->
         <div class="actions-card mb-4">
-          <h3 class="fs-5 fw-bold mb-3 card-title">تحديث الحالة</h3>
-          
+          <h3 class="fs-5 fw-bold mb-3 card-title">
+            <i class="fa-solid fa-user me-2"></i>
+            تحديث حالتي الشخصية
+          </h3>
+
           <div class="action-buttons-grid">
-            <button *ngFor="let action of mainActions" 
-                    type="button" 
+            <button *ngFor="let action of driverStatusActions"
+                    type="button"
                     class="btn {{ action.btnClass }} {{ action.textClass }} action-btn p-3 d-flex align-items-center"
-                    (click)="updateStatus(action)">
-              
+                    (click)="updateDriverStatus(action)">
+
               <i class="{{ action.icon }} fa-fw fa-lg me-3"></i>
               <span class="fw-bold fs-6 mx-2">{{ action.label }}</span>
             </button>
           </div>
         </div>
-        
+
+        <!-- Vehicle Status Actions -->
+        <div class="actions-card mb-4">
+          <h3 class="fs-5 fw-bold mb-3 card-title">
+            <i class="fa-solid fa-ambulance me-2"></i>
+            تحديث حالة المركبة
+          </h3>
+
+          <div class="action-buttons-grid">
+            <button *ngFor="let action of mainActions"
+                    type="button"
+                    class="btn {{ action.btnClass }} {{ action.textClass }} action-btn p-3 d-flex align-items-center"
+                    (click)="updateVehicleStatus(action)">
+
+              <i class="{{ action.icon }} fa-fw fa-lg me-3"></i>
+              <span class="fw-bold fs-6 mx-2">{{ action.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Off-Duty Actions -->
         <div class="actions-card">
           <h3 class="fs-5 fw-bold mb-3 card-title">خيارات إضافية</h3>
-          
+
           <div class="action-buttons-grid">
-            <button *ngFor="let action of offDutyActions" 
-                    type="button" 
+            <button *ngFor="let action of offDutyActions"
+                    type="button"
                     class="btn {{ action.btnClass }} action-btn p-3 d-flex align-items-center"
-                    (click)="updateStatus(action)">
-              
+                    (click)="updateVehicleStatus(action)">
+
               <i class="{{ action.icon }} fa-fw fa-lg me-3"></i>
               <span class="fw-bold fs-6 mx-2">{{ action.label }}</span>
             </button>

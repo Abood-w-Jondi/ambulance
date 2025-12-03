@@ -1,0 +1,245 @@
+<div class="container-fluid py-4">
+  <!-- Filters Card -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0"><i class="fas fa-filter"></i> تصفية السجلات</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Date Range -->
+        <div class="col-md-3">
+          <label class="form-label">من تاريخ</label>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="filters.startDate"
+            (change)="applyFilters()">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">إلى تاريخ</label>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="filters.endDate"
+            (change)="applyFilters()">
+        </div>
+
+        <!-- Entity Type -->
+        <div class="col-md-2">
+          <label class="form-label">نوع الكيان</label>
+          <select
+            class="form-select"
+            [(ngModel)]="filters.entityType"
+            (change)="applyFilters()">
+            <option value="">الكل</option>
+            <option value="driver">سائق</option>
+            <option value="vehicle">مركبة</option>
+            <option value="trip">رحلة</option>
+            <option value="paramedic">مسعف</option>
+          </select>
+        </div>
+
+        <!-- Action Type -->
+        <div class="col-md-2">
+          <label class="form-label">نوع العملية</label>
+          <select
+            class="form-select"
+            [(ngModel)]="filters.actionType"
+            (change)="applyFilters()">
+            <option value="">الكل</option>
+            <option value="driver_login">تسجيل دخول</option>
+            <option value="driver_logout">تسجيل خروج</option>
+            <option value="status_change">تغيير حالة</option>
+            <option value="create">إنشاء</option>
+            <option value="update">تعديل</option>
+            <option value="delete">حذف</option>
+          </select>
+        </div>
+
+        <!-- Financial Filter -->
+        <div class="col-md-2">
+          <label class="form-label">تغييرات مالية فقط</label>
+          <div class="form-check form-switch mt-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="financialFilter"
+              [checked]="filters.isFinancialChange === true"
+              (change)="filters.isFinancialChange = filters.isFinancialChange ? undefined : true; applyFilters()">
+            <label class="form-check-label" for="financialFilter">
+              تفعيل
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col">
+          <button class="btn btn-primary" (click)="applyFilters()">
+            <i class="fas fa-search"></i> بحث
+          </button>
+          <button class="btn btn-secondary ms-2" (click)="resetFilters()">
+            <i class="fas fa-redo"></i> إعادة تعيين
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Card -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="fas fa-list"></i> سجلات التدقيق</h5>
+      <span class="badge bg-info">إجمالي: {{ total }}</span>
+    </div>
+    <div class="card-body">
+      <!-- Loading State -->
+      <div *ngIf="loading()" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading() && logs().length === 0" class="text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <p class="text-muted">لا توجد سجلات متاحة</p>
+      </div>
+
+      <!-- Logs Table -->
+      <div *ngIf="!loading() && logs().length > 0" class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>الوقت</th>
+              <th>المستخدم</th>
+              <th>العملية</th>
+              <th>الكيان</th>
+              <th>الحقول المتغيرة</th>
+              <th>تأثير مالي</th>
+              <th>تفاصيل</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let log of logs()">
+              <!-- Main Row -->
+              <tr [class.table-warning]="log.isFinancialChange">
+                <td class="text-nowrap">{{ formatDate(log.createdAt) }}</td>
+                <td>
+                  <div>{{ log.userName || 'نظام' }}</div>
+                  <small class="text-muted">{{ log.userRole }}</small>
+                </td>
+                <td>
+                  <span class="badge"
+                    [class.bg-success]="log.actionType === 'driver_login'"
+                    [class.bg-danger]="log.actionType === 'driver_logout'"
+                    [class.bg-info]="log.actionType === 'status_change'"
+                    [class.bg-primary]="log.actionType === 'create'"
+                    [class.bg-warning]="log.actionType === 'update'">
+                    {{ getActionTypeLabel(log.actionType) }}
+                  </span>
+                </td>
+                <td>
+                  <div>{{ getEntityTypeLabel(log.entityType) }}</div>
+                  <small class="text-muted">{{ log.entityId?.substring(0, 8) || '-' }}...</small>
+                </td>
+                <td>
+                  <span *ngFor="let field of log.changedFields" class="badge bg-secondary me-1">
+                    {{ field }}
+                  </span>
+                </td>
+                <td>
+                  <span *ngIf="log.isFinancialChange" class="text-danger fw-bold">
+                    <i class="fas fa-coins"></i> {{ log.financialImpact | number:'1.2-2' }}
+                  </span>
+                  <span *ngIf="!log.isFinancialChange" class="text-muted">-</span>
+                </td>
+                <td>
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="toggleRow(log.id)">
+                    <i class="fas" [class.fa-chevron-down]="!isExpanded(log.id)" [class.fa-chevron-up]="isExpanded(log.id)"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Expanded Details Row -->
+              <tr *ngIf="isExpanded(log.id)" class="table-light">
+                <td colspan="7">
+                  <div class="p-3">
+                    <div class="row">
+                      <!-- Old Values -->
+                      <div class="col-md-5">
+                        <h6 class="text-danger"><i class="fas fa-arrow-left"></i> القيم القديمة</h6>
+                        <pre class="bg-white p-2 border rounded">{{ getValueDisplay(log.oldValues) }}</pre>
+                      </div>
+
+                      <!-- Arrow -->
+                      <div class="col-md-2 text-center d-flex align-items-center justify-content-center">
+                        <i class="fas fa-arrow-right fa-2x text-primary"></i>
+                      </div>
+
+                      <!-- New Values -->
+                      <div class="col-md-5">
+                        <h6 class="text-success"><i class="fas fa-arrow-right"></i> القيم الجديدة</h6>
+                        <pre class="bg-white p-2 border rounded">{{ getValueDisplay(log.newValues) }}</pre>
+                      </div>
+                    </div>
+
+                    <!-- Additional Info -->
+                    <div class="row mt-3">
+                      <div class="col-md-6">
+                        <small class="text-muted">
+                          <i class="fas fa-globe"></i> IP: {{ log.ipAddress || '-' }}
+                        </small>
+                      </div>
+                      <div class="col-md-6" *ngIf="log.notes">
+                        <small class="text-muted">
+                          <i class="fas fa-sticky-note"></i> ملاحظات: {{ log.notes }}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="!loading() && logs().length > 0" class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+          عرض {{ (currentPage - 1) * limit + 1 }} - {{ Math.min(currentPage * limit, total) }} من {{ total }}
+        </div>
+        <nav>
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <button class="page-link" (click)="prevPage()">السابق</button>
+            </li>
+            <li class="page-item" [class.active]="currentPage === 1">
+              <button class="page-link" (click)="goToPage(1)">1</button>
+            </li>
+            <li class="page-item disabled" *ngIf="currentPage > 3">
+              <span class="page-link">...</span>
+            </li>
+            <li class="page-item" *ngFor="let page of [currentPage - 1, currentPage, currentPage + 1]"
+                [class.active]="page === currentPage"
+                [class.d-none]="page < 2 || page >= totalPages">
+              <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+            </li>
+            <li class="page-item disabled" *ngIf="currentPage < totalPages - 2">
+              <span class="page-link">...</span>
+            </li>
+            <li class="page-item" [class.active]="currentPage === totalPages" *ngIf="totalPages > 1">
+              <button class="page-link" (click)="goToPage(totalPages)">{{ totalPages }}</button>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <button class="page-link" (click)="nextPage()">التالي</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>

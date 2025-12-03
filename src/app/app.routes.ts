@@ -10,6 +10,7 @@ import { FuelHistoryComponent } from './admin/fuel-history/fuel-history.componen
 import { TransactionHistoryComponent } from './admin/transaction-history/transaction-history.component';
 import { LoginComponent } from './admin/login/login.component';
 import { VehicleMapComponent } from './admin/vehicle-map/vehicle-map.component';
+import { AuditLogsComponent } from './admin/audit-logs/audit-logs.component';
 import { StatusUpdateComponent } from './user/status-update/status-update.component';
 import { AcceptTripsComponent } from './user/accept-trips/accept-trips.component';
 import { TripsHistoryComponent } from './user/trips-history/trips-history.component';
@@ -65,6 +66,7 @@ export const routes = [
 			{ path: 'common-locations', component: CommonLocationsComponent },
 			{ path: 'users-management', component: UsersManagementComponent },
 			{ path: 'vehicle-map', component: VehicleMapComponent },
+			{ path: 'audit-logs', component: AuditLogsComponent },
 			{ path: 'profile/:id', component: ProfileComponent },
 			{ path: 'profile', component: ProfileComponent },
 		],

@@ -1,0 +1,27 @@
+.table-warning {
+  background-color: #fff3cd !important;
+}
+
+pre {
+  font-size: 0.875rem;
+  max-height: 300px;
+  overflow: auto;
+  direction: ltr;
+  text-align: left;
+}
+
+.badge {
+  font-size: 0.875rem;
+}
+
+.card-header h5 {
+  margin: 0;
+}
+
+.pagination .page-link {
+  cursor: pointer;
+}
+
+.table > tbody > tr > td {
+  vertical-align: middle;
+}
