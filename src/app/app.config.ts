@@ -5,15 +5,17 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './shared/interceptors/auth.interceptor';
+import { errorInterceptor } from './shared/interceptors/error.interceptor';
+import { responseInterceptor } from './shared/interceptors/response.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
 
-    // HTTP Client with interceptors
+    // HTTP Client with interceptors (order matters: response -> error -> auth)
     provideHttpClient(
-      withInterceptors([authInterceptor])
+      withInterceptors([responseInterceptor, errorInterceptor, authInterceptor])
     ),
 
     // Animations

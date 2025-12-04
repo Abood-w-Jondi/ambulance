@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Location, LocationTag, LocationType, CreateLocationRequest, LocationReference } from '../models/location.model';
 import { PaginatedResponse } from './driver.service';
+import { buildHttpParams } from '../utils/http-params.util';
 
 export interface LocationQueryParams {
   page?: number;
@@ -29,15 +30,7 @@ export class LocationService {
    * Get paginated list of locations
    */
   getLocations(params?: LocationQueryParams): Observable<PaginatedResponse<Location>> {
-    let httpParams = new HttpParams();
-    if (params) {
-      Object.keys(params).forEach(key => {
-        const value = params[key as keyof LocationQueryParams];
-        if (value !== undefined && value !== null && value !== '') {
-          httpParams = httpParams.set(key, value.toString());
-        }
-      });
-    }
+    const httpParams = buildHttpParams(params);
     return this.http.get<PaginatedResponse<Location>>(this.API_URL, { params: httpParams });
   }
 
@@ -61,8 +54,8 @@ export class LocationService {
    * Search locations by name
    */
   searchLocations(searchTerm: string): Observable<LocationReference[]> {
-    const params = new HttpParams().set('searchTerm', searchTerm);
-    return this.http.get<{success: boolean, data: LocationReference[]}>(`${this.API_URL}/search`, { params })
+    const httpParams = buildHttpParams({ searchTerm });
+    return this.http.get<{success: boolean, data: LocationReference[]}>(`${this.API_URL}/search`, { params: httpParams })
       .pipe(map(response => response.data || []));
   }
 

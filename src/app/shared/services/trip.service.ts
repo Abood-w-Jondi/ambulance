@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Trip, TransferStatus } from '../models';
 import { PatientLoan, PatientLoanFilters } from '../models/patient-loan.model';
 import { PaginatedResponse } from './driver.service';
+import { buildHttpParams } from '../utils/http-params.util';
 
 export interface TripQueryParams {
   page?: number;
@@ -32,15 +33,7 @@ export class TripService {
   constructor(private http: HttpClient) {}
 
   getTrips(params?: TripQueryParams): Observable<PaginatedResponse<Trip>> {
-    let httpParams = new HttpParams();
-    if (params) {
-      Object.keys(params).forEach(key => {
-        const value = params[key as keyof TripQueryParams];
-        if (value !== undefined && value !== null && value !== '' && value !== 'All') {
-          httpParams = httpParams.set(key, value.toString());
-        }
-      });
-    }
+    const httpParams = buildHttpParams(params);
     return this.http.get<PaginatedResponse<Trip>>(this.API_URL, { params: httpParams });
   }
 
@@ -96,15 +89,7 @@ export class TripService {
    * Get patient loans for a driver
    */
   getPatientLoans(driverId: string, filters?: PatientLoanFilters): Observable<PatientLoan[]> {
-    let httpParams = new HttpParams();
-
-    if (filters) {
-      if (filters.status) httpParams = httpParams.set('status', filters.status);
-      if (filters.startDate) httpParams = httpParams.set('startDate', filters.startDate);
-      if (filters.endDate) httpParams = httpParams.set('endDate', filters.endDate);
-      if (filters.sortBy) httpParams = httpParams.set('sortBy', filters.sortBy);
-      if (filters.sortOrder) httpParams = httpParams.set('sortOrder', filters.sortOrder);
-    }
+    const httpParams = buildHttpParams(filters);
 
     return this.http.get<{ success: boolean; data: PatientLoan[] }>(
       `${environment.apiEndpoint}/drivers/${driverId}/patient-loans`,
@@ -132,6 +117,8 @@ export class TripService {
 
   /**
    * Admin closes a trip to trigger transaction creation (admin only)
+   * @deprecated Transactions now trigger automatically when trip status becomes "تم النقل"
+   * This method is kept for backwards compatibility only
    */
   closeTrip(tripId: string): Observable<any> {
     return this.http.post(`${this.API_URL}/${tripId}/close`, {});
@@ -148,10 +135,11 @@ export class TripService {
    * Get driver's active trips (non-final status trips)
    */
   getDriverActiveTrips(driverId: string): Observable<Trip[]> {
+    const httpParams = buildHttpParams({ driverId });
     return this.http.get<PaginatedResponse<Trip>>(this.API_URL, {
-      params: new HttpParams().set('driverId', driverId)
+      params: httpParams
     }).pipe(
-      map(response => response.data.filter(trip => 
+      map(response => response.data.filter(trip =>
         !['تم النقل', 'رفض النقل', 'بلاغ كاذب'].includes(trip.transferStatus)
       ))
     );
@@ -161,10 +149,11 @@ export class TripService {
    * Get driver's historical trips (final status trips)
    */
   getDriverHistoricalTrips(driverId: string): Observable<Trip[]> {
+    const httpParams = buildHttpParams({ driverId, limit: '1000' });
     return this.http.get<PaginatedResponse<Trip>>(this.API_URL, {
-      params: new HttpParams().set('driverId', driverId).set('limit', '1000')
+      params: httpParams
     }).pipe(
-      map(response => response.data.filter(trip => 
+      map(response => response.data.filter(trip =>
         ['تم النقل', 'رفض النقل', 'بلاغ كاذب'].includes(trip.transferStatus)
       ))
     );
@@ -174,10 +163,11 @@ export class TripService {
    * Get vehicle's historical trips (all trips for a vehicle with final status)
    */
   getVehicleHistoricalTrips(vehicleId: string): Observable<Trip[]> {
+    const httpParams = buildHttpParams({ vehicleId, limit: '1000' });
     return this.http.get<PaginatedResponse<Trip>>(this.API_URL, {
-      params: new HttpParams().set('vehicleId', vehicleId).set('limit', '1000')
+      params: httpParams
     }).pipe(
-      map(response => response.data.filter(trip => 
+      map(response => response.data.filter(trip =>
         ['تم النقل', 'رفض النقل', 'بلاغ كاذب'].includes(trip.transferStatus)
       ))
     );

@@ -266,6 +266,55 @@ export class TripFormComponent implements OnInit {
     }
   }
 
+  // Calculate diesel automatically from odometer readings
+  get calculatedDiesel(): number {
+    const start = this.tripForm.start || 0;
+    const end = this.tripForm.end || 0;
+    return Math.max(0, end - start);
+  }
+
+  // Calculate shares based on payed price, paramedic share, and fuel cost
+  // IMPORTANT: Must match backend logic (trips.php:927-932)
+  private calculateShares(payedPrice: number, paramedicShare: number, fuelCost: number) {
+    // Backend formula:
+    // afterParamedic = payedPrice - paramedicShare
+    // afterFuel = afterParamedic - fuelCost  (1 NIS per km)
+    // driverShare = afterFuel / 3
+    // eqShare = (afterFuel / 3) * 2
+    const afterParamedic = payedPrice - paramedicShare;
+    const afterFuel = afterParamedic - fuelCost;  // Deduct fuel BEFORE splitting
+    const driverShare = afterFuel / 3;
+    const eqShare = (afterFuel / 3) * 2;  // 2/3 of remaining
+    return { paramedicShare, driverShare, eqShare };
+  }
+
+  // Calculate paramedic share based on trip type
+  calculateParamedicShare(tripType: TripType | '', customShare?: number): number {
+    const shares: Record<string, number> = {
+      'داخلي': 20,
+      'وسط': 60,
+      'خارجي': 80
+    };
+
+    if (tripType === 'اخرى') {
+      return customShare ?? 0;
+    }
+
+    return shares[tripType] ?? 0;
+  }
+
+  // Handle trip type change to auto-calculate paramedic share
+  onTripTypeChange(): void {
+    if (this.tripForm.tripType && this.tripForm.tripType !== 'اخرى') {
+      this.tripForm.paramedicShare = this.calculateParamedicShare(this.tripForm.tripType);
+    } else if (this.tripForm.tripType === 'اخرى') {
+      // Allow user to enter custom value for 'اخرى'
+      // Keep the existing value or reset to 0 if needed
+    } else {
+      this.tripForm.paramedicShare = 0;
+    }
+  }
+
   save(): void {
     if (!this.validateForm()) {
       return;
@@ -317,6 +366,14 @@ export class TripFormComponent implements OnInit {
   }
 
   prepareTripData(): any {
+    // Calculate shares automatically based on payedPrice, paramedicShare, and fuel cost
+    const fuelCost = this.calculatedDiesel * 1.0;  // 1 NIS per km
+    const shares = this.calculateShares(
+      this.tripForm.payedPrice || 0,
+      this.tripForm.paramedicShare || 0,
+      fuelCost
+    );
+
     return {
       day: this.tripForm.day,
       month: this.tripForm.month,
@@ -332,7 +389,7 @@ export class TripFormComponent implements OnInit {
       transferToTag: this.tripForm.transferToTag,
       start: this.tripForm.start || 0,
       end: this.tripForm.end || 0,
-      diesel: this.tripForm.diesel || 0,
+      diesel: this.calculatedDiesel,  // Use calculated diesel
       patientName: this.tripForm.patientName,
       patientContact: this.tripForm.patientContact || null,
       diagnosis: this.tripForm.diagnosis,
@@ -342,9 +399,7 @@ export class TripFormComponent implements OnInit {
       otherExpenses: this.tripForm.otherExpenses || 0,
       totalPrice: this.tripForm.totalPrice || 0,
       payedPrice: this.tripForm.payedPrice || 0,
-      paramedicShare: this.tripForm.paramedicShare || 0,
-      driverShare: this.tripForm.driverShare || 0,
-      eqShare: this.tripForm.eqShare || 0,
+      ...shares,  // Include calculated shares (paramedicShare, driverShare, eqShare)
       ymdValue: this.tripForm.ymdValue || null,
       ymdPeriod: this.tripForm.ymdPeriod || null
     };

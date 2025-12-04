@@ -80,7 +80,6 @@ export const routes = [
 			{ path: '', redirectTo: 'driver-dashboard', pathMatch: 'full' as const },
 			{ path: 'driver-dashboard', component: DriverDashboardComponent },
 			{ path: 'status-update', component: StatusUpdateComponent },
-			{ path: 'accept-trips', component: AcceptTripsComponent },
 			{ path: 'trips-history', component: TripsHistoryComponent },
 			{ path: 'my-trips', component: MyTripsComponent },
 			{ path: 'trip-form', component: TripFormComponent },

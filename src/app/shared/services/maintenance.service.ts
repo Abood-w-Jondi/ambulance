@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { MaintenanceRecord, MaintenanceStatus } from '../models';
 import { PaginatedResponse } from './driver.service';
+import { buildHttpParams } from '../utils/http-params.util';
 
 export interface MaintenanceQueryParams {
   page?: number;
@@ -28,17 +29,7 @@ export class MaintenanceService {
    * Get all maintenance records with pagination and filters
    */
   getMaintenanceRecords(params?: MaintenanceQueryParams): Observable<PaginatedResponse<MaintenanceRecord>> {
-    let httpParams = new HttpParams();
-
-    if (params) {
-      Object.keys(params).forEach(key => {
-        const value = params[key as keyof MaintenanceQueryParams];
-        if (value !== undefined && value !== null && value !== '') {
-          httpParams = httpParams.set(key, value.toString());
-        }
-      });
-    }
-
+    const httpParams = buildHttpParams(params);
     return this.http.get<PaginatedResponse<MaintenanceRecord>>(this.API_URL, { params: httpParams });
   }
 
@@ -75,9 +66,7 @@ export class MaintenanceService {
    * Used for auto-populating odometerBefore field
    */
   getLastOdometerReading(vehicleId: string, maintenanceTypeId: string): Observable<{success: boolean, data: {lastOdometerAfter: number | null}}> {
-    let httpParams = new HttpParams()
-      .set('vehicleId', vehicleId)
-      .set('maintenanceTypeId', maintenanceTypeId);
+    const httpParams = buildHttpParams({ vehicleId, maintenanceTypeId });
 
     return this.http.get<{success: boolean, data: {lastOdometerAfter: number | null}}>(
       `${this.API_URL}/last-odometer`,

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { buildHttpParams } from '../utils/http-params.util';
 
 export interface StatisticsResponse {
   drivers: {
@@ -83,26 +84,7 @@ export class StatsService {
     cache?: boolean;
     cacheMinutes?: number;
   }): Observable<StatisticsResponse> {
-    let httpParams = new HttpParams();
-
-    if (params) {
-      if (params.period) {
-        httpParams = httpParams.set('period', params.period);
-      }
-      if (params.startDate) {
-        httpParams = httpParams.set('startDate', params.startDate);
-      }
-      if (params.endDate) {
-        httpParams = httpParams.set('endDate', params.endDate);
-      }
-      if (params.cache !== undefined) {
-        httpParams = httpParams.set('cache', params.cache.toString());
-      }
-      if (params.cacheMinutes !== undefined) {
-        httpParams = httpParams.set('cacheMinutes', params.cacheMinutes.toString());
-      }
-    }
-
+    const httpParams = buildHttpParams(params);
     return this.http.get<StatisticsResponse>(this.API_URL, { params: httpParams });
   }
 

@@ -271,12 +271,12 @@
                         <div class="mb-3">
                             <label for="searchTerm" class="form-label small fw-medium">البحث</label>
                             <input id="searchTerm" type="text" class="form-control" placeholder="الاسم، البريد الإلكتروني، أو اسم المستخدم"
-                                [(ngModel)]="searchTermValue" (ngModelChange)="searchTerm.set($event)">
+                                [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
                         </div>
 
                         <div class="mb-3">
                             <label for="filterStatus" class="form-label small fw-medium">حالة السائق</label>
-                            <select id="filterStatus" class="form-select" [(ngModel)]="filterStatusValue"
+                            <select id="filterStatus" class="form-select" [ngModel]="filterStatus()"
                                 (ngModelChange)="filterStatus.set($event)">
                                 <option value="all">الكل</option>
                                 <option value="متاح">متاح</option>
@@ -287,13 +287,13 @@
 
                         <div class="mb-3">
                             <label for="minOwed" class="form-label small fw-medium">الحد الأدنى للمبلغ المستحق</label>
-                            <input id="minOwed" type="number" class="form-control text-end" [(ngModel)]="minOwedValue"
+                            <input id="minOwed" type="number" class="form-control text-end" [ngModel]="minOwed()"
                                 (ngModelChange)="minOwed.set($event)" style="direction: ltr;">
                         </div>
 
                         <div class="mb-3">
                             <label for="maxOwed" class="form-label small fw-medium">الحد الأقصى للمبلغ المستحق</label>
-                            <input id="maxOwed" type="number" class="form-control text-end" [(ngModel)]="maxOwedValue"
+                            <input id="maxOwed" type="number" class="form-control text-end" [ngModel]="maxOwed()"
                                 (ngModelChange)="maxOwed.set($event)" style="direction: ltr;">
                         </div>
 

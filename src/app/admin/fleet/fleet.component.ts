@@ -52,7 +52,7 @@ export class FleetComponent implements OnInit {
         vehicleId: '',
         vehicleName: '',
         notes: '',
-        status: 'متاح' as VehicleStatus
+        status: 'متاحة' as VehicleStatus
     };
 
     // Pagination
@@ -61,7 +61,7 @@ export class FleetComponent implements OnInit {
     totalRecords = 0;
     isLoading = signal(false);
 
-    vehicleStatuses: VehicleStatus[] = ['متاح', 'في الخدمة', 'صيانة'];
+    vehicleStatuses: VehicleStatus[] = ['متاحة', 'في الطريق للمريض', 'في الموقع', 'في الطريق للمستشفى', 'في الوجهة', 'خارج الخدمة', 'إنهاء الخدمة'];
     colors: string[] = ['White', 'Red', 'Yellow', 'Silver', 'Blue'];
 
     constructor(
@@ -152,37 +152,38 @@ export class FleetComponent implements OnInit {
 
     getStatusColor(status: VehicleStatus): string {
         switch (status) {
-            case 'متاح':
+            case 'متاحة':
                 return '#28A745';
-            case 'في الخدمة':
+            case 'في الطريق للمريض':
                 return '#17A2B8';
-            case 'صيانة':
-                return '#FD7E14';
-            default:
+            case 'خارج الخدمة':
                 return '#6C757D';
+                default:
+                return '#FD7E14';
         }
     }
 
     getStatusBadgeClass(status: VehicleStatus): string {
-        switch (status) {
-            case 'متاح':
-                return 'text-bg-success';
-            case 'في الخدمة':
-                return 'text-bg-info';
-            case 'صيانة':
-                return 'text-bg-warning';
-            default:
-                return 'text-bg-secondary';
-        }
-    }
+    const STATUS_COLORS: { [key in VehicleStatus]: string } = {
+    'متاحة': '#28a745',          
+    'في الطريق للمريض': '#e2af19ff', 
+    'في الموقع': '#17a2b8',        
+    'في الطريق للمستشفى': '#fd7e14', 
+    'في الوجهة': '#6f42c1',        
+    'خارج الخدمة': '#dc3545',      
+    'إنهاء الخدمة': '#6c757d',         
+  };
+  return STATUS_COLORS[status] || '#6C757D';
+
+}
 
     getStatusIcon(status: VehicleStatus): string {
         switch (status) {
-            case 'متاح':
+            case 'متاحة':
                 return 'fa-circle-check';
-            case 'في الخدمة':
+            case 'في الطريق للمريض':
                 return 'fa-truck-medical';
-            case 'صيانة':
+            case 'خارج الخدمة':
                 return 'fa-wrench';
             default:
                 return 'fa-circle';
@@ -194,7 +195,7 @@ export class FleetComponent implements OnInit {
             vehicleId: '',
             vehicleName: '',
             notes: '',
-            status: 'متاح'
+            status: 'متاحة'
         };
         this.isAddVehicleModalOpen.set(true);
     }

@@ -51,7 +51,7 @@ export class VehicleMapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Status Colors
   private readonly STATUS_COLORS: Record<string, string> = {
-    'متاح': '#28a745',          
+    'متاحة': '#28a745',          
     'في الطريق للمريض': '#e2af19ff', 
     'في الموقع': '#17a2b8',        
     'في الطريق للمستشفى': '#fd7e14', 

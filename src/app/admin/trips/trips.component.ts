@@ -178,10 +178,17 @@ export class TripsComponent implements OnInit {
     isLoading = signal(false);
 
     // Calculate money distribution based on payed price (not total price)
-    private calculateShares(payedPrice: number, paramedicShare: number) {
-        const remaining = payedPrice - paramedicShare;
-        const driverShare = remaining / 3;
-        const eqShare = remaining - driverShare;
+    // IMPORTANT: Must match backend logic (trips.php:927-932)
+    private calculateShares(payedPrice: number, paramedicShare: number, fuelCost: number) {
+        // Backend formula:
+        // afterParamedic = payedPrice - paramedicShare
+        // afterFuel = afterParamedic - fuelCost  (1 NIS per km)
+        // driverShare = afterFuel / 3
+        // eqShare = (afterFuel / 3) * 2
+        const afterParamedic = payedPrice - paramedicShare;
+        const afterFuel = afterParamedic - fuelCost;  // Deduct fuel BEFORE splitting
+        const driverShare = afterFuel / 3;
+        const eqShare = (afterFuel / 3) * 2;  // 2/3 of remaining
         return { paramedicShare, driverShare, eqShare };
     }
 
@@ -531,7 +538,8 @@ export class TripsComponent implements OnInit {
     }
 
     addTrip(): void {
-        const shares = this.calculateShares(this.tripForm.payedPrice, this.tripForm.paramedicShare);
+        const fuelCost = this.calculatedDiesel * 1.0;  // 1 NIS per km
+        const shares = this.calculateShares(this.tripForm.payedPrice, this.tripForm.paramedicShare, fuelCost);
 
         this.tripService.createTrip({
             day: this.tripForm.day,
@@ -616,7 +624,8 @@ export class TripsComponent implements OnInit {
     saveEditTrip(): void {
         const trip = this.selectedTrip();
         if (trip) {
-            const shares = this.calculateShares(this.tripForm.payedPrice, this.tripForm.paramedicShare);
+            const fuelCost = this.calculatedDiesel * 1.0;  // 1 NIS per km
+            const shares = this.calculateShares(this.tripForm.payedPrice, this.tripForm.paramedicShare, fuelCost);
 
             const updatedData = {
                 day: this.tripForm.day,

@@ -58,11 +58,13 @@ export interface Trip {
     payedPrice: number;        // Amount already paid by patient
     paramedicShare: number;    // Paramedic's share (deducted first before splitting remaining)
     driverShare: number;       // Driver's share
-    eqShare: number;           // Equipment/Company share
+    eqShare: number;           // Equipment/Company share (DEPRECATED - split into companyShare and ownerShare)
+    companyShare: number;      // Company (الشركة) share
+    ownerShare: number;        // Owner (المالك) share
 
     // Loan Tracking (when patient owes driver money)
     isLoan: boolean;           // True if patient took loan from driver
-    loanAmount: number;        // Amount patient owes driver (totalPrice - payedPrice)
+    loanAmount: number;        // Amount patient owes driver (totalPrice - paidPrice)
     loanCollected: boolean;    // True when driver has collected the loan from patient
     loanCollectedAt?: Date;    // When loan was collected
     loanCollectionNotes?: string; // Notes about loan collection
@@ -75,10 +77,10 @@ export interface Trip {
     acceptedAt?: Date;         // When driver accepted the trip
     completedAt?: Date;        // When trip status changed to final status
 
-    // Trip Closure System (NEW - for transaction control)
-    isClosed: boolean;         // Trip closed for transaction processing (default: false)
-    closedAt?: Date;           // When trip was closed
-    closedBy?: string;         // User ID who closed the trip
+    // Trip Closure System (DEPRECATED - transactions now trigger on "تم النقل" status)
+    isClosed: boolean;         // DEPRECATED - Trip closed for transaction processing
+    closedAt?: Date;           // DEPRECATED - When trip was closed
+    closedBy?: string;         // DEPRECATED - User ID who closed the trip
 
     // Trip populated mostly by driver after accepting
     populatedByDriver?: boolean;  // Flag to indicate if driver has filled the data

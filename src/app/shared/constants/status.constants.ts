@@ -26,7 +26,7 @@ export const TRANSFER_STATUS_COLORS: Record<string, string> = {
 
 // Vehicle Status Constants (NEW: Expanded to 7 statuses)
 export const VEHICLE_STATUS = {
-  AVAILABLE: 'متاح',                          // Available
+  AVAILABLE: 'متاحة',                          // Available
   ON_WAY_TO_PATIENT: 'في الطريق للمريض',      // On way to patient
   AT_LOCATION: 'في الموقع',                   // At location
   ON_WAY_TO_HOSPITAL: 'في الطريق للمستشفى',   // On way to hospital
@@ -50,7 +50,7 @@ export const VEHICLE_STATUS_COLORS: Record<string, string> = {
 
 // Driver Status Constants
 export const DRIVER_STATUS = {
-  AVAILABLE: 'متاح',
+  AVAILABLE: 'متاحة',
   ON_TRIP: 'في رحلة',
   OFFLINE: 'غير متصل'
 } as const;
@@ -66,7 +66,7 @@ export const DRIVER_STATUS_COLORS: Record<string, string> = {
 
 // Paramedic Status Constants
 export const PARAMEDIC_STATUS = {
-  AVAILABLE: 'متاح',
+  AVAILABLE: 'متاحة',
   ON_TRIP: 'في رحلة',
   OFFLINE: 'غير متصل',
   ON_LEAVE: 'في إجازة'

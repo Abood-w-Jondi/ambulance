@@ -79,7 +79,7 @@ export class StatusUpdateComponent implements OnInit {
 
   // Main action buttons array - **Updated with API status values (VehicleStatus)**
   mainActions: StatusAction[] = [
-    { label: 'مُتاح', icon: 'fa-solid fa-shield-heart', btnClass: 'btn-success', textClass: 'text-white', status: 'متاح' },
+    { label: 'مُتاح', icon: 'fa-solid fa-shield-heart', btnClass: 'btn-success', textClass: 'text-white', status: 'متاحة' },
     { label: 'في الطريق للمريض', icon: 'fa-solid fa-route', btnClass: 'btn-warning', textClass: 'text-dark', status: 'في الطريق للمريض' },
     { label: 'في الموقع', icon: 'fa-solid fa-location-dot', btnClass: 'btn-info', textClass: 'text-white', status: 'في الموقع' },
     { label: 'في الطريق للمستشفى', icon: 'fa-solid fa-truck-medical', btnClass: 'btn-info', textClass: 'text-white', status: 'في الطريق للمستشفى' },
@@ -224,7 +224,7 @@ export class StatusUpdateComponent implements OnInit {
     this.currentVehicleStatus.alertClass = props.alertClass;
 
     switch(newStatus) {
-      case 'متاح':
+      case 'متاحة':
         this.currentVehicleStatus.description = 'المركبة جاهزة للاستجابة للحالات.';
         break;
       case 'في الطريق للمريض':

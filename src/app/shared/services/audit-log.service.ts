@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { buildHttpParams } from '../utils/http-params.util';
 
 /**
  * Audit Log Entry
@@ -66,17 +67,7 @@ export class AuditLogService {
    * Get audit logs with filtering and pagination
    */
   getAuditLogs(params?: AuditLogQueryParams): Observable<PaginatedResponse<AuditLog>> {
-    let httpParams = new HttpParams();
-
-    if (params) {
-      Object.keys(params).forEach(key => {
-        const value = params[key as keyof AuditLogQueryParams];
-        if (value !== undefined && value !== null && value !== '') {
-          httpParams = httpParams.set(key, value.toString());
-        }
-      });
-    }
-
+    const httpParams = buildHttpParams(params);
     return this.http.get<PaginatedResponse<AuditLog>>(this.API_URL, { params: httpParams });
   }
 

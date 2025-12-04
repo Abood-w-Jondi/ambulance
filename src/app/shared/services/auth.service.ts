@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User, LoginCredentials, LoginResponse, UserRole, TokenPayload } from '../models';
@@ -14,11 +14,7 @@ export class AuthService {
   private readonly TOKEN_KEY = environment.jwt.tokenKey;
   private readonly REFRESH_TOKEN_KEY = environment.jwt.refreshTokenKey;
 
-  // Current user state
-  private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
-  public currentUser$ = this.currentUserSubject.asObservable();
-
-  // Signals for reactive state
+  // Signals for reactive state (single source of truth)
   currentUser = signal<User | null>(this.getUserFromStorage());
   isAuthenticated = computed(() => this.currentUser() !== null);
   userRole = computed(() => this.currentUser()?.role || null);
@@ -41,7 +37,6 @@ export class AuthService {
     const user = this.getUserFromStorage();
     if (user) {
       this.currentUser.set(user);
-      this.currentUserSubject.next(user);
     }
   }
 
@@ -240,7 +235,6 @@ export class AuthService {
    */
   private setUser(user: User): void {
     this.currentUser.set(user);
-    this.currentUserSubject.next(user);
     localStorage.setItem('ambulance_user', JSON.stringify(user));
   }
 
@@ -267,7 +261,6 @@ export class AuthService {
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem('ambulance_user');
     this.currentUser.set(null);
-    this.currentUserSubject.next(null);
   }
 
   /**

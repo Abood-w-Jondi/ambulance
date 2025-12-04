@@ -20,7 +20,7 @@ export class BottomBarComponent {
   navItems: NavItem[] = [
     { label: 'لوحة القيادة', icon: 'fa-solid fa-gauge', route: '/user/driver-dashboard' },
     { label: 'الحالة', icon: 'fa-solid fa-arrows-rotate', route: '/user/status-update' },
-    { label: 'النقليات', icon: 'fa-solid fa-list-ul', route: '/user/accept-trips' },
+    { label: 'النقليات', icon: 'fa-solid fa-list-ul', route: '/user/my-trips' },
     { label: 'الملف الشخصي', icon: 'fa-solid fa-user-circle', route: '/user/profile' }
   ];
 

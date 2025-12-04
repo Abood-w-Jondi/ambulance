@@ -223,7 +223,7 @@
                                         <h5 class="fw-bold m-0">{{ vehicle.vehicleId }}</h5>
                                         <p class="text-muted small m-0">{{ vehicle.vehicleName }}</p>
                                     </div>
-                                    <span class="badge rounded-pill fw-bold" [ngClass]="getStatusBadgeClass(vehicle.status)">
+                                    <span class="badge rounded-pill fw-bold" [ngStyle]="{'background-color': getStatusBadgeClass(vehicle.status)}">
                                         <i class="fa-solid me-1" [ngClass]="getStatusIcon(vehicle.status)"></i>
                                         {{ vehicle.status }}
                                     </span>

@@ -58,7 +58,7 @@
 .bg-danger-subtle { background-color: #ffeaea !important; }
 
 
-.greenC {
+.green-c {
     background-color: #10B981 !important;
     color: white !important;
     transition: background-color 0.3s ease;
@@ -68,7 +68,7 @@
     }
 }
 
-.blueC {
+.blue-c {
     background-color: #0d6efd !important;
     color: white !important;
     transition: background-color 0.3s ease;
@@ -78,7 +78,7 @@
     }
 }
 
-.yellowC {
+.yellow-c {
     background-color: #f9a200 !important;
     color: white !important;
     transition: background-color 0.3s ease;

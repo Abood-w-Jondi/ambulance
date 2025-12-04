@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Driver, DriverStatus } from '../models';
+import { buildHttpParams } from '../utils/http-params.util';
 
 /**
  * Pagination response wrapper
@@ -41,17 +42,7 @@ export class DriverService {
    * Get all drivers with pagination and filters
    */
   getDrivers(params?: DriverQueryParams): Observable<PaginatedResponse<Driver>> {
-    let httpParams = new HttpParams();
-
-    if (params) {
-      Object.keys(params).forEach(key => {
-        const value = params[key as keyof DriverQueryParams];
-        if (value !== undefined && value !== null && value !== '' && value !== 'all') {
-          httpParams = httpParams.set(key, value.toString());
-        }
-      });
-    }
-
+    const httpParams = buildHttpParams(params);
     return this.http.get<PaginatedResponse<Driver>>(this.API_URL, { params: httpParams });
   }
 
@@ -122,10 +113,7 @@ export class DriverService {
    * Get driver's trips history
    */
   getDriverTrips(id: string, params?: { page?: number; limit?: number }): Observable<any> {
-    let httpParams = new HttpParams();
-    if (params?.page) httpParams = httpParams.set('page', params.page.toString());
-    if (params?.limit) httpParams = httpParams.set('limit', params.limit.toString());
-
+    const httpParams = buildHttpParams(params);
     return this.http.get(`${this.API_URL}/${id}/trips`, { params: httpParams });
   }
 

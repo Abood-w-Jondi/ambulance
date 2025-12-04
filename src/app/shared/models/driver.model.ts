@@ -22,6 +22,7 @@ export interface Driver {
     // Profile Media
     imageUrl: string;
     imageAlt: string;
+    driver_status: DriverStatus
 }
 
 export type DriverStatus = 'متاح' | 'في رحلة' | 'غير متصل';

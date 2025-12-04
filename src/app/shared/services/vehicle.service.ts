@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Vehicle, VehicleStatus } from '../models';
 import { PaginatedResponse } from './driver.service';
+import { buildHttpParams } from '../utils/http-params.util';
 
 export interface VehicleQueryParams {
   page?: number;
@@ -37,15 +38,7 @@ export class VehicleService {
   constructor(private http: HttpClient) {}
 
   getVehicles(params?: VehicleQueryParams): Observable<PaginatedResponse<Vehicle>> {
-    let httpParams = new HttpParams();
-    if (params) {
-      Object.keys(params).forEach(key => {
-        const value = params[key as keyof VehicleQueryParams];
-        if (value !== undefined && value !== null && value !== '' && value !== 'All') {
-          httpParams = httpParams.set(key, value.toString());
-        }
-      });
-    }
+    const httpParams = buildHttpParams(params);
     return this.http.get<PaginatedResponse<Vehicle>>(this.API_URL, { params: httpParams });
   }
 

@@ -52,12 +52,6 @@ export class DriversListComponent implements OnInit {
     }
     
     queryFilterValue = signal<string | null>(null);
-    
-    searchTermValue: string = '';
-    filterStatusValue: FilterStatus = 'all';
-    minOwedValue: number | null = null;
-    maxOwedValue: number | null = null;
-
     showFiltersOnMobile = signal(false);
     searchTerm = signal('');
     filterStatus = signal<FilterStatus>('all');
@@ -358,8 +352,7 @@ export class DriversListComponent implements OnInit {
         this.route.queryParams.subscribe(params => {
             if (params['filterValue']) {
                 this.queryFilterValue.set(params['filterValue']);
-                this.searchTermValue = this.queryFilterValue() || '';
-                this.searchTerm.set(this.searchTermValue);
+                this.searchTerm.set(this.queryFilterValue() || '');
             }
         });
         this.loadData();
@@ -398,11 +391,6 @@ export class DriversListComponent implements OnInit {
         this.filterStatus.set('all');
         this.minOwed.set(null);
         this.maxOwed.set(null);
-
-        this.searchTermValue = '';
-        this.filterStatusValue = 'all';
-        this.minOwedValue = null;
-        this.maxOwedValue = null;
 
         this.showFiltersOnMobile.set(false);
         this.toastService.info('تمت إعادة تعيين الفلاتر', 3000);

@@ -78,10 +78,6 @@
                     {{ vehicle.status }}
                   </span>
                 </div>
-                <small class="text-muted text-truncate d-block">
-                  <i class="fas fa-user-circle me-1"></i>
-                  {{ vehicle.driverName || 'بدون سائق' }}
-                </small>
               </div>
             </div>
           </div>
@@ -140,10 +136,6 @@
       </div>
 
       <div class="detail-body mt-3">
-        <div class="info-row">
-          <i class="fas fa-user text-muted"></i>
-          <span>{{ selectedVehicle()!.driverName || 'سائق غير معروف' }}</span>
-        </div>
         <div class="info-row">
           <i class="fas fa-clock text-muted"></i>
           <span>آخر تحديث: {{ selectedVehicle()!.lastLocationUpdate | date:'mediumTime':'':'ar-EG' }}</span>

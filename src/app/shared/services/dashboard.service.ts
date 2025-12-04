@@ -42,6 +42,10 @@ export interface DashboardStats {
     totalDriverShare: number;
     totalParamedicShare: number;
     totalCompanyShare: number;
+    totalOwnerShare: number;
+    companyBalance: number;
+    companyDebtToOwner: number;
+    ownerBalance: number;
   };
   fuel: {
     totalAmount: number;

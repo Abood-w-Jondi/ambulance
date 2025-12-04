@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { FuelRecord } from '../models';
 import { PaginatedResponse } from './driver.service';
+import { buildHttpParams } from '../utils/http-params.util';
 
 export interface FuelQueryParams {
   page?: number;
@@ -29,16 +30,7 @@ export class FuelService {
    * Get all fuel records with pagination and filters
    */
   getFuelRecords(params?: FuelQueryParams): Observable<PaginatedResponse<FuelRecord>> {
-    let httpParams = new HttpParams();
-
-    if (params) {
-      Object.keys(params).forEach(key => {
-        const value = params[key as keyof FuelQueryParams];
-        if (value !== undefined && value !== null && value !== '') {
-          httpParams = httpParams.set(key, value.toString());
-        }
-      });
-    }
+    const httpParams = buildHttpParams(params);
 
     return this.http.get<PaginatedResponse<any>>(this.API_URL, { params: httpParams }).pipe(
       map(response => ({

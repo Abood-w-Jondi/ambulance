@@ -20,16 +20,14 @@ export interface Vehicle {
 }
 
 export type VehicleType = 'Type I Truck' | 'Type II Van' | 'Type III Cutaway';
-export type VehicleStatus = 
-  | 'متاح' 
-  | 'في الطريق للمريض' 
-  | 'في الموقع' 
-  | 'في الطريق للمستشفى' 
-  | 'في الوجهة' 
-  | 'خارج الخدمة' 
-  | 'إنهاء الخدمة'
-  | 'صيانة' // يمكن إضافة صيانة إذا كانت حالة يدوية
-  | 'في الخدمة'; // يمكن إضافة "في الخدمة" كحالة عامة تغطي معظم الحالات التشغيلية
+export type VehicleStatus =
+  | 'متاحة'
+  | 'في الطريق للمريض'
+  | 'في الموقع'
+  | 'في الطريق للمستشفى'
+  | 'في الوجهة'
+  | 'خارج الخدمة'
+  | 'إنهاء الخدمة';
 export type VehicleFilterStatus = 'All' | VehicleStatus;
 
 /**
