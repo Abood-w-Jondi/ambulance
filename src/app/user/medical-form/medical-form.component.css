@@ -1,0 +1,315 @@
+/* Base Colors/Variables (Optional but helpful for consistency) */
+:root {
+  --primary-color: #007bff; /* A nice, standard blue */
+  --secondary-color: #6c757d;
+  --success-color: #28a745;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --info-color: #17a2b8;
+  --background-light: #f4f7f9;
+  --card-background: #ffffff;
+  --border-color: #e3e8ee;
+  --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08); /* More subtle, modern shadow */
+}
+
+body {
+  background-color: var(--background-light); /* Apply a light background to the body */
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.medical-form-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px; /* Increased padding */
+}
+
+/* --- Form Header Styling --- */
+.form-header {
+  background: var(--card-background);
+  border-radius: 12px; /* Slightly more rounded corners */
+  padding: 25px; /* Slightly more padding */
+  margin-bottom: 30px; /* Increased margin */
+  box-shadow: var(--shadow-light);
+  border: 1px solid var(--border-color); /* Subtle border for definition */
+}
+
+.form-title {
+  color: #343a40; /* Darker title text */
+  font-weight: 700;
+  font-size: 1.8rem;
+}
+
+.trip-id-text {
+  font-size: 0.95rem;
+  color: var(--secondary-color) !important;
+}
+
+.btn-go-back {
+  border-radius: 8px;
+}
+
+/* --- Status Bar Styling (Card-like look) --- */
+.status-bar-card {
+  background: var(--background-light);
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px dashed var(--border-color); /* Dashed border for visual separation from header */
+}
+
+.completion-section {
+  margin-bottom: 0; /* Adjusted for better spacing within the row */
+}
+
+.completion-label {
+  color: var(--secondary-color);
+  font-size: 1rem;
+}
+
+.completion-percentage-badge {
+  font-weight: 600;
+  padding: 0.4em 0.8em;
+  border-radius: 10px;
+  color: white; /* Ensure text is white for contrast against dynamic background */
+  min-width: 45px; /* Ensures space for 3 digits */
+  text-align: center;
+}
+
+.status-badges {
+  /* Added margin-left/right to allow inner gap to align with outer padding */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px; /* Increased gap */
+}
+
+.status-badges .badge {
+  padding: 0.5em 0.8em;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* Progress bar custom colors and style */
+.completion-progress.progress {
+  height: 10px !important;
+  border-radius: 5px;
+  background-color: #e9ecef; /* Light gray track */
+}
+
+.progress-bar {
+  transition: width 0.4s ease, background-color 0.4s ease;
+  border-radius: 5px; /* Matches the parent progress container */
+}
+
+/* --- Form Sections (Accordion/Body) --- */
+
+.accordion-item {
+  margin-bottom: 12px; /* Slightly more space */
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* Subtle shadow on items */
+}
+
+.accordion-button {
+  font-weight: 600;
+  font-size: 1.1rem; /* Slightly larger text */
+  padding: 18px 25px; /* Increased padding */
+  background-color: var(--card-background); /* White background for the collapsed state */
+  color: #343a40;
+  border: none;
+  border-bottom: 1px solid transparent; /* Prepare for active state border */
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: #d1e7fd; /* Lighter, but distinct background for active state */
+  color: var(--primary-color);
+  box-shadow: none;
+  border-bottom-color: var(--primary-color); /* Highlight border on active button */
+}
+
+.accordion-button:focus {
+  box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+}
+
+.accordion-body {
+  padding: 25px;
+  background-color: #fff;
+}
+
+/* --- Form Elements --- */
+
+.form-label {
+  font-weight: 600; /* Bolder label text */
+  margin-bottom: 8px;
+  color: #343a40;
+  font-size: 0.95rem;
+}
+
+.form-check-label {
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+.form-control, .form-select {
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* --- Table Styling --- */
+
+.table-sm th,
+.table-sm td {
+  padding: 8px; /* Slightly more padding for better spacing */
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.table-bordered {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden; /* Ensures rounded corners apply to the whole table */
+}
+
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid var(--border-color);
+}
+
+.table-sm thead th {
+  background-color: var(--background-light);
+  font-weight: 600;
+  color: #343a40;
+}
+
+/* Neurovascular table styling */
+.table-sm .form-control-sm {
+  font-size: 0.85rem;
+  padding: 4px 8px;
+}
+
+/* --- Modal Styling --- */
+.modal-backdrop {
+  z-index: 1040;
+}
+
+.modal {
+  z-index: 1050;
+}
+
+/* --- Mobile Responsive Enhancements --- */
+@media (max-width: 991.98px) {
+  /* Tablet/Mobile Adjustments for Status Bar */
+  .status-bar-card .row > div {
+    /* Add bottom margin to each column on smaller screens */
+    margin-bottom: 15px; 
+  }
+  
+  .status-bar-card .row > div:last-child {
+    margin-bottom: 0; /* Remove margin from the very last column */
+  }
+
+  .status-badges, .action-buttons {
+    justify-content: center !important; /* Center align on mobile */
+  }
+}
+
+@media (max-width: 767.98px) {
+  .medical-form-container {
+    padding: 15px;
+  }
+
+  .form-header {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .form-title {
+    font-size: 1.5rem;
+  }
+
+  .btn-go-back {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .status-bar-card {
+    padding: 15px;
+  }
+
+  .status-badges {
+    flex-direction: row; /* Keep badges in a row, allow wrapping */
+    justify-content: center;
+    gap: 6px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .action-buttons .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .accordion-button {
+    font-size: 1rem;
+    padding: 12px 15px;
+  }
+
+  .accordion-body {
+    padding: 15px;
+  }
+
+  .table-sm {
+    font-size: 0.8rem;
+  }
+
+  .table-sm th,
+  .table-sm td {
+    padding: 4px;
+  }
+}
+
+/* RTL support (Kept and slightly enhanced) */
+[dir="rtl"] .accordion-button::after {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .form-title .fas {
+  margin-right: 0 !important;
+  margin-left: 0.75rem; /* Space the icon on the right */
+}
+
+[dir="rtl"] .btn-go-back .fas {
+  margin-left: 0.5rem !important; /* Move icon to the right of text */
+  margin-right: 0 !important;
+  transform: scaleX(-1); /* Flip the arrow for RTL */
+}

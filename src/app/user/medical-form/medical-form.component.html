@@ -1,0 +1,1422 @@
+<!-- Loading State -->
+<div *ngIf="isLoading" class="loading-container">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">جاري التحميل...</span>
+  </div>
+  <p class="mt-3">جاري تحميل النموذج الطبي...</p>
+</div>
+
+<!-- Main Form Container -->
+<div *ngIf="!isLoading" class="medical-form-container">
+  <!-- Header -->
+  <div class="form-header">
+  <div class="header-main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="form-title mb-1">
+          <i class="fas fa-notes-medical me-3"></i>
+          النموذج الطبي
+        </h1>
+        <p class="text-secondary mb-0 trip-id-text">رحلة #{{ tripId }}</p>
+      </div>
+      <button class="btn btn-outline-secondary btn-go-back" (click)="goBack()">
+        <i class="fas fa-arrow-right me-2"></i>
+        رجوع
+      </button>
+    </div>
+
+    <div class="status-bar-card">
+      <div class="row g-3">
+        <div class="col-12 col-lg-6 completion-col">
+          <div class="completion-section">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-bold text-dark completion-label">نسبة الاكتمال</span>
+              <span class="badge completion-percentage-badge" [style.background-color]="getCompletionColor()">
+                {{ completionPercentage }}%
+              </span>
+            </div>
+            <div class="progress completion-progress" style="height: 10px;">
+              <div class="progress-bar" role="progressbar" [style.width.%]="completionPercentage"
+                [style.background-color]="getCompletionColor()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-6 d-flex flex-column align-items-lg-start">
+          <div class="status-badges mb-3 mb-lg-0 w-100 d-flex flex-wrap justify-content-lg-end justify-content-center">
+            <span class="badge bg-info me-2" *ngIf="isSaving">
+              <i class="fas fa-spinner fa-spin me-1"></i>
+              جاري الحفظ...
+            </span>
+            <span class="badge bg-success me-2" *ngIf="!isSaving && canEdit">
+              <i class="fas fa-check me-1"></i>
+              تم الحفظ
+            </span>
+            <span class="badge bg-warning me-2" *ngIf="isLocked && !isComplete">
+              <i class="fas fa-lock me-1"></i>
+              مقفل
+            </span>
+            <span class="badge bg-primary me-2" *ngIf="isComplete">
+              <i class="fas fa-check-circle me-1"></i>
+              مكتمل
+            </span>
+            <span class="badge bg-secondary me-2" *ngIf="isAdmin">
+              <i class="fas fa-user-shield me-1"></i>
+              مدير
+            </span>
+            <span class="badge bg-danger" *ngIf="!canEdit && !isAdmin">
+              <i class="fas fa-ban me-1"></i>
+              للقراءة فقط
+            </span>
+          </div>
+
+          <div class="action-buttons w-100 d-flex justify-content-lg-end justify-content-center">
+            <button class="btn btn-primary me-2" *ngIf="canEdit && !isLocked && !isComplete"
+              (click)="openCompleteConfirmModal()">
+              <i class="fas fa-check-circle me-2"></i>
+              وضع علامة كمكتمل وقفل النموذج
+            </button>
+            <button class="btn btn-warning" *ngIf="isAdmin && isLocked" (click)="unlockForm()">
+              <i class="fas fa-unlock me-2"></i>
+              فتح النموذج
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  <!-- Form Sections (Accordion) -->
+  <div class="accordion mt-4" id="medicalFormAccordion">
+
+    <!-- Section 1: Patient Information -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button" [class.collapsed]="!expandedSections['Patient_Information']" type="button"
+          (click)="toggleSection('Patient_Information')">
+          <i class="fas fa-user-injured me-2"></i>
+          معلومات المريض
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['Patient_Information']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">اسم المريض</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Patient_Information!.Patient_Name"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">التاريخ</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Patient_Information!.Date"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-12">
+              <label class="form-label">شكوى المريض</label>
+              <textarea class="form-control" rows="3" [(ngModel)]="formData.Patient_Information!.Patient_Complaint"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">الوقت إلى منطقة العلاج</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Patient_Information!.Time_to_Treatment_Area"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">الأشعة السينية</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Patient_Information!.X_Ray"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-12">
+              <label class="form-label">السرد</label>
+              <textarea class="form-control" rows="4" [(ngModel)]="formData.Patient_Information!.Narrative"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Vital Signs -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['Vital_Signs']" type="button"
+          (click)="toggleSection('Vital_Signs')">
+          <i class="fas fa-heartbeat me-2"></i>
+          العلامات الحيوية
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['Vital_Signs']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">ضغط الدم (BP)</label>
+              <input type="text" class="form-control" placeholder="120/80" [(ngModel)]="formData.Vital_Signs!.BP"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">التنفس (Resp)</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Vital_Signs!.Resp"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">النبض (Pulse)</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Vital_Signs!.Pulse"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">الحرارة (Temp)</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Vital_Signs!.Temp"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: History and Social -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['History_and_Social']"
+          type="button" (click)="toggleSection('History_and_Social')">
+          <i class="fas fa-history me-2"></i>
+          التاريخ الطبي والاجتماعي
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['History_and_Social']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <!-- Tetanus & Flu Shot -->
+            <div class="col-md-6">
+              <label class="form-label">التيتانوس</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.History_and_Social!.Tetanus"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">لقاح الإنفلونزا</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.History_and_Social!.Flu_Shot"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+
+            <!-- Social Status -->
+            <div class="col-12">
+              <label class="form-label fw-bold">الحالة الاجتماعية</label>
+              <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Social_Status!.Single" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="single">
+                  <label class="form-check-label" for="single">أعزب</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Social_Status!.Married" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="married">
+                  <label class="form-check-label" for="married">متزوج</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Social_Status!.Widowed" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="widowed">
+                  <label class="form-check-label" for="widowed">أرمل</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Social_Status!.Divorced" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="divorced">
+                  <label class="form-check-label" for="divorced">مطلق</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Alcohol & Tobacco -->
+            <div class="col-12">
+              <label class="form-label fw-bold">التبغ والكحول</label>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">التبغ</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.History_and_Social!.Alcohol_Tobacco!.Tobacco" (ngModelChange)="onFieldChange()"
+                [disabled]="!canEdit">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">استخدام الكحول</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.History_and_Social!.Alcohol_Tobacco!.ETOH_Use" (ngModelChange)="onFieldChange()"
+                [disabled]="!canEdit">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">التكرار</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.History_and_Social!.Alcohol_Tobacco!.Freq"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+
+            <!-- Visual Acuity -->
+            <div class="col-12">
+              <label class="form-label fw-bold">حدة البصر</label>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">OU</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.History_and_Social!.Visual_Acuity!.OU"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">OD</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.History_and_Social!.Visual_Acuity!.OD"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">OS</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.History_and_Social!.Visual_Acuity!.OS"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-3">
+              <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox"
+                  [(ngModel)]="formData.History_and_Social!.Visual_Acuity!.Corrected" (ngModelChange)="onFieldChange()"
+                  [disabled]="!canEdit" id="corrected">
+                <label class="form-check-label" for="corrected">مصحح</label>
+              </div>
+            </div>
+
+            <!-- Family History -->
+            <div class="col-12">
+              <label class="form-label fw-bold">التاريخ العائلي</label>
+              <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Family_History!.Heart_Disease"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="famHeartDisease">
+                  <label class="form-check-label" for="famHeartDisease">أمراض القلب</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Family_History!.Cancer" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="famCancer">
+                  <label class="form-check-label" for="famCancer">السرطان</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Family_History!.Diabetes"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="famDiabetes">
+                  <label class="form-check-label" for="famDiabetes">السكري</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">أخرى (التاريخ العائلي)</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.History_and_Social!.Family_History!.Other"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+
+            <!-- Past Medical History -->
+            <div class="col-12">
+              <label class="form-label fw-bold">التاريخ الطبي السابق</label>
+              <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Past_Medical_History!.HTN"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="htn">
+                  <label class="form-check-label" for="htn">ارتفاع ضغط الدم</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Past_Medical_History!.Heart_Disease"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="pastHeartDisease">
+                  <label class="form-check-label" for="pastHeartDisease">أمراض القلب</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Past_Medical_History!.CVA"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="cva">
+                  <label class="form-check-label" for="cva">سكتة دماغية</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Past_Medical_History!.Cancer"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="pastCancer">
+                  <label class="form-check-label" for="pastCancer">السرطان</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Past_Medical_History!.Diabetes"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="pastDiabetes">
+                  <label class="form-check-label" for="pastDiabetes">السكري</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">أخرى (التاريخ الطبي)</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.History_and_Social!.Past_Medical_History!.Other" (ngModelChange)="onFieldChange()"
+                [disabled]="!canEdit">
+            </div>
+
+            <!-- Past Surgeries -->
+            <div class="col-12">
+              <label class="form-label fw-bold">العمليات الجراحية السابقة</label>
+              <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Past_Surgeries!.Gall_Bladder"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="gallBladder">
+                  <label class="form-check-label" for="gallBladder">المرارة</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Past_Surgeries!.Appendix"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="appendix">
+                  <label class="form-check-label" for="appendix">الزائدة الدودية</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Past_Surgeries!.Heart" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="heartSurgery">
+                  <label class="form-check-label" for="heartSurgery">القلب</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Past_Surgeries!.Hysterectomy"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="hysterectomy">
+                  <label class="form-check-label" for="hysterectomy">استئصال الرحم</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Past_Surgeries!.Lung" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="lungSurgery">
+                  <label class="form-check-label" for="lungSurgery">الرئة</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">أخرى (العمليات الجراحية)</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.History_and_Social!.Past_Surgeries!.Other"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+
+            <!-- Infectious History -->
+            <div class="col-12">
+              <label class="form-label fw-bold">التاريخ المعدي</label>
+              <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Infectious_History!.HIV" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="hiv">
+                  <label class="form-check-label" for="hiv">HIV</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Infectious_History!.COPD"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="copd">
+                  <label class="form-check-label" for="copd">COPD</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Infectious_History!.Asthma"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="asthma">
+                  <label class="form-check-label" for="asthma">الربو</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Infectious_History!.Seizures"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="seizures">
+                  <label class="form-check-label" for="seizures">النوبات</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.History_and_Social!.Infectious_History!.Diabetes"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="infDiabetes">
+                  <label class="form-check-label" for="infDiabetes">السكري</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">أخرى (التاريخ المعدي)</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.History_and_Social!.Infectious_History!.Other" (ngModelChange)="onFieldChange()"
+                [disabled]="!canEdit">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Medication and Allergies -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['Medication_and_Allergies']"
+          type="button" (click)="toggleSection('Medication_and_Allergies')">
+          <i class="fas fa-pills me-2"></i>
+          الأدوية والحساسية
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['Medication_and_Allergies']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <!-- Medication -->
+            <div class="col-12">
+              <label class="form-label fw-bold">الأدوية</label>
+              <div class="d-flex gap-3 mb-2">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Medication_and_Allergies!.Medication!.None" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="medNone">
+                  <label class="form-check-label" for="medNone">لا يوجد</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Medication_and_Allergies!.Medication!.Unknown"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="medUnknown">
+                  <label class="form-check-label" for="medUnknown">غير معروف</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">تفاصيل الأدوية</label>
+              <textarea class="form-control" rows="3"
+                [(ngModel)]="formData.Medication_and_Allergies!.Medication!.Details" (ngModelChange)="onFieldChange()"
+                [disabled]="!canEdit"></textarea>
+            </div>
+
+            <!-- Allergies -->
+            <div class="col-12">
+              <label class="form-label fw-bold">الحساسية</label>
+              <div class="d-flex gap-3 mb-2">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Medication_and_Allergies!.Allergies!.None" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="allergyNone">
+                  <label class="form-check-label" for="allergyNone">لا يوجد</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Medication_and_Allergies!.Allergies!.Unknown"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="allergyUnknown">
+                  <label class="form-check-label" for="allergyUnknown">غير معروف</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">تفاصيل الحساسية</label>
+              <textarea class="form-control" rows="3"
+                [(ngModel)]="formData.Medication_and_Allergies!.Allergies!.Details" (ngModelChange)="onFieldChange()"
+                [disabled]="!canEdit"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5: Bleeding -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['Bleeding']" type="button"
+          (click)="toggleSection('Bleeding')">
+          <i class="fas fa-tint me-2"></i>
+          النزيف
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['Bleeding']">
+        <div class="accordion-body">
+          <div class="d-flex gap-3 flex-wrap">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Bleeding!.Present"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="bleedPresent">
+              <label class="form-check-label" for="bleedPresent">موجود</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Bleeding!.Absent"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="bleedAbsent">
+              <label class="form-check-label" for="bleedAbsent">غير موجود</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Bleeding!.OBO_Trauma"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="oboTrauma">
+              <label class="form-check-label" for="oboTrauma">OBO صدمة</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Bleeding!.Controlled"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="bleedControlled">
+              <label class="form-check-label" for="bleedControlled">تحت السيطرة</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Bleeding!.Moderate"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="bleedModerate">
+              <label class="form-check-label" for="bleedModerate">معتدل</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Bleeding!.Hemorrhage"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="hemorrhage">
+              <label class="form-check-label" for="hemorrhage">نزيف حاد</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 6: Physical Assessment -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['Physical_Assessment']"
+          type="button" (click)="toggleSection('Physical_Assessment')">
+          <i class="fas fa-stethoscope me-2"></i>
+          التقييم الجسدي
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['Physical_Assessment']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <!-- Mental Status -->
+            <div class="col-12">
+              <label class="form-label fw-bold">الحالة العقلية</label>
+              <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Mental_Status!.Alert_Oriented"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="alertOriented">
+                  <label class="form-check-label" for="alertOriented">متنبه وموجه</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Mental_Status!.Awake_Confused"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="awakeConfused">
+                  <label class="form-check-label" for="awakeConfused">مستيقظ مشوش</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Mental_Status!.Verbally_Responsive"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="verballyResponsive">
+                  <label class="form-check-label" for="verballyResponsive">يستجيب شفهيا</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Mental_Status!.Responds_to_Pain"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="respondsToPain">
+                  <label class="form-check-label" for="respondsToPain">يستجيب للألم</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Mental_Status!.Aphasic" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="aphasic">
+                  <label class="form-check-label" for="aphasic">فاقد النطق</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Mental_Status!.Combative"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="combative">
+                  <label class="form-check-label" for="combative">عدواني</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Mental_Status!.Unresponsive"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="unresponsive">
+                  <label class="form-check-label" for="unresponsive">غير مستجيب</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Color -->
+            <div class="col-12">
+              <label class="form-label fw-bold">اللون</label>
+              <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Color!.Pink" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="colorPink">
+                  <label class="form-check-label" for="colorPink">وردي</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Color!.Mottled" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="mottled">
+                  <label class="form-check-label" for="mottled">مرقط</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Color!.Cyanotic" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="cyanotic">
+                  <label class="form-check-label" for="cyanotic">زراق</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Color!.Jaundiced" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="jaundiced">
+                  <label class="form-check-label" for="jaundiced">يرقاني</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Color!.Pale" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="colorPale">
+                  <label class="form-check-label" for="colorPale">شاحب</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Skin -->
+            <div class="col-12">
+              <label class="form-label fw-bold">الجلد</label>
+              <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Physical_Assessment!.Skin!.Warm"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="skinWarm">
+                  <label class="form-check-label" for="skinWarm">دافئ</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Physical_Assessment!.Skin!.Cool"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="skinCool">
+                  <label class="form-check-label" for="skinCool">بارد</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Physical_Assessment!.Skin!.Hot"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="skinHot">
+                  <label class="form-check-label" for="skinHot">ساخن</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Physical_Assessment!.Skin!.Dry"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="skinDry">
+                  <label class="form-check-label" for="skinDry">جاف</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Physical_Assessment!.Skin!.Diaphoretic" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="diaphoretic">
+                  <label class="form-check-label" for="diaphoretic">متعرق</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 7: Skin Integrity -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['Skin_Integrity']" type="button"
+          (click)="toggleSection('Skin_Integrity')">
+          <i class="fas fa-hand-paper me-2"></i>
+          سلامة الجلد
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['Skin_Integrity']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Skin_Integrity!.INTACT"
+                  (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="skinIntact">
+                <label class="form-check-label" for="skinIntact">سليم</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">أخرى</label>
+              <textarea class="form-control" rows="3" [(ngModel)]="formData.Skin_Integrity!.OTHER"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit"
+                placeholder="وصف أي مشاكل في سلامة الجلد..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 8: Cardiovascular & Respiratory -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['Cardiovascular_Respiratory']"
+          type="button" (click)="toggleSection('Cardiovascular_Respiratory')">
+          <i class="fas fa-lungs me-2"></i>
+          القلب والجهاز التنفسي
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['Cardiovascular_Respiratory']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <!-- Shortness of Breath -->
+            <div class="col-12">
+              <label class="form-label fw-bold">ضيق التنفس</label>
+              <div class="d-flex gap-3 mb-2">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Shortness_of_Breath!.Yes"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="sobYes">
+                  <label class="form-check-label" for="sobYes">نعم</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Shortness_of_Breath!.No"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="sobNo">
+                  <label class="form-check-label" for="sobNo">لا</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">يحدث عند:</label>
+              <div class="d-flex gap-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Shortness_of_Breath!.Occurs!.Ambulating"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="sobAmbulating">
+                  <label class="form-check-label" for="sobAmbulating">المشي</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Shortness_of_Breath!.Occurs!.Resting"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="sobResting">
+                  <label class="form-check-label" for="sobResting">الراحة</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Shortness_of_Breath!.Occurs!.Eating"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="sobEating">
+                  <label class="form-check-label" for="sobEating">الأكل</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">يخف بواسطة</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.Cardiovascular_Respiratory!.Shortness_of_Breath!.Relieved_by"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">التكرار</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.Cardiovascular_Respiratory!.Shortness_of_Breath!.Freq"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">كم من الوقت</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.Cardiovascular_Respiratory!.Shortness_of_Breath!.How_Long"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-12">
+              <label class="form-label">يتفاقم</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.Cardiovascular_Respiratory!.Shortness_of_Breath!.Worsens"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+
+            <!-- Coughing -->
+            <div class="col-12 mt-3">
+              <label class="form-label fw-bold">السعال</label>
+              <div class="d-flex gap-3 mb-2">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Coughing!.Yes" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="coughYes">
+                  <label class="form-check-label" for="coughYes">نعم</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Coughing!.No" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="coughNo">
+                  <label class="form-check-label" for="coughNo">لا</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Coughing!.Non_Productive"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="nonProductive">
+                  <label class="form-check-label" for="nonProductive">جاف</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Coughing!.Productive"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="productive">
+                  <label class="form-check-label" for="productive">مع بلغم</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">الكمية</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.Cardiovascular_Respiratory!.Coughing!.Amount" (ngModelChange)="onFieldChange()"
+                [disabled]="!canEdit">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">اللون</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Cardiovascular_Respiratory!.Coughing!.Color"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">كم من الوقت</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.Cardiovascular_Respiratory!.Coughing!.How_Long" (ngModelChange)="onFieldChange()"
+                [disabled]="!canEdit">
+            </div>
+
+            <!-- Cardiac Monitor -->
+            <div class="col-12 mt-3">
+              <label class="form-label fw-bold">جهاز مراقبة القلب</label>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox"
+                  [(ngModel)]="formData.Cardiovascular_Respiratory!.Cardiac_Monitor!.N_A"
+                  (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="cardiacNA">
+                <label class="form-check-label" for="cardiacNA">غير متاح</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">المعدل</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.Cardiovascular_Respiratory!.Cardiac_Monitor!.Rate"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">الإيقاع</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.Cardiovascular_Respiratory!.Cardiac_Monitor!.Rhythm"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+
+            <!-- SpO2 -->
+            <div class="col-12 mt-3">
+              <label class="form-label fw-bold">تشبع الأكسجين (SpO2)</label>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">نسبة التشبع %</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.Cardiovascular_Respiratory!.SpO2!.O2_Sat_Pct" (ngModelChange)="onFieldChange()"
+                [disabled]="!canEdit" placeholder="98%">
+            </div>
+            <div class="col-md-6">
+              <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox"
+                  [(ngModel)]="formData.Cardiovascular_Respiratory!.SpO2!.N_A" (ngModelChange)="onFieldChange()"
+                  [disabled]="!canEdit" id="spo2NA">
+                <label class="form-check-label" for="spo2NA">غير متاح</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">على الأكسجين؟</label>
+              <div class="d-flex gap-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.SpO2!.On_O2!.Yes"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="onO2Yes">
+                  <label class="form-check-label" for="onO2Yes">نعم</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.SpO2!.On_O2!.No" (ngModelChange)="onFieldChange()"
+                    [disabled]="!canEdit" id="onO2No">
+                  <label class="form-check-label" for="onO2No">لا</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Respirations -->
+            <div class="col-12 mt-3">
+              <label class="form-label fw-bold">التنفس</label>
+              <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Respirations!.Normal"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="respNormal">
+                  <label class="form-check-label" for="respNormal">طبيعي</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Respirations!.Apneic"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="apneic">
+                  <label class="form-check-label" for="apneic">انقطاع النفس</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Respirations!.Weak_Resp"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="weakResp">
+                  <label class="form-check-label" for="weakResp">ضعيف</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Respirations!.Dyspneic"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="dyspneic">
+                  <label class="form-check-label" for="dyspneic">ضيق تنفس</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Respirations!.Coughing"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="respCoughing">
+                  <label class="form-check-label" for="respCoughing">سعال</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Respirations!.Wheezing"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="wheezing">
+                  <label class="form-check-label" for="wheezing">أزيز</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Respirations!.Retracting"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="retracting">
+                  <label class="form-check-label" for="retracting">انسحاب</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lungs Auscultation -->
+            <div class="col-12 mt-3">
+              <label class="form-label fw-bold">تسمع الرئتين</label>
+              <div class="d-flex gap-3 mb-2">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Lungs_Auscultation!.Clear"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="lungsClear">
+                  <label class="form-check-label" for="lungsClear">صافي</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Lungs_Auscultation!.Right"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="lungsRight">
+                  <label class="form-check-label" for="lungsRight">يمين</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="formData.Cardiovascular_Respiratory!.Lungs_Auscultation!.Left"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="lungsLeft">
+                  <label class="form-check-label" for="lungsLeft">يسار</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">أخرى</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.Cardiovascular_Respiratory!.Lungs_Auscultation!.Other"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">تعليقات</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="formData.Cardiovascular_Respiratory!.Lungs_Auscultation!.Comments"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 9: Neurovascular -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['Neurovascular']" type="button"
+          (click)="toggleSection('Neurovascular')">
+          <i class="fas fa-brain me-2"></i>
+          التقييم العصبي الوعائي
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['Neurovascular']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Neurovascular!.N_A"
+                  (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="neuroNA">
+                <label class="form-check-label" for="neuroNA">غير متاح</label>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <p class="text-muted mb-2">المواقع: RA (ذراع يمين) | LA (ذراع يسار) | RL (ساق يمين) | LL (ساق يسار)</p>
+            </div>
+
+            <!-- Color Assessment -->
+            <div class="col-12 mt-3">
+              <label class="form-label fw-bold">اللون</label>
+              <table class="table table-sm table-bordered">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th *ngFor="let site of neurovascularSites">{{ site }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>وردي</td>
+                    <td *ngFor="let site of neurovascularSites; let i = index">
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="formData.Neurovascular!.COLOR!.PINK![i]" (ngModelChange)="onFieldChange()"
+                        [disabled]="!canEdit">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>شاحب</td>
+                    <td *ngFor="let site of neurovascularSites; let i = index">
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="formData.Neurovascular!.COLOR!.PALE![i]" (ngModelChange)="onFieldChange()"
+                        [disabled]="!canEdit">
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Temperature Assessment -->
+            <div class="col-12 mt-3">
+              <label class="form-label fw-bold">الحرارة</label>
+              <table class="table table-sm table-bordered">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th *ngFor="let site of neurovascularSites">{{ site }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>دافئ</td>
+                    <td *ngFor="let site of neurovascularSites; let i = index">
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="formData.Neurovascular!.TEMP!.WARM![i]" (ngModelChange)="onFieldChange()"
+                        [disabled]="!canEdit">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>بارد</td>
+                    <td *ngFor="let site of neurovascularSites; let i = index">
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="formData.Neurovascular!.TEMP!.COOL![i]" (ngModelChange)="onFieldChange()"
+                        [disabled]="!canEdit">
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Motion Assessment -->
+            <div class="col-12 mt-3">
+              <label class="form-label fw-bold">الحركة</label>
+              <table class="table table-sm table-bordered">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th *ngFor="let site of neurovascularSites">{{ site }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>كامل</td>
+                    <td *ngFor="let site of neurovascularSites; let i = index">
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="formData.Neurovascular!.MOTION!.FULL![i]" (ngModelChange)="onFieldChange()"
+                        [disabled]="!canEdit">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>جزئي</td>
+                    <td *ngFor="let site of neurovascularSites; let i = index">
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="formData.Neurovascular!.MOTION!.PARTIAL![i]" (ngModelChange)="onFieldChange()"
+                        [disabled]="!canEdit">
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Sensation Assessment -->
+            <div class="col-12 mt-3">
+              <label class="form-label fw-bold">الإحساس</label>
+              <table class="table table-sm table-bordered">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th *ngFor="let site of neurovascularSites">{{ site }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>سليم</td>
+                    <td *ngFor="let site of neurovascularSites; let i = index">
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="formData.Neurovascular!.SENSATION!.INTACT![i]" (ngModelChange)="onFieldChange()"
+                        [disabled]="!canEdit">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>خدر</td>
+                    <td *ngFor="let site of neurovascularSites; let i = index">
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="formData.Neurovascular!.SENSATION!.NUMBNESS![i]" (ngModelChange)="onFieldChange()"
+                        [disabled]="!canEdit">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>ألم</td>
+                    <td *ngFor="let site of neurovascularSites; let i = index">
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="formData.Neurovascular!.SENSATION!.PAIN![i]" (ngModelChange)="onFieldChange()"
+                        [disabled]="!canEdit">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>وخز</td>
+                    <td *ngFor="let site of neurovascularSites; let i = index">
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="formData.Neurovascular!.SENSATION!.TINGLING![i]" (ngModelChange)="onFieldChange()"
+                        [disabled]="!canEdit">
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 10: Abdomen -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['Abdomen']" type="button"
+          (click)="toggleSection('Abdomen')">
+          <i class="fas fa-procedures me-2"></i>
+          البطن
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['Abdomen']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Normal"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="abdNormal">
+                  <label class="form-check-label" for="abdNormal">طبيعي</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Flat"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="abdFlat">
+                  <label class="form-check-label" for="abdFlat">مسطح</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Distended"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="distended">
+                  <label class="form-check-label" for="distended">منتفخ</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Vomiting"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="vomiting">
+                  <label class="form-check-label" for="vomiting">قيء</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Diarrhea"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="diarrhea">
+                  <label class="form-check-label" for="diarrhea">إسهال</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Hematemesis"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="hematemesis">
+                  <label class="form-check-label" for="hematemesis">قيء دموي</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Melena"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="melena">
+                  <label class="form-check-label" for="melena">براز أسود</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Continuous"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="continuous">
+                  <label class="form-check-label" for="continuous">مستمر</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Intermittent"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="intermittent">
+                  <label class="form-check-label" for="intermittent">متقطع</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Present"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="abdPresent">
+                  <label class="form-check-label" for="abdPresent">موجود</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Absent"
+                    (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="abdAbsent">
+                  <label class="form-check-label" for="abdAbsent">غير موجود</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">كم من الوقت</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Abdomen!.How_Long"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">تعليقات</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Abdomen!.Comments"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">أصوات الأمعاء</label>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Abdomen!.Bowel_Sounds!.N_A"
+                  (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="bowelSoundsNA">
+                <label class="form-check-label" for="bowelSoundsNA">غير متاح</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">وصف أصوات الأمعاء</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Abdomen!.Bowel_Sounds!.Description"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 11: OB/GYN -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['OB_GYN']" type="button"
+          (click)="toggleSection('OB_GYN')">
+          <i class="fas fa-baby me-2"></i>
+          النساء والتوليد
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['OB_GYN']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">إفرازات مهبلية</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.OB_GYN!.VAG_D_C"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">اللون</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.OB_GYN!.COLOR"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">عدد الفوط</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.OB_GYN!.QUANT_PAD_CT"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">النزيف</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.OB_GYN!.BLEEDING"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">نبضات قلب الجنين (FHT)</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.OB_GYN!.FHT"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 12: Neurological -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['Neurological']" type="button"
+          (click)="toggleSection('Neurological')">
+          <i class="fas fa-head-side-brain me-2"></i>
+          الفحص العصبي
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['Neurological']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="formData.Neurological!.NORMAL"
+                  (ngModelChange)="onFieldChange()" [disabled]="!canEdit" id="neuroNormal">
+                <label class="form-check-label" for="neuroNormal">طبيعي</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">الشلل</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Neurological!.PARALYSIS"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">البؤبؤات</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Neurological!.PUPILS"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">فقدان الحس</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.Neurological!.SENSORY_LOSS"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 13: General -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" [class.collapsed]="!expandedSections['General']" type="button"
+          (click)="toggleSection('General')">
+          <i class="fas fa-clipboard-list me-2"></i>
+          عام
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" [class.show]="expandedSections['General']">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">تعليقات</label>
+              <textarea class="form-control" rows="4" [(ngModel)]="formData.General!.Comments"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit"
+                placeholder="أي ملاحظات أو تعليقات إضافية..."></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">وقت إتمام التقييم</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.General!.Time_Assessment_Completed"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit" placeholder="مثال: 14:30">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">التوقيع</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.General!.Signature"
+                (ngModelChange)="onFieldChange()" [disabled]="!canEdit" placeholder="اسم الضابط/المسعف">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Complete Confirmation Modal -->
+<div class="modal fade" [class.show]="showCompleteConfirmModal"
+  [style.display]="showCompleteConfirmModal ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-check-circle me-2"></i>
+          تأكيد إكمال النموذج
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeCompleteConfirmModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">
+          <strong>هل أنت متأكد أنك تريد وضع علامة على هذا النموذج الطبي كمكتمل؟</strong>
+        </p>
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong>تحذير:</strong> بعد وضع علامة كمكتمل، سيتم قفل النموذج ولن تتمكن من تعديله.
+          فقط المسؤولون سيكونون قادرين على إجراء تغييرات.
+        </div>
+        <p class="mb-0">
+          <strong>نسبة الاكتمال الحالية:</strong>
+          <span class="badge ms-2" [style.background-color]="getCompletionColor()">
+            {{ completionPercentage }}%
+          </span>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCompleteConfirmModal()">
+          إلغاء
+        </button>
+        <button type="button" class="btn btn-success" (click)="confirmComplete()" [disabled]="isCompleting">
+          <i class="fas fa-check me-2" *ngIf="!isCompleting"></i>
+          <i class="fas fa-spinner fa-spin me-2" *ngIf="isCompleting"></i>
+          {{ isCompleting ? 'جاري الإكمال...' : 'نعم، وضع علامة كمكتمل' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showCompleteConfirmModal" *ngIf="showCompleteConfirmModal"></div>

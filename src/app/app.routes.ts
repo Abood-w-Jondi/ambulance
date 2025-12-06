@@ -21,6 +21,8 @@ import { MyTripsComponent } from './user/my-trips/my-trips.component';
 import { TripFormComponent } from './user/trip-form/trip-form.component';
 import { LoanCollectionComponent } from './user/loan-collection/loan-collection.component';
 import { VehicleChecklistComponent } from './user/vehicle-checklist/vehicle-checklist.component';
+import { MedicalFormComponent } from './user/medical-form/medical-form.component';
+import { MedicalFormsComponent } from './admin/medical-forms/medical-forms.component';
 import { MaintenanceTypesComponent } from './admin/settings/maintenance-types/maintenance-types.component';
 import { TransportationTypesComponent } from './admin/settings/transportation-types/transportation-types.component';
 import { CommonLocationsComponent } from './admin/settings/common-locations/common-locations.component';
@@ -70,6 +72,7 @@ export const routes = [
 			{ path: 'vehicle-map', component: VehicleMapComponent },
 			{ path: 'audit-logs', component: AuditLogsComponent },
 			{ path: 'vehicle-checklists', component: VehicleChecklistsComponent },
+			{ path: 'medical-forms', component: MedicalFormsComponent },
 			{ path: 'profile/:id', component: ProfileComponent },
 			{ path: 'profile', component: ProfileComponent },
 		],
@@ -90,6 +93,7 @@ export const routes = [
 			{ path: 'wallet', component: WalletComponent },
 			{ path: 'loan-collection', component: LoanCollectionComponent },
 			{ path: 'vehicle-checklist', component: VehicleChecklistComponent },
+			{ path: 'medical-form/:tripId', component: MedicalFormComponent },
 			{ path: 'profile', component: ProfileComponent },
 		],
 	},

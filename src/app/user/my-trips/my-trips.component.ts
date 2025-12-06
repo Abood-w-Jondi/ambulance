@@ -7,6 +7,7 @@ import { AuthService } from '../../shared/services/auth.service';
 import { DriverService } from '../../shared/services/driver.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { VehicleCookieService } from '../../shared/services/vehicle-cookie.service';
+import { MedicalFormService } from '../../shared/services/medical-form.service';
 import { Trip, TransferStatus } from '../../shared/models/trip.model';
 
 @Component({
@@ -68,7 +69,10 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   
   // Modal states
   showCloseConfirmModal: boolean = false;
+  showMedicalFormWarningModal: boolean = false;
   selectedTripForClose: Trip | null = null;
+  medicalFormCompletionPercentage: number = 0;
+  isMedicalFormComplete: boolean = false;
 
   constructor(
     private tripService: TripService,
@@ -76,6 +80,7 @@ export class MyTripsComponent implements OnInit, OnDestroy {
     private driverService: DriverService,
     private toastService: ToastService,
     private vehicleCookieService: VehicleCookieService,
+    private medicalFormService: MedicalFormService,
     private router: Router
   ) {
     const currentUser = this.authService.currentUser();
@@ -335,9 +340,33 @@ export class MyTripsComponent implements OnInit, OnDestroy {
     });
   }
 
+  openMedicalForm(trip: Trip): void {
+    this.router.navigate(['/user/medical-form', trip.id]);
+  }
+
   openCloseConfirmModal(trip: Trip): void {
     this.selectedTripForClose = trip;
-    this.showCloseConfirmModal = true;
+
+    // Check if medical form is complete before showing close modal
+    this.medicalFormService.getCompletionStatus(trip.id).subscribe({
+      next: (status) => {
+        this.isMedicalFormComplete = status.isComplete;
+        this.medicalFormCompletionPercentage = status.percentage;
+
+        if (!status.isComplete) {
+          // Show medical form warning modal
+          this.showMedicalFormWarningModal = true;
+        } else {
+          // Show regular close confirmation modal
+          this.showCloseConfirmModal = true;
+        }
+      },
+      error: (error) => {
+        console.error('Failed to check medical form status:', error);
+        // If error, just show close modal (form might not exist yet)
+        this.showCloseConfirmModal = true;
+      }
+    });
   }
 
   closeConfirmModal(): void {
@@ -345,12 +374,45 @@ export class MyTripsComponent implements OnInit, OnDestroy {
     this.selectedTripForClose = null;
   }
 
-  confirmCloseTrip(): void {
+  closeMedicalFormWarningModal(): void {
+    this.showMedicalFormWarningModal = false;
+    this.selectedTripForClose = null;
+    this.medicalFormCompletionPercentage = 0;
+    this.isMedicalFormComplete = false;
+  }
+
+  fillMedicalFormNow(): void {
     if (!this.selectedTripForClose) return;
-    
+    this.closeMedicalFormWarningModal();
+    this.openMedicalForm(this.selectedTripForClose);
+  }
+
+  skipAndCloseTrip(): void {
+    if (!this.selectedTripForClose) return;
+
     const tripId = this.selectedTripForClose.id;
     const patientName = this.selectedTripForClose.patientName;
-    
+
+    this.tripService.closeTrip(tripId).subscribe({
+      next: () => {
+        this.toastService.success(`تم إغلاق الرحلة للمريض ${patientName}`);
+        this.closeMedicalFormWarningModal();
+        this.loadMyTrips();
+      },
+      error: (error) => {
+        console.error('Failed to close trip:', error);
+        this.toastService.error(error.message || 'فشل إغلاق الرحلة');
+        this.closeMedicalFormWarningModal();
+      }
+    });
+  }
+
+  confirmCloseTrip(): void {
+    if (!this.selectedTripForClose) return;
+
+    const tripId = this.selectedTripForClose.id;
+    const patientName = this.selectedTripForClose.patientName;
+
     this.tripService.closeTrip(tripId).subscribe({
       next: () => {
         this.toastService.success(`تم إغلاق الرحلة للمريض ${patientName}`);

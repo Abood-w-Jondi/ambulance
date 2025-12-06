@@ -1,0 +1,228 @@
+{
+  "Patient_Information": {
+    "Patient_Name": "",
+    "Date": "",
+    "Patient_Complaint": "",
+    "Time_to_Treatment_Area": "",
+    "X_Ray": "",
+    "Narrative": ""
+  },
+  "Vital_Signs": {
+    "BP": "",
+    "Resp": "",
+    "Pulse": "",
+    "Temp": ""
+  },
+  "History_and_Social": {
+    "Tetanus": "",
+    "Flu_Shot": "",
+    "Social_Status": {
+      "Single": false,
+      "Married": false,
+      "Widowed": false,
+      "Divorced": false
+    },
+    "Alcohol_Tobacco": {
+      "Tobacco": "",
+      "ETOH_Use": "",
+      "Freq": ""
+    },
+    "Visual_Acuity": {
+      "OU": "",
+      "OD": "",
+      "OS": "",
+      "Corrected": false
+    },
+    "Family_History": {
+      "Heart_Disease": false,
+      "Cancer": false,
+      "Diabetes": false,
+      "Other": ""
+    },
+    "Past_Medical_History": {
+      "HTN": false,
+      "Heart_Disease": false,
+      "CVA": false,
+      "Cancer": false,
+      "Diabetes": false,
+      "Other": ""
+    },
+    "Past_Surgeries": {
+      "Gall_Bladder": false,
+      "Appendix": false,
+      "Heart": false,
+      "Hysterectomy": false,
+      "Lung": false,
+      "Other": ""
+    },
+    "Infectious_History": {
+      "HIV": false,
+      "COPD": false,
+      "Asthma": false,
+      "Seizures": false,
+      "Diabetes": false,
+      "Other": ""
+    }
+  },
+  "Medication_and_Allergies": {
+    "Medication": {
+      "None": false,
+      "Unknown": false,
+      "Details": ""
+    },
+    "Allergies": {
+      "None": false,
+      "Unknown": false,
+      "Details": ""
+    }
+  },
+  "Bleeding": {
+    "Present": false,
+    "Absent": false,
+    "OBO_Trauma": false,
+    "Controlled": false,
+    "Moderate": false,
+    "Hemorrhage": false
+  },
+  "Physical_Assessment": {
+    "Mental_Status": {
+      "Alert_Oriented": false,
+      "Awake_Confused": false,
+      "Verbally_Responsive": false,
+      "Responds_to_Pain": false,
+      "Aphasic": false,
+      "Combative": false,
+      "Unresponsive": false
+    },
+    "Color": {
+      "Pink": false,
+      "Mottled": false,
+      "Cyanotic": false,
+      "Jaundiced": false,
+      "Pale": false
+    },
+    "Skin": {
+      "Warm": false,
+      "Cool": false,
+      "Hot": false,
+      "Dry": false,
+      "Diaphoretic": false
+    }
+  },
+  "Skin_Integrity": {
+    "INTACT": false,
+    "OTHER": ""
+  },
+  "Cardiovascular_Respiratory": {
+    "Shortness_of_Breath": {
+      "Yes": false,
+      "No": false,
+      "Occurs": {
+        "Ambulating": false,
+        "Resting": false,
+        "Eating": false
+      },
+      "Relieved_by": "",
+      "Freq": "",
+      "How_Long": "",
+      "Worsens": ""
+    },
+    "Coughing": {
+      "Yes": false,
+      "No": false,
+      "Non_Productive": false,
+      "Productive": false,
+      "Amount": "",
+      "Color": "",
+      "How_Long": ""
+    },
+    "Cardiac_Monitor": {
+      "N_A": false,
+      "Rate": "",
+      "Rhythm": ""
+    },
+    "SpO2": {
+      "O2_Sat_Pct": "",
+      "N_A": false,
+      "On_O2": {
+        "Yes": false,
+        "No": false
+      }
+    },
+    "Respirations": {
+      "Normal": false,
+      "Apneic": false,
+      "Weak_Resp": false,
+      "Dyspneic": false,
+      "Coughing": false,
+      "Wheezing": false,
+      "Retracting": false
+    },
+    "Lungs_Auscultation": {
+      "Clear": false,
+      "Right": false,
+      "Left": false,
+      "Other": "",
+      "Comments": ""
+    }
+  },
+  "Neurovascular": {
+    "N_A": false,
+    "SITE": "RA LA RL LL",
+    "COLOR": {
+      "PINK": ["", "", "", ""],
+      "PALE": ["", "", "", ""]
+    },
+    "TEMP": {
+      "WARM": ["", "", "", ""],
+      "COOL": ["", "", "", ""]
+    },
+    "MOTION": {
+      "FULL": ["", "", "", ""],
+      "PARTIAL": ["", "", "", ""]
+    },
+    "SENSATION": {
+      "INTACT": ["", "", "", ""],
+      "NUMBNESS": ["", "", "", ""],
+      "PAIN": ["", "", "", ""],
+      "TINGLING": ["", "", "", ""]
+    }
+  },
+  "Abdomen": {
+    "Normal": false,
+    "Flat": false,
+    "Distended": false,
+    "Vomiting": false,
+    "Diarrhea": false,
+    "Hematemesis": false,
+    "Melena": false,
+    "Continuous": false,
+    "Intermittent": false,
+    "Present": false,
+    "Absent": false,
+    "How_Long": "",
+    "Comments": "",
+    "Bowel_Sounds": {
+      "N_A": false,
+      "Description": ""
+    }
+  },
+  "OB_GYN": {
+    "VAG_D_C": "",
+    "COLOR": "",
+    "QUANT_PAD_CT": "",
+    "BLEEDING": "",
+    "FHT": ""
+  },
+  "Neurological": {
+    "NORMAL": false,
+    "PARALYSIS": "",
+    "PUPILS": "",
+    "SENSORY_LOSS": ""
+  },
+  "General": {
+    "Comments": "",
+    "Time_Assessment_Completed": "",
+    "Signature": ""
+  }
+}

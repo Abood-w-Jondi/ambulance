@@ -35,3 +35,6 @@ export * from './settings.model';
 
 // Location Models
 export * from './location.model';
+
+// Medical Form Models
+export * from './medical-form.model';

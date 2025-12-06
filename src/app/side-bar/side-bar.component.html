@@ -104,6 +104,12 @@
           <span>سجل الموارد الطبية</span>
         </a>
       </li>
+      <li>
+        <a (click)="navigateTo('medical-forms')" [class.active]="isActive('medical-forms')">
+          <i class="fa-solid fa-notes-medical nav-icon"></i>
+          <span>النماذج الطبية</span>
+        </a>
+      </li>
     </ul>
 
     <ul class="nav-group nav-group-footer">
