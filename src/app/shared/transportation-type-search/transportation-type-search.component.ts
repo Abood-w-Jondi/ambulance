@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransportationTypeService, TransportationTypeReference } from '../services/transportation-type.service';
@@ -6,6 +6,7 @@ import { TransportationTypeService, TransportationTypeReference } from '../servi
 export interface TransportationTypeSelection {
   id: string;
   name: string;
+  isNew?: boolean;
 }
 
 @Component({
@@ -15,12 +16,11 @@ export interface TransportationTypeSelection {
   templateUrl: './transportation-type-search.component.html',
   styleUrls: ['./transportation-type-search.component.css']
 })
-export class TransportationTypeSearchComponent implements OnInit {
+export class TransportationTypeSearchComponent implements OnInit, OnChanges {
   @Input() label: string = 'التشخيص';
   @Input() placeholder: string = 'ابحث عن التشخيص...';
   @Input() required: boolean = false;
   @Input() disabled: boolean = false;
-  @Input() selectedTypeId: string = '';
   @Input() selectedTypeName: string = '';
 
   @Output() typeSelected = new EventEmitter<TransportationTypeSelection>();
@@ -29,10 +29,12 @@ export class TransportationTypeSearchComponent implements OnInit {
   transportationTypes = signal<TransportationTypeReference[]>([]);
   isDropdownOpen = signal(false);
   isLoading = signal(false);
+  isCreatingNew = signal(false);
+  selectedTypeId = signal('');
 
   // Computed filtered types - only show if 1+ characters
   filteredTypes = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
+    const term = this.searchTerm().trim();
 
     // Don't show results if empty
     if (term.length < 1) {
@@ -42,12 +44,25 @@ export class TransportationTypeSearchComponent implements OnInit {
     return this.transportationTypes();
   });
 
-  constructor(private transportationTypeService: TransportationTypeService) {}
+  constructor(
+    private transportationTypeService: TransportationTypeService
+  ) {}
 
   ngOnInit(): void {
     // Set initial search term if type is already selected
     if (this.selectedTypeName) {
       this.searchTerm.set(this.selectedTypeName);
+      // Mark as selected to prevent it from being treated as new on blur
+      this.selectedTypeId.set('existing'); // Non-empty value indicates existing type
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Handle when selectedTypeName changes after initialization (e.g., edit modal)
+    if (changes['selectedTypeName'] && changes['selectedTypeName'].currentValue) {
+      this.searchTerm.set(changes['selectedTypeName'].currentValue);
+      // Mark as selected to prevent it from being treated as new on blur
+      this.selectedTypeId.set('existing'); // Non-empty value indicates existing type
     }
   }
 
@@ -79,6 +94,7 @@ export class TransportationTypeSearchComponent implements OnInit {
 
   selectType(type: TransportationTypeReference): void {
     this.searchTerm.set(type.name);
+    this.selectedTypeId.set(type.id);
     this.isDropdownOpen.set(false);
 
     this.typeSelected.emit({
@@ -98,6 +114,30 @@ export class TransportationTypeSearchComponent implements OnInit {
   onBlur(): void {
     // Delay to allow click events on dropdown items
     setTimeout(() => {
+      const term = this.searchTerm().trim();
+
+      // If user typed something but no selection was made
+      if (term && !this.selectedTypeId()) {
+        // Check if exact match exists (case-insensitive)
+        const exactMatch = this.transportationTypes().find(
+          t => t.name.toLowerCase() === term.toLowerCase()
+        );
+
+        if (exactMatch) {
+          // Select the existing match
+          this.selectType(exactMatch);
+        } else {
+          // DON'T CREATE - just emit with isNew flag
+          // Transportation type will be created when the trip form is submitted
+          this.selectedTypeId.set(''); // Empty ID indicates new type
+          this.typeSelected.emit({
+            id: '',
+            name: term,
+            isNew: true
+          });
+        }
+      }
+
       this.isDropdownOpen.set(false);
     }, 200);
   }

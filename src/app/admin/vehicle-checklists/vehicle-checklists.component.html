@@ -1,0 +1,306 @@
+<div class="container-fluid py-4 bg-light-subtle">
+  <div class="row justify-content-center">
+    <div class="col-12">
+      <div class="card shadow-lg checklist-master-card">
+
+        <div class="card-header bg-primary text-white p-3 checklist-header">
+          <h4 class="mb-0">
+            <i class="bi bi-clipboard-data me-2"></i>
+            قوائم فحص المركبات
+          </h4>
+        </div>
+
+        <div class="card-body p-4">
+          <div class="row g-3 mb-4 p-3 rounded-3 filter-box">
+            <div class="col-md-3">
+              <label class="form-label small text-muted">من تاريخ</label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="filters.startDate">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-muted">إلى تاريخ</label>
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="filters.endDate">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small text-muted">المركبة</label>
+              <select class="form-select form-select-sm" [(ngModel)]="filters.vehicleId">
+                <option value="">الكل</option>
+                @for (vehicle of vehicles(); track vehicle.id) {
+                <option [value]="vehicle.id">{{ vehicle.vehicleName }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small text-muted">السائق</label>
+              <select class="form-select form-select-sm" [(ngModel)]="filters.driverId">
+                <option value="">الكل</option>
+                @for (driver of drivers(); track driver.id) {
+                <option [value]="driver.id">{{ driver.arabicName }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small text-muted">الحالة</label>
+              <select class="form-select form-select-sm" [(ngModel)]="filters.completionStatus">
+                <option value="all">الكل</option>
+                <option value="completed">مكتمل</option>
+                <option value="pending">معلق</option>
+              </select>
+            </div>
+            <div class="col-12 pt-2">
+              <button class="btn btn-primary btn-sm me-2 search-button" (click)="applyFilters()">
+                <i class="bi bi-search me-1"></i>
+                بحث
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" (click)="resetFilters()">
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                إعادة تعيين
+              </button>
+            </div>
+          </div>
+
+          @if (loading()) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">جاري التحميل...</span>
+            </div>
+          </div>
+          }
+
+          @if (!loading() && checklists().length > 0) {
+          <div class="table-responsive master-table-container">
+            <table class="table table-hover align-middle main-checklist-table">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>المركبة</th>
+                  <th>السائق</th>
+                  <th class="text-center">إجمالي العناصر</th>
+                  <th class="text-center">غير المتوفرة</th>
+                  <th class="text-center">التقييم</th>
+                  <th class="text-center">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (checklist of checklists(); track checklist.id) {
+                <tr class="table-row-clickable" (click)="viewDetails(checklist.id!)">
+                  <td><small>{{ formatDate(checklist.completedAt!) }}</small></td>
+                  <td><strong>{{ checklist.vehicleName }}</strong></td>
+                  <td>{{ checklist.driverName }}</td>
+                  <td class="text-center">
+                    <span class="badge bg-primary total-badge">
+                      {{ checklist.totalItems }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge"
+                      [ngClass]="checklist.unavailableItems > 0 ? 'bg-danger danger-badge' : 'bg-success'">
+                      {{ checklist.unavailableItems }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge fw-bold" [ngClass]="getStatusBadgeClass(checklist)">
+                      @if (checklist.unavailableItems === 0) {
+                      ممتاز <i class="bi bi-star-fill"></i>
+                      } @else if (checklist.unavailableItems <= 5) { جيد <i class="bi bi-info-circle"></i>
+                        } @else {
+                        يحتاج انتباه <i class="bi bi-exclamation-triangle-fill"></i>
+                        }
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <button class="btn btn-sm detail-button"
+                      (click)="viewDetails(checklist.id!); $event.stopPropagation()">
+                      <i class="bi bi-eye me-1"></i>
+                      عرض التفاصيل
+                    </button>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <nav aria-label="Pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+              <li class="page-item" [class.disabled]="currentPage === 1">
+                <a class="page-link" (click)="onPageChange(currentPage - 1)">السابق</a>
+              </li>
+              @for (page of getPaginationPages(); track page) {
+              <li class="page-item" [class.active]="currentPage === page">
+                <a class="page-link" (click)="onPageChange(page)">{{ page }}</a>
+              </li>
+              }
+              <li class="page-item" [class.disabled]="currentPage === totalPages">
+                <a class="page-link" (click)="onPageChange(currentPage + 1)">التالي</a>
+              </li>
+            </ul>
+            <p class="text-center text-muted small">
+              عرض {{ checklists().length }} من {{ total }} نتيجة
+            </p>
+          </nav>
+          }
+
+          @if (!loading() && checklists().length === 0) {
+          <div class="alert alert-warning text-center mt-4 border-0">
+            <i class="bi bi-exclamation-circle me-2 fs-5"></i>
+            <h5 class="mb-0">لا توجد قوائم فحص مطابقة للمعايير المحددة</h5>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+@if (showDetailModal() && selectedChecklist()) {
+<div class="modal-backdrop fade show"></div>
+<div class="modal fade show d-block detail-modal-v2" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content modal-content-v2">
+      <div class="modal-header bg-primary text-white p-3 modal-header-v2 justify-content-between">
+        <h5 class="modal-title">
+          <i class="bi bi-file-text me-2"></i>
+          تفاصيل قائمة الفحص (<span class="fw-light">{{ selectedChecklist()!.vehicleName }}</span>)
+        </h5>
+        <button type="button" class="btn-close btn-close-white ms-1" (click)="closeDetailModal()"></button>
+      </div>
+      <div class="modal-body p-4">
+
+        <div class="row mb-4 summary-info-box p-3 rounded-3">
+          <div class="col-md-4 mb-2 mb-md-0">
+            <p class="mb-1 text-muted small">المركبة:</p>
+            <p class="mb-0 fw-bold text-primary">{{ selectedChecklist()!.vehicleName }}</p>
+          </div>
+          <div class="col-md-4 mb-2 mb-md-0">
+            <p class="mb-1 text-muted small">السائق:</p>
+            <p class="mb-0 fw-bold">{{ selectedChecklist()!.driverName }}</p>
+          </div>
+          <div class="col-md-4">
+            <p class="mb-1 text-muted small">تاريخ الفحص:</p>
+            <p class="mb-0 fw-bold">{{ formatDate(selectedChecklist()!.completedAt!) }}</p>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4 text-center">
+          <div class="col-md-4">
+            <div class="card summary-card border-success bg-light-green">
+              <div class="card-body p-3">
+                <h3 class="text-success mb-1">{{ selectedChecklist()!.availableItems }}</h3>
+                <p class="mb-0 small fw-bold text-success-emphasis">عناصر متوفرة</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card summary-card border-danger bg-light-red">
+              <div class="card-body p-3">
+                <h3 class="text-danger mb-1">{{ selectedChecklist()!.unavailableItems }}</h3>
+                <p class="mb-0 small fw-bold text-danger-emphasis">عناصر غير متوفرة</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card summary-card border-primary bg-light-blue">
+              <div class="card-body p-3">
+                <h3 class="text-primary mb-1">{{ selectedChecklist()!.totalItems }}</h3>
+                <p class="mb-0 small fw-bold text-primary-emphasis">إجمالي العناصر</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-list-check me-1 text-primary"></i>
+            تفاصيل العناصر المفحوصة:
+          </h5>
+          <div class="d-flex align-items-center">
+            <label class="form-label mb-0 me-2 small">فلترة العناصر:</label>
+            <select class="form-select form-select-sm" [(ngModel)]="itemsFilter">
+              <option value="all">الكل</option>
+              <option value="available">المتوفرة فقط</option>
+              <option value="unavailable">غير المتوفرة فقط</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row g-3 item-detail-grid">
+          @for (item of getFilteredItems(); track item.order) {
+          <div class="col-12">
+            <div class="card h-100 p-3 item-card-v2" [class.border-danger]="!item.isAvailable"
+              [class.bg-light-red]="!item.isAvailable" [class.border-success]="item.isAvailable"
+              [class.bg-light-green]="item.isAvailable">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="mb-0 fw-bold item-name-title">
+                  <span class="text-muted small me-2">#{{ item.order }}</span>
+                  {{ item.name }}
+                </h6>
+                <span class="badge text-uppercase item-status-badge"
+                  [ngClass]="item.isAvailable ? 'bg-success' : 'bg-danger'">
+                  @if (item.isAvailable) {
+                  متوفر <i class="bi bi-check-circle-fill"></i>
+                  } @else {
+                  غير متوفر <i class="bi bi-x-octagon-fill"></i>
+                  }
+                </span>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-auto">
+                  <p class="mb-0 small">
+                    <i class="bi bi-tag-fill me-1 text-secondary"></i>
+                    الفئة: <span class="fw-normal text-dark">{{ item.category }}</span>
+                  </p>
+                </div>
+                <div class="col-auto">
+                  <p class="mb-0 small">
+                    <i class="bi bi-box-fill me-1 text-secondary"></i>
+                    الكمية: <span class="fw-normal text-dark">
+                      {{ item.quantity !== null ? item.quantity : 'غير محدد' }}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <div class="item-notes-area p-2 rounded-2" [class.bg-white]="!item.isAvailable"
+                [class.bg-light-subtle]="item.isAvailable">
+                <p class="mb-1 small fw-bold text-dark">
+                  <i class="bi bi-chat-left-text-fill me-1"></i>
+                  الملاحظات:
+                </p>
+                <p class="mb-0 small notes-content" [class.text-danger]="!item.isAvailable">
+                  {{ item.notes || 'لا يوجد ملاحظات مسجلة.' }}
+                </p>
+              </div>
+            </div>
+          </div>
+          }
+          @if (getFilteredItems().length === 0) {
+          <div class="col-12">
+            <div class="alert alert-info text-center mt-3 border-0">
+              <i class="bi bi-info-circle me-2 fs-5"></i>
+              لا توجد عناصر مطابقة لفلتر العرض المحدد.
+            </div>
+          </div>
+          }
+        </div>
+
+        <div class="mt-4 p-3 bg-light rounded-3 general-notes-box">
+          <h6 class="mb-2 border-bottom pb-1">
+            <i class="bi bi-journal-text me-1 text-primary"></i>
+            <strong>ملاحظات عامة حول الفحص:</strong>
+          </h6>
+          @if (selectedChecklist()!.generalNotes) {
+          <p class="text-muted mb-0">{{ selectedChecklist()!.generalNotes }}</p>
+          } @else {
+          <p class="mb-0 fst-italic text-muted">لم تسجل أي ملاحظات عامة لهذا الفحص.</p>
+          }
+        </div>
+
+      </div>
+      <div class="modal-footer modal-footer-v2">
+        <button type="button" class="btn btn-secondary" (click)="closeDetailModal()">
+          <i class="bi bi-x-circle me-1"></i>
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

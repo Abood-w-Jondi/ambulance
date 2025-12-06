@@ -7,8 +7,10 @@ import { TripService } from '../../shared/services/trip.service';
 import { AuthService } from '../../shared/services/auth.service';
 import { LocationTrackingService, GeoPosition } from '../../shared/services/location-tracking.service';
 import { VehicleCookieService } from '../../shared/services/vehicle-cookie.service';
+import { ChecklistService } from '../../shared/services/checklist.service';
 import { AddMaintenanceModalComponent } from '../add-maintenance-modal/add-maintenance-modal.component';
 import { AddFuelModalComponent } from '../add-fuel-modal/add-fuel-modal.component';
+import { ChecklistReminderComponent } from '../../shared/checklist-reminder/checklist-reminder.component';
 import { Driver } from '../../shared/models';
 import { Subscription } from 'rxjs';
 import * as L from 'leaflet';
@@ -16,7 +18,7 @@ import * as L from 'leaflet';
 @Component({
   selector: 'app-driver-dashboard',
   standalone: true,
-  imports: [AddMaintenanceModalComponent, AddFuelModalComponent, CommonModule],
+  imports: [AddMaintenanceModalComponent, AddFuelModalComponent, ChecklistReminderComponent, CommonModule],
   templateUrl: './driver-dashboard.component.html',
   styleUrls: ['./driver-dashboard.component.css']
 })
@@ -45,7 +47,12 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
   // Modals
   showFuelModal: boolean = false;
   showMaintenanceModal: boolean = false;
-  
+
+  // Checklist reminder
+  showChecklistReminder = signal(false);
+  currentSessionId = signal<string | null>(null);
+  currentVehicleName = signal<string>('');
+
   // Subscriptions
   private subscriptions: Subscription[] = [];
 
@@ -59,12 +66,14 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     private tripService: TripService,
     private authService: AuthService,
     private locationTrackingService: LocationTrackingService,
-    private vehicleCookieService: VehicleCookieService
+    private vehicleCookieService: VehicleCookieService,
+    private checklistService: ChecklistService
   ) {}
 
   ngOnInit(): void {
     this.loadDriverData();
     this.subscribeToLocation();
+    this.checkReminderStatus();
   }
 
   ngAfterViewInit(): void {
@@ -225,6 +234,7 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
   private loadPendingLoans(driverId: string): void {
     this.tripService.getPatientLoans(driverId, { status: 'uncollected' }).subscribe({
       next: (loans) => {
+        console.log('Pending loans loaded:', loans);
         this.pendingLoansCount.set(loans.length);
         this.pendingLoansAmount.set(loans.reduce((sum, l) => sum + l.loanAmount, 0));
       },
@@ -325,5 +335,53 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
 
   returnToAdmin(): void {
     this.router.navigate(['/admin/admin-dashboard']);
+  }
+
+  // Checklist reminder methods
+  checkReminderStatus(): void {
+    // Get vehicle ID from cookie
+    const vehicleId = this.vehicleCookieService.getSelectedVehicleId();
+
+    if (!vehicleId) {
+      console.log('No vehicle selected, skipping checklist reminder check');
+      return;
+    }
+
+    this.checklistService.getCurrentSession(vehicleId).subscribe({
+      next: (response : any) => {
+        console.log('Checklist session data:', response);
+        if (response) {
+          this.currentSessionId.set(response.sessionId);
+          this.currentVehicleName.set(response.vehicleName);
+
+          if (response.canShowReminder && !response.checklistCompleted) {
+            this.showChecklistReminder.set(true);
+          }
+        }
+      },
+      error: (err) => {
+        console.error('Failed to check reminder status:', err);
+      }
+    });
+  }
+
+  openChecklist(): void {
+    this.showChecklistReminder.set(false);
+    this.router.navigate(['/user/vehicle-checklist']);
+  }
+
+  dismissReminder(): void {
+    const sessionId = this.currentSessionId();
+    if (sessionId) {
+      this.checklistService.dismissReminder(sessionId).subscribe({
+        next: () => {
+          this.showChecklistReminder.set(false);
+          this.toastService.info('سيظهر التذكير مرة أخرى بعد 10 دقائق');
+        },
+        error: (err) => {
+          console.error('Failed to dismiss reminder:', err);
+        }
+      });
+    }
   }
 }

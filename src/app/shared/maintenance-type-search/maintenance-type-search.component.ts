@@ -68,6 +68,7 @@ export class MaintenanceTypeSearchComponent implements OnInit {
     this.isLoading.set(true);
     this.maintenanceTypeService.searchMaintenanceTypes(term).subscribe({
       next: (types) => {
+        console.log('Search results:', types);
         this.maintenanceTypes.set(types);
         this.isLoading.set(false);
       },

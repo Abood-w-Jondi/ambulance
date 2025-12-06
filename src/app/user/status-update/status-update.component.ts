@@ -104,7 +104,7 @@ export class StatusUpdateComponent implements OnInit {
     this.driverService.getCurrentDriver().subscribe({
       next: (driver) => {
         this.driverId = driver.id;
-        this.updateDriverUIStatus(driver.driver_status);
+        this.updateDriverUIStatus(driver.arabicStatus);
       },
       error: (err) => {
         console.error('Failed to load driver status:', err);
@@ -175,12 +175,15 @@ export class StatusUpdateComponent implements OnInit {
 
   // Updates driver UI status
   private updateDriverUIStatus(newStatus: DriverStatus): void {
-    const props = this.getDriverStatusDisplayProps(newStatus);
+    // Normalize: trim whitespace
+    const normalizedStatus = (newStatus || '').trim() as DriverStatus;
+
+    const props = this.getDriverStatusDisplayProps(normalizedStatus);
     this.currentDriverStatus.title = props.title;
     this.currentDriverStatus.icon = props.icon;
     this.currentDriverStatus.alertClass = props.alertClass;
 
-    switch(newStatus) {
+    switch(normalizedStatus) {
       case 'متاح':
         this.currentDriverStatus.description = 'أنت متاح لاستقبال الرحلات.';
         break;
@@ -191,6 +194,7 @@ export class StatusUpdateComponent implements OnInit {
         this.currentDriverStatus.description = 'أنت غير متصل حالياً.';
         break;
       default:
+        console.warn('Unknown driver status:', normalizedStatus); // DEBUG
         this.currentDriverStatus.description = 'حالة غير معروفة.';
     }
   }

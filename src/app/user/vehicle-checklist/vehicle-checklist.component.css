@@ -1,0 +1,142 @@
+/* --- Global & Card Styling --- */
+.bg-light-subtle {
+    background-color: #f7f9fc !important;
+}
+
+.custom-checklist-card {
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.card-header h4 {
+    font-size: 1.6rem;
+    color: #0d6efd; 
+}
+
+/* --- Progress Summary --- */
+.progress-summary-v3 {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.progress {
+    height: 10px; 
+    border-radius: 0.5rem;
+}
+
+/* --- Accordion & Categories (Updated with Transition) --- */
+.category-item-v3 {
+    border-color: #e0e0e0 !important;
+    overflow: hidden; /* Important for clean transitions */
+}
+
+.category-header-v3 {
+    background-color: #f8f9fa;
+    color: #344767;
+    border-radius: 0.5rem !important;
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease; /* Smooth transition for color changes */
+}
+
+.category-header-v3:not(.collapsed) {
+    background-color: #e9f0ff; 
+    color: #0d6efd;
+    box-shadow: none;
+    border-bottom: 1px solid #cce5ff;
+}
+
+/* ** CRUCIAL: Accordion Animation/Transition Fix ** */
+/* We rely on Bootstrap's collapse component, but can enhance the look */
+.accordion-collapse {
+    transition: height 0.3s ease-in-out;
+}
+
+/* --- Item Card Design --- */
+.item-card-v3 {
+    transition: all 0.2s;
+    background-color: #fefefe;
+    border-left: 5px solid #ccc !important;
+}
+
+.bg-light-green {
+    background-color: #e6ffed !important;
+    border-left: 5px solid #198754 !important;
+}
+
+.bg-light-red {
+    background-color: #fff0f0 !important;
+    border-left: 5px solid #dc3545 !important;
+}
+
+.item-name-v3 {
+    font-size: 1.05rem;
+    color: #333;
+}
+
+/* 🔄 التعديل المطلوب 1: تحسين مظهر الأزرار وعرضها ومسافتها */
+.status-buttons-v3 {
+    /* مسافة علوية للتحسين في الوضع المستجيب */
+    margin-top: 5px; 
+}
+
+.status-buttons-v3 .btn {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.8rem; /* زيادة الحشو لتبدو أكبر */
+    border-radius: 0.5rem !important; /* جعل الزر مستديراً أكثر */
+    min-width: 95px; /* زيادة العرض قليلاً */
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+/* جعل الأزرار المحددة ممتلئة بشكل أفضل (Filled Look) */
+.btn-check:checked + .btn-outline-success {
+    background-color: #198754;
+    border-color: #198754;
+    color: white;
+    box-shadow: 0 4px 6px rgba(25, 135, 84, 0.3); /* إضافة ظل بسيط */
+}
+
+.btn-check:checked + .btn-outline-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    box-shadow: 0 4px 6px rgba(220, 53, 69, 0.3); /* إضافة ظل بسيط */
+}
+
+/* Input Fields */
+.form-control-sm {
+    padding: 0.4rem 0.75rem;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 576px) {
+    .item-card-v3 > .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .status-buttons-v3 {
+        margin-top: 10px; /* زيادة المسافة العلوية أكثر على الجوال */
+        width: 100%; /* جعل مجموعة الأزرار بعرض كامل */
+    }
+
+    .status-buttons-v3 .btn {
+        min-width: 50%; /* تقاسم العرض بين الزرين */
+        padding: 0.4rem 0.6rem;
+    }
+    
+    .col-sm-3, .col-sm-9 {
+        width: 100%;
+    }
+
+    .item-name-v3 {
+        font-size: 1rem;
+    }
+}
+
+/* --- Action Buttons --- */
+.save-button-v3 {
+    min-width: 200px;
+    background-color: #28a745; 
+    border-color: #28a745;
+}

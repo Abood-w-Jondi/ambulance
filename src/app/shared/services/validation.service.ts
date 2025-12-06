@@ -39,14 +39,14 @@ export class ValidationService {
   // Arabic name validation (Arabic characters and spaces)
   isValidArabicName(name: string): boolean {
     if (!name) return false;
-    const arabicRegex = /^[\u0600-\u06FF\s]+$/;
+    const arabicRegex = /^[\u0600-\u06FF\s0-9]+$/;
     return arabicRegex.test(name.trim()) && name.trim().length >= 2;
   }
 
   // English name validation (English characters and spaces)
   isValidEnglishName(name: string): boolean {
     if (!name) return true;
-    const englishRegex = /^[a-zA-Z\s]+$/;
+    const englishRegex = /^[a-zA-Z\s0-9]+$/;
     return englishRegex.test(name.trim()) && name.trim().length >= 2;
   }
 

@@ -1,0 +1,182 @@
+/* --- Global & Card Styling --- */
+.bg-light-subtle {
+    background-color: #f8f9fa !important;
+}
+
+.checklist-master-card {
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.checklist-header {
+    background-color: #0d6efd !important;
+    border-bottom: 3px solid #0a58ca;
+}
+
+/* --- Filters Styling --- */
+.filter-box {
+    background-color: #f1f5f9;
+    border: 1px solid #e0e0e0;
+}
+
+.form-select-sm, .form-control-sm {
+    font-size: 0.875rem;
+}
+
+.search-button {
+    background-color: #198754;
+    border-color: #198754;
+    font-weight: 500;
+}
+
+/* --- Main Table Styling --- */
+.main-checklist-table th {
+    background-color: #e9ecef;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-row-clickable {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.table-row-clickable:hover {
+    background-color: #f0f8ff !important;
+}
+
+/* Badges */
+.badge {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    min-width: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.danger-badge {
+    background-color: #dc3545 !important;
+    animation: pulse-red 1s infinite alternate; /* subtle animation for high attention items */
+}
+
+@keyframes pulse-red {
+    from { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+    to { box-shadow: 0 0 0 5px rgba(220, 53, 69, 0); }
+}
+
+.total-badge {
+    background-color: #0d6efd !important;
+}
+
+.bg-warning {
+    color: #212529 !important; /* Dark text on yellow for readability */
+}
+
+.detail-button {
+    color: #fff;
+background-color: #198754;
+
+    border-radius: 5px;
+    transition: all 0.2s;
+}
+
+/* --- Detail Modal Styling --- */
+.detail-modal-v2 {
+    z-index: 1050;
+}
+
+.modal-content-v2 {
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.modal-header-v2 {
+    background-color: #0d6efd !important;
+}
+
+.summary-info-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+
+/* Summary Cards */
+.summary-card {
+    border-width: 2px !important;
+}
+
+.bg-light-blue {
+    background-color: #e9f0ff !important;
+}
+
+/* Detail Table */
+.detail-table th {
+    background-color: #f1f5f9;
+    font-size: 0.85rem;
+}
+
+.detail-table td {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+}
+
+.table-danger {
+    background-color: #fff0f0 !important;
+}
+
+.table-success {
+    background-color: #e6ffed !important;
+}
+
+.item-name-detail {
+    color: #333;
+}
+
+.item-notes-detail {
+    word-break: break-word;
+}
+
+/* General Notes */
+.general-notes-box {
+    border: 1px solid #e9ecef !important;
+}
+
+.item-card-v2 {
+    transition: all 0.2s ease-in-out;
+    border-radius: 0.75rem !important;
+    border-left-width: 5px !important; /* Thick border for status emphasis */
+}
+
+.item-name-title {
+    color: #0d6efd; /* Consistent primary color for item name */
+}
+
+.item-status-badge {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.3rem;
+    font-weight: 600;
+}
+
+.item-notes-area {
+    margin-top: 0.5rem;
+    border: 1px solid #dee2e6;
+    min-height: 50px; /* Ensure a minimum visible space */
+}
+
+.notes-content {
+    white-space: pre-wrap; /* Keeps any manual formatting (like line breaks) */
+}
+
+/* Light background colors (reused from previous design but good to list) */
+.bg-light-green {
+    background-color: #eaf8ed !important; /* Slightly lighter green */
+    border-color: #198754 !important;
+}
+
+.bg-light-red {
+    background-color: #fff0f0 !important;
+    border-color: #dc3545 !important;
+}

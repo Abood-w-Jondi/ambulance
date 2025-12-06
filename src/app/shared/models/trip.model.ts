@@ -77,10 +77,10 @@ export interface Trip {
     acceptedAt?: Date;         // When driver accepted the trip
     completedAt?: Date;        // When trip status changed to final status
 
-    // Trip Closure System (DEPRECATED - transactions now trigger on "تم النقل" status)
-    isClosed: boolean;         // DEPRECATED - Trip closed for transaction processing
-    closedAt?: Date;           // DEPRECATED - When trip was closed
-    closedBy?: string;         // DEPRECATED - User ID who closed the trip
+    // Trip Closure System
+    isClosed: boolean;         // Trip closed by driver (finished editing)
+    closedAt?: Date;           // When trip was closed
+    closedBy?: string;         // User ID who closed the trip
 
     // Trip populated mostly by driver after accepting
     populatedByDriver?: boolean;  // Flag to indicate if driver has filled the data

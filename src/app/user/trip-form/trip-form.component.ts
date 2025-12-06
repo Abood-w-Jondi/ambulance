@@ -273,15 +273,16 @@ export class TripFormComponent implements OnInit {
     return Math.max(0, end - start);
   }
 
-  // Calculate shares based on payed price, paramedic share, and fuel cost
-  // IMPORTANT: Must match backend logic (trips.php:927-932)
-  private calculateShares(payedPrice: number, paramedicShare: number, fuelCost: number) {
+  // Calculate shares based on total price (full service value), paramedic share, and fuel cost
+  // IMPORTANT: Must match backend logic (trips.php:1108-1127)
+  // Loan amount (totalPrice - payedPrice) is tracked separately
+  private calculateShares(totalPrice: number, paramedicShare: number, fuelCost: number) {
     // Backend formula:
-    // afterParamedic = payedPrice - paramedicShare
+    // afterParamedic = totalPrice - paramedicShare
     // afterFuel = afterParamedic - fuelCost  (1 NIS per km)
     // driverShare = afterFuel / 3
     // eqShare = (afterFuel / 3) * 2
-    const afterParamedic = payedPrice - paramedicShare;
+    const afterParamedic = totalPrice - paramedicShare;
     const afterFuel = afterParamedic - fuelCost;  // Deduct fuel BEFORE splitting
     const driverShare = afterFuel / 3;
     const eqShare = (afterFuel / 3) * 2;  // 2/3 of remaining
@@ -366,10 +367,10 @@ export class TripFormComponent implements OnInit {
   }
 
   prepareTripData(): any {
-    // Calculate shares automatically based on payedPrice, paramedicShare, and fuel cost
+    // Calculate shares automatically based on totalPrice, paramedicShare, and fuel cost
     const fuelCost = this.calculatedDiesel * 1.0;  // 1 NIS per km
     const shares = this.calculateShares(
-      this.tripForm.payedPrice || 0,
+      this.tripForm.totalPrice || 0,
       this.tripForm.paramedicShare || 0,
       fuelCost
     );

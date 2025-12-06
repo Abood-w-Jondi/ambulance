@@ -1,19 +1,11 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-interface FuelRecord {
-  id: string;
-  ambulanceName: string;
-  ambulanceNumber: string;
-  driverId: string;
-  driverName: string;
-  date: Date;
-  odometerBefore: number;
-  odometerAfter: number;
-  fuelAmount: number;
-  cost: number;
-  notes?: string;
-}
+import { FuelService } from '../../shared/services/fuel.service';
+import { VehicleService } from '../../shared/services/vehicle.service';
+import { DriverService } from '../../shared/services/driver.service';
+import { ToastService } from '../../shared/services/toast.service';
+import { FuelRecord } from '../../shared/models';
 
 @Component({
   selector: 'app-add-fuel-modal',
@@ -22,11 +14,24 @@ interface FuelRecord {
   styleUrls: ['./add-fuel-modal.component.css']
 })
 export class AddFuelModalComponent implements OnInit {
+  @Input() vehicleId: string = '';
+  @Input() vehicleInternalId: string = '';
+  @Input() driverId: string = '';
+  @Input() driverInternalId: string = '';
+
   @Output() close = new EventEmitter<void>();
   @Output() fuelAdded = new EventEmitter<FuelRecord>();
 
-  fuelRecord: Partial<FuelRecord> = {
-    date: new Date(),
+  recordForm = {
+    day: new Date().getDate(),
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
+    ambulanceName: '',
+    ambulanceNumber: '',
+    ambulanceId: '',          // vehicleInternalId
+    driverId: '',
+    driverName: '',
+    driverInternalId: '',     // driverInternalId
     odometerBefore: 0,
     odometerAfter: 0,
     fuelAmount: 0,
@@ -34,73 +39,97 @@ export class AddFuelModalComponent implements OnInit {
     notes: ''
   };
 
-  ambulances: Array<{name: string, number: string}> = [
-    { name: 'سيارة إسعاف 1', number: 'AMB-001' },
-    { name: 'سيارة إسعاف 2', number: 'AMB-002' },
-    { name: 'سيارة إسعاف 3', number: 'AMB-003' }
-  ];
-
-  selectedAmbulance: string = '';
   isSubmitting: boolean = false;
 
-  constructor() { }
+  constructor(
+    private fuelService: FuelService,
+    private vehicleService: VehicleService,
+    private driverService: DriverService,
+    private toastService: ToastService
+  ) { }
 
   ngOnInit(): void {
-    // TODO: Load ambulances from service
-  }
+    // Pre-populate from inputs (vehicle and driver passed from parent)
+    this.recordForm.ambulanceId = this.vehicleInternalId;
+    this.recordForm.driverInternalId = this.driverInternalId;
+    this.recordForm.driverId = this.driverId;
 
-  onAmbulanceChange(): void {
-    const ambulance = this.ambulances.find(a => a.number === this.selectedAmbulance);
-    if (ambulance) {
-      this.fuelRecord.ambulanceName = ambulance.name;
-      this.fuelRecord.ambulanceNumber = ambulance.number;
+    // Load vehicle name using VehicleService
+    if (this.vehicleInternalId) {
+      this.vehicleService.getVehicleById(this.vehicleInternalId).subscribe({
+        next: (vehicle) => {
+          this.recordForm.ambulanceName = vehicle.vehicleName;
+          this.recordForm.ambulanceNumber = vehicle.vehicleId;
+        },
+        error: (error) => console.error('Failed to load vehicle:', error)
+      });
+    }
+
+    // Load driver name using DriverService
+    if (this.driverInternalId) {
+      this.driverService.getDriverById(this.driverInternalId).subscribe({
+        next: (driver) => {
+          this.recordForm.driverName = driver.arabicName || driver.name;
+        },
+        error: (error) => console.error('Failed to load driver:', error)
+      });
     }
   }
 
   calculateDistance(): number {
-    const before = this.fuelRecord.odometerBefore || 0;
-    const after = this.fuelRecord.odometerAfter || 0;
+    const before = this.recordForm.odometerBefore || 0;
+    const after = this.recordForm.odometerAfter || 0;
     return Math.max(0, after - before);
   }
 
   onSubmit(): void {
-    if (this.isFormValid()) {
-      this.isSubmitting = true;
-      
-      const newFuelRecord: FuelRecord = {
-        id: this.generateId(),
-        ambulanceName: this.fuelRecord.ambulanceName!,
-        ambulanceNumber: this.fuelRecord.ambulanceNumber!,
-        driverId: 'current-driver-id', // TODO: Get from auth service
-        driverName: 'السائق الحالي', // TODO: Get from auth service
-        date: this.fuelRecord.date!,
-        odometerBefore: this.fuelRecord.odometerBefore!,
-        odometerAfter: this.fuelRecord.odometerAfter!,
-        fuelAmount: this.fuelRecord.fuelAmount!,
-        cost: this.fuelRecord.cost!,
-        notes: this.fuelRecord.notes
-      };
-
-      // TODO: Call service to save fuel record
-      
-      setTimeout(() => {
-        this.isSubmitting = false;
-        this.fuelAdded.emit(newFuelRecord);
-      }, 500);
+    if (!this.isFormValid()) {
+      return;
     }
+
+    this.isSubmitting = true;
+
+    // Prepare date
+    let date: any = new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day);
+
+    // Call FuelService.createFuelRecord()
+    this.fuelService.createFuelRecord({
+      ambulanceName: this.recordForm.ambulanceName,
+      ambulanceNumber: this.recordForm.ambulanceNumber,
+      ambulanceId: this.recordForm.ambulanceId,
+      driverId: this.recordForm.driverId,
+      driverName: this.recordForm.driverName,
+      driverInternalId: this.recordForm.driverInternalId,
+      date: date,
+      odometerBefore: this.recordForm.odometerBefore,
+      odometerAfter: this.recordForm.odometerAfter,
+      fuelAmount: this.recordForm.fuelAmount,
+      cost: this.recordForm.cost,
+      notes: this.recordForm.notes
+    }).subscribe({
+      next: (record) => {
+        this.isSubmitting = false;
+        this.toastService.success('تمت إضافة سجل الوقود بنجاح');
+        this.fuelAdded.emit(record);
+      },
+      error: (error) => {
+        this.isSubmitting = false;
+        console.error('Error creating fuel record:', error);
+        this.toastService.error('فشل حفظ سجل الوقود');
+      }
+    });
   }
 
   isFormValid(): boolean {
     return !!(
-      this.fuelRecord.ambulanceNumber &&
-      this.fuelRecord.date &&
-      this.fuelRecord.odometerBefore !== undefined &&
-      this.fuelRecord.odometerAfter !== undefined &&
-      this.fuelRecord.odometerAfter > this.fuelRecord.odometerBefore &&
-      this.fuelRecord.fuelAmount &&
-      this.fuelRecord.fuelAmount > 0 &&
-      this.fuelRecord.cost &&
-      this.fuelRecord.cost > 0
+      this.recordForm.ambulanceId &&
+      this.recordForm.odometerBefore !== undefined &&
+      this.recordForm.odometerAfter !== undefined &&
+      this.recordForm.odometerAfter > this.recordForm.odometerBefore &&
+      this.recordForm.fuelAmount &&
+      this.recordForm.fuelAmount > 0 &&
+      this.recordForm.cost &&
+      this.recordForm.cost > 0
     );
   }
 
@@ -108,7 +137,17 @@ export class AddFuelModalComponent implements OnInit {
     this.close.emit();
   }
 
-  private generateId(): string {
-    return 'fuel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  getDaysInMonth(month: number, year: number): number[] {
+    const days = new Date(year, month, 0).getDate();
+    return Array.from({ length: days }, (_, i) => i + 1);
+  }
+
+  getMonths(): number[] {
+    return Array.from({ length: 12 }, (_, i) => i + 1);
+  }
+
+  getYears(): number[] {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 10 }, (_, i) => currentYear - i);
   }
 }

@@ -24,7 +24,7 @@ export class MaintenanceTypeService {
     searchMaintenanceTypes(searchTerm: string): Observable<MaintenanceTypeReference[]> {
         const params = new HttpParams().set('searchTerm', searchTerm);
         return this.http.get<{success: boolean, data: MaintenanceTypeReference[]}>(`${this.API_URL}/search`, { params })
-            .pipe(map(response => response.data || []));
+            .pipe(map((response :any) => response || []));
     }
 
     getMaintenanceTypes(queryParams?: any): Observable<any> {

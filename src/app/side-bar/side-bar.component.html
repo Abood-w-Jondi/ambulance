@@ -1,4 +1,4 @@
-<header class="sticky-top bg-light shadow-sm p-3 mb-2 d-flex align-items-center border-bottom px-4" style="height: 61px;">
+<header class="sticky-top bg-light shadow-sm p-3 mb-2 d-flex align-items-center border-bottom px-4" style="height: 61px; z-index: 498;">
     <div *ngIf="showSideBar">
         <i class="fa-solid fa-bars d-md-none" (click)="toggleSidebar()" style="cursor:pointer;"></i>
     </div>
@@ -94,8 +94,14 @@
       </li>
       <li>
         <a (click)="navigateTo('audit-logs')" [class.active]="isActive('audit-logs')">
-          <i class="fa-solid fa-location-dot nav-icon"></i>
+          <i class="fa-solid fa-file-alt nav-icon"></i>
           <span>سجل التدقيق</span>
+        </a>
+      </li>
+      <li>
+        <a (click)="navigateTo('vehicle-checklists')" [class.active]="isActive('vehicle-checklists')">
+          <i class="fa-solid fa-file-medical nav-icon"></i>
+          <span>سجل الموارد الطبية</span>
         </a>
       </li>
     </ul>

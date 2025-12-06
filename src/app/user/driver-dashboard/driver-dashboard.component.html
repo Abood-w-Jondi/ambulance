@@ -167,15 +167,29 @@
 </div>
 
 <!-- Fuel Modal -->
-<app-add-fuel-modal 
-  *ngIf="showFuelModal" 
+<app-add-fuel-modal
+  *ngIf="showFuelModal"
+  [vehicleId]="vehicleId || ''"
+  [vehicleInternalId]="vehicleId || ''"
+  [driverId]="driver()?.id || ''"
+  [driverInternalId]="driver()?.id || ''"
   (close)="closeFuelModal()"
   (fuelAdded)="onFuelAdded()">
 </app-add-fuel-modal>
 
 <!-- Maintenance Modal -->
-<app-add-maintenance-modal 
-  *ngIf="showMaintenanceModal" 
+<app-add-maintenance-modal
+  *ngIf="showMaintenanceModal"
+  [vehicleId]="vehicleId || ''"
+  [vehicleInternalId]="vehicleId || ''"
   (close)="closeMaintenanceModal()"
   (maintenanceAdded)="onMaintenanceAdded()">
 </app-add-maintenance-modal>
+
+<!-- Checklist Reminder Modal -->
+<app-checklist-reminder
+  [isOpen]="showChecklistReminder()"
+  [vehicleName]="currentVehicleName()"
+  (openChecklist)="openChecklist()"
+  (dismiss)="dismissReminder()">
+</app-checklist-reminder>

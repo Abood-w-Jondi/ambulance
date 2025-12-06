@@ -177,15 +177,16 @@ export class TripsComponent implements OnInit {
     totalRecords = 0;
     isLoading = signal(false);
 
-    // Calculate money distribution based on payed price (not total price)
-    // IMPORTANT: Must match backend logic (trips.php:927-932)
-    private calculateShares(payedPrice: number, paramedicShare: number, fuelCost: number) {
+    // Calculate money distribution based on total price (full service value)
+    // IMPORTANT: Must match backend logic (trips.php:1108-1127)
+    // Loan amount (totalPrice - payedPrice) is tracked separately
+    private calculateShares(totalPrice: number, paramedicShare: number, fuelCost: number) {
         // Backend formula:
-        // afterParamedic = payedPrice - paramedicShare
+        // afterParamedic = totalPrice - paramedicShare
         // afterFuel = afterParamedic - fuelCost  (1 NIS per km)
         // driverShare = afterFuel / 3
         // eqShare = (afterFuel / 3) * 2
-        const afterParamedic = payedPrice - paramedicShare;
+        const afterParamedic = totalPrice - paramedicShare;
         const afterFuel = afterParamedic - fuelCost;  // Deduct fuel BEFORE splitting
         const driverShare = afterFuel / 3;
         const eqShare = (afterFuel / 3) * 2;  // 2/3 of remaining
@@ -539,7 +540,7 @@ export class TripsComponent implements OnInit {
 
     addTrip(): void {
         const fuelCost = this.calculatedDiesel * 1.0;  // 1 NIS per km
-        const shares = this.calculateShares(this.tripForm.payedPrice, this.tripForm.paramedicShare, fuelCost);
+        const shares = this.calculateShares(this.tripForm.totalPrice, this.tripForm.paramedicShare, fuelCost);
 
         this.tripService.createTrip({
             day: this.tripForm.day,
@@ -625,7 +626,7 @@ export class TripsComponent implements OnInit {
         const trip = this.selectedTrip();
         if (trip) {
             const fuelCost = this.calculatedDiesel * 1.0;  // 1 NIS per km
-            const shares = this.calculateShares(this.tripForm.payedPrice, this.tripForm.paramedicShare, fuelCost);
+            const shares = this.calculateShares(this.tripForm.totalPrice, this.tripForm.paramedicShare, fuelCost);
 
             const updatedData = {
                 day: this.tripForm.day,
@@ -749,6 +750,60 @@ export class TripsComponent implements OnInit {
     getYears(): number[] {
         const currentYear = new Date().getFullYear();
         return Array.from({ length: 10 }, (_, i) => currentYear - i);
+    }
+
+    /**
+     * Format timestamp for display in admin view
+     */
+    formatTimestamp(date: Date | string | undefined): string {
+        if (!date) return 'غير متاح';
+        const d = typeof date === 'string' ? new Date(date) : date;
+        return d.toLocaleString('ar-SA', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    /**
+     * Calculate duration between accepted and closed timestamps
+     */
+    getTripDuration(acceptedAt: Date | string | undefined, closedAt: Date | string | undefined): string {
+        if (!acceptedAt || !closedAt) return 'غير متاح';
+        const accepted = typeof acceptedAt === 'string' ? new Date(acceptedAt) : acceptedAt;
+        const closed = typeof closedAt === 'string' ? new Date(closedAt) : closedAt;
+        const diffMs = closed.getTime() - accepted.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const hours = Math.floor(diffMins / 60);
+        const mins = diffMins % 60;
+        return `${hours}س ${mins}د`;
+    }
+
+    /**
+     * Admin force-close a trip
+     */
+    forceCloseTrip(): void {
+        const trip = this.selectedTrip();
+        if (!trip) return;
+
+        if (trip.isClosed) {
+            this.toastService.error('الرحلة مغلقة بالفعل');
+            return;
+        }
+
+        this.tripService.closeTrip(trip.id).subscribe({
+            next: () => {
+                this.toastService.success('تم إغلاق الرحلة بنجاح');
+                this.selectedTrip.update(t => t ? { ...t, isClosed: true } : null);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error closing trip:', error);
+                this.toastService.error('فشل إغلاق الرحلة');
+            }
+        });
     }
 
 }

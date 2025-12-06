@@ -18,20 +18,18 @@ import { Trip, TransferStatus } from '../../shared/models/trip.model';
 })
 export class MyTripsComponent implements OnInit, OnDestroy {
   // Tab selection
-  selectedTab: 'available' | 'active' | 'history' = 'available';
-  
-  // History view toggle
+  selectedTab: 'available' | 'mytrips' = 'available';
+
+  // My Trips view toggle
   historyView: 'vehicle' | 'driver' = 'vehicle';
-  
+
   // Trip lists
   availableTrips: Trip[] = [];
-  activeTrips: Trip[] = [];
-  historicalTrips: Trip[] = [];
-  allHistoricalTrips: Trip[] = []; // Unfiltered list for client-side filtering
-  
+  myTrips: Trip[] = [];
+  allMyTrips: Trip[] = []; // Unfiltered list for client-side filtering
+
   // Loading states
   isLoadingAvailable: boolean = false;
-  isLoadingActive: boolean = false;
   isLoadingHistory: boolean = false;
   
   // History filters
@@ -114,8 +112,7 @@ export class MyTripsComponent implements OnInit, OnDestroy {
 
   loadData(): void {
     this.loadAvailableTrips();
-    this.loadActiveTrips();
-    this.loadHistoricalTrips();
+    this.loadMyTrips();
   }
 
   startAutoRefresh(): void {
@@ -123,28 +120,24 @@ export class MyTripsComponent implements OnInit, OnDestroy {
     this.refreshInterval = setInterval(() => {
       if (this.selectedTab === 'available') {
         this.loadAvailableTrips();
-      } else if (this.selectedTab === 'active') {
-        this.loadActiveTrips();
       }
     }, 30000);
   }
 
-  switchTab(tab: 'available' | 'active' | 'history'): void {
+  switchTab(tab: 'available' | 'mytrips'): void {
     this.selectedTab = tab;
-    
+
     // Load data if not already loaded
     if (tab === 'available' && this.availableTrips.length === 0) {
       this.loadAvailableTrips();
-    } else if (tab === 'active' && this.activeTrips.length === 0) {
-      this.loadActiveTrips();
-    } else if (tab === 'history' && this.historicalTrips.length === 0) {
-      this.loadHistoricalTrips();
+    } else if (tab === 'mytrips' && this.myTrips.length === 0) {
+      this.loadMyTrips();
     }
   }
 
   toggleHistoryView(): void {
     this.historyView = this.historyView === 'vehicle' ? 'driver' : 'vehicle';
-    this.loadHistoricalTrips();
+    this.loadMyTrips();
   }
 
   loadAvailableTrips(): void {
@@ -162,46 +155,29 @@ export class MyTripsComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadActiveTrips(): void {
-    this.isLoadingActive = true;
-    // Get all driver's trips (including final status ones that aren't closed yet)
-    this.tripService.getTrips({ driverId: this.driverId, limit: 1000 }).subscribe({
-      next: (response) => {
-        // Filter to show non-closed trips only (can be any status)
-        this.activeTrips = response.data.filter(trip => !trip.isClosed);
-        this.isLoadingActive = false;
-      },
-      error: (error) => {
-        console.error('Failed to load active trips:', error);
-        this.toastService.error('فشل تحميل الرحلات النشطة');
-        this.isLoadingActive = false;
-      }
-    });
-  }
-
-  loadHistoricalTrips(): void {
+  loadMyTrips(): void {
     this.isLoadingHistory = true;
     this.currentPage = 1; // Reset to first page
     const observable = this.historyView === 'vehicle'
-      ? this.tripService.getVehicleHistoricalTrips(this.vehicleId)
-      : this.tripService.getDriverHistoricalTrips(this.driverId);
-    
+      ? this.tripService.getVehicleTrips(this.vehicleId)
+      : this.tripService.getDriverTrips(this.driverId);
+
     observable.subscribe({
       next: (trips) => {
-        this.allHistoricalTrips = trips;
+        this.allMyTrips = trips;
         this.applyHistoryFilters();
         this.isLoadingHistory = false;
       },
       error: (error) => {
-        console.error('Failed to load historical trips:', error);
-        this.toastService.error('فشل تحميل الرحلات السابقة');
+        console.error('Failed to load trips:', error);
+        this.toastService.error('فشل تحميل الرحلات');
         this.isLoadingHistory = false;
       }
     });
   }
 
   applyHistoryFilters(): void {
-    let filtered = [...this.allHistoricalTrips];
+    let filtered = [...this.allMyTrips];
     
     // Filter by status
     if (this.historyFilters.status !== 'all') {
@@ -251,8 +227,20 @@ export class MyTripsComponent implements OnInit, OnDestroy {
         }
       });
     }
-    
-    this.historicalTrips = filtered;
+
+    // Sort: Unclosed trips first, then closed trips (both newest first)
+    filtered.sort((a, b) => {
+      // First sort by closed status (unclosed first)
+      if (a.isClosed !== b.isClosed) {
+        return a.isClosed ? 1 : -1;
+      }
+      // Then sort by date (newest first)
+      const dateA = new Date(a.year, a.month - 1, a.day).getTime();
+      const dateB = new Date(b.year, b.month - 1, b.day).getTime();
+      return dateB - dateA;
+    });
+
+    this.myTrips = filtered;
     this.currentPage = 1; // Reset to first page after filtering
   }
 
@@ -275,11 +263,11 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   getPaginatedHistory(): Trip[] {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
-    return this.historicalTrips.slice(startIndex, endIndex);
+    return this.myTrips.slice(startIndex, endIndex);
   }
 
   get totalHistoryPages(): number {
-    return Math.ceil(this.historicalTrips.length / this.itemsPerPage);
+    return Math.ceil(this.myTrips.length / this.itemsPerPage);
   }
 
   changePage(page: number): void {
@@ -316,7 +304,7 @@ export class MyTripsComponent implements OnInit, OnDestroy {
       next: () => {
         this.toastService.success(`تم قبول الرحلة للمريض ${trip.patientName}`);
         this.loadAvailableTrips();
-        this.loadActiveTrips();
+        this.loadMyTrips();
       },
       error: (error) => {
         console.error('Failed to accept trip:', error);
@@ -332,6 +320,10 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   }
 
   editTrip(trip: Trip): void {
+    if (trip.isClosed) {
+      this.toastService.error('لا يمكن تعديل رحلة مغلقة');
+      return;
+    }
     this.router.navigate(['/user/trip-form', trip.id], {
       queryParams: { mode: 'edit' }
     });
@@ -363,8 +355,7 @@ export class MyTripsComponent implements OnInit, OnDestroy {
       next: () => {
         this.toastService.success(`تم إغلاق الرحلة للمريض ${patientName}`);
         this.closeConfirmModal();
-        this.loadActiveTrips();
-        this.loadHistoricalTrips();
+        this.loadMyTrips();
       },
       error: (error) => {
         console.error('Failed to close trip:', error);
@@ -389,9 +380,8 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   }
 
   canCloseTrip(trip: Trip): boolean {
-    // Can close if trip has a final status and is not already closed
-    const finalStatuses = ['تم النقل', 'رفض النقل', 'بلاغ كاذب'];
-    return finalStatuses.includes(trip.transferStatus) && !trip.isClosed;
+    // Can close if not already closed (allow closing at any status)
+    return !trip.isClosed;
   }
 
   formatDate(trip: Trip): string {

@@ -138,7 +138,6 @@
                                 <app-transportation-type-search
                                     [label]="'التشخيص'"
                                     [placeholder]="'ابحث عن التشخيص...'"
-                                    [selectedTypeId]="tripForm.transportationTypeId"
                                     [selectedTypeName]="tripForm.transportationTypeName"
                                     (typeSelected)="onTransportationTypeSelected($event)">
                                 </app-transportation-type-search>
@@ -334,7 +333,6 @@
                                 <app-transportation-type-search
                                     [label]="'التشخيص'"
                                     [placeholder]="'ابحث عن التشخيص...'"
-                                    [selectedTypeId]="tripForm.transportationTypeId"
                                     [selectedTypeName]="tripForm.transportationTypeName"
                                     (typeSelected)="onTransportationTypeSelected($event)">
                                 </app-transportation-type-search>
@@ -504,6 +502,35 @@
                             <p class="text-muted small mb-1">حصة EQ</p>
                             <p class="fw-bold" dir="ltr">₪{{ trip.eqShare.toFixed(2) }}</p>
                         </div>
+                        <div class="col-12">
+                            <hr class="my-3">
+                            <h6 class="fw-bold mb-3">معلومات التتبع</h6>
+                        </div>
+                        <div class="col-6">
+                            <p class="text-muted small mb-1">تم القبول</p>
+                            <p class="fw-bold">{{ formatTimestamp(trip.acceptedAt) }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="text-muted small mb-1">تم الإغلاق</p>
+                            <p class="fw-bold">
+                                {{ formatTimestamp(trip.closedAt) }}
+                                @if (trip.closedBy) {
+                                <span class="badge bg-secondary ms-2">بواسطة: {{ trip.closedBy }}</span>
+                                }
+                            </p>
+                        </div>
+                        @if (trip.acceptedAt && trip.closedAt) {
+                        <div class="col-6">
+                            <p class="text-muted small mb-1">المدة</p>
+                            <p class="fw-bold">{{ getTripDuration(trip.acceptedAt, trip.closedAt) }}</p>
+                        </div>
+                        }
+                        <div class="col-6">
+                            <p class="text-muted small mb-1">حالة الإغلاق</p>
+                            <span class="badge" [class.bg-success]="trip.isClosed" [class.bg-warning]="!trip.isClosed">
+                                {{ trip.isClosed ? 'مغلقة' : 'مفتوحة' }}
+                            </span>
+                        </div>
                     </div>
                     <div class="d-flex justify-content-between gap-2 mt-4">
                         <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold"
@@ -512,6 +539,13 @@
                             حذف
                         </button>
                         <div class="d-flex gap-2">
+                            @if (!trip.isClosed) {
+                            <button type="button" class="btn btn-success rounded-pill px-4 fw-bold"
+                                (click)="forceCloseTrip()">
+                                <i class="fa-solid fa-lock me-1"></i>
+                                إغلاق الرحلة
+                            </button>
+                            }
                             <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
                                 (click)="closeViewTripModal()">إغلاق</button>
                             <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold"

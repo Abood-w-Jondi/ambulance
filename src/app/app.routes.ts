@@ -11,6 +11,7 @@ import { TransactionHistoryComponent } from './admin/transaction-history/transac
 import { LoginComponent } from './admin/login/login.component';
 import { VehicleMapComponent } from './admin/vehicle-map/vehicle-map.component';
 import { AuditLogsComponent } from './admin/audit-logs/audit-logs.component';
+import { VehicleChecklistsComponent } from './admin/vehicle-checklists/vehicle-checklists.component';
 import { StatusUpdateComponent } from './user/status-update/status-update.component';
 import { AcceptTripsComponent } from './user/accept-trips/accept-trips.component';
 import { TripsHistoryComponent } from './user/trips-history/trips-history.component';
@@ -19,6 +20,7 @@ import { DriverDashboardComponent } from './user/driver-dashboard/driver-dashboa
 import { MyTripsComponent } from './user/my-trips/my-trips.component';
 import { TripFormComponent } from './user/trip-form/trip-form.component';
 import { LoanCollectionComponent } from './user/loan-collection/loan-collection.component';
+import { VehicleChecklistComponent } from './user/vehicle-checklist/vehicle-checklist.component';
 import { MaintenanceTypesComponent } from './admin/settings/maintenance-types/maintenance-types.component';
 import { TransportationTypesComponent } from './admin/settings/transportation-types/transportation-types.component';
 import { CommonLocationsComponent } from './admin/settings/common-locations/common-locations.component';
@@ -67,6 +69,7 @@ export const routes = [
 			{ path: 'users-management', component: UsersManagementComponent },
 			{ path: 'vehicle-map', component: VehicleMapComponent },
 			{ path: 'audit-logs', component: AuditLogsComponent },
+			{ path: 'vehicle-checklists', component: VehicleChecklistsComponent },
 			{ path: 'profile/:id', component: ProfileComponent },
 			{ path: 'profile', component: ProfileComponent },
 		],
@@ -86,6 +89,7 @@ export const routes = [
 			{ path: 'trip-form/:id', component: TripFormComponent },
 			{ path: 'wallet', component: WalletComponent },
 			{ path: 'loan-collection', component: LoanCollectionComponent },
+			{ path: 'vehicle-checklist', component: VehicleChecklistComponent },
 			{ path: 'profile', component: ProfileComponent },
 		],
 	},

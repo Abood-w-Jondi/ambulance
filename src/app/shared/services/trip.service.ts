@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Trip, TransferStatus } from '../models';
 import { PatientLoan, PatientLoanFilters } from '../models/patient-loan.model';
@@ -88,16 +88,16 @@ export class TripService {
   /**
    * Get patient loans for a driver
    */
-  getPatientLoans(driverId: string, filters?: PatientLoanFilters): Observable<PatientLoan[]> {
-    const httpParams = buildHttpParams(filters);
+getPatientLoans(driverId: string, filters?: PatientLoanFilters): Observable<PatientLoan[]> {
+  const httpParams = buildHttpParams(filters);
 
-    return this.http.get<{ success: boolean; data: PatientLoan[] }>(
-      `${environment.apiEndpoint}/drivers/${driverId}/patient-loans`,
-      { params: httpParams }
-    ).pipe(
-      map(response => response.data)
-    );
-  }
+  return this.http.get<{ success: boolean; data: PatientLoan[] }>(
+    `${environment.apiEndpoint}/drivers/${driverId}/patient-loans`,
+    { params: httpParams }
+  ).pipe(
+    map((response: any) => response)
+  );
+}
 
   // NEW METHODS FOR TRIP CLOSURE AND ACCEPTANCE
 
@@ -116,9 +116,9 @@ export class TripService {
   }
 
   /**
-   * Admin closes a trip to trigger transaction creation (admin only)
-   * @deprecated Transactions now trigger automatically when trip status becomes "تم النقل"
-   * This method is kept for backwards compatibility only
+   * Close a trip - marks it as finished editing
+   * Driver can close at any status to indicate they're done
+   * Admin can force-close any trip
    */
   closeTrip(tripId: string): Observable<any> {
     return this.http.post(`${this.API_URL}/${tripId}/close`, {});
@@ -170,6 +170,30 @@ export class TripService {
       map(response => response.data.filter(trip =>
         ['تم النقل', 'رفض النقل', 'بلاغ كاذب'].includes(trip.transferStatus)
       ))
+    );
+  }
+
+  /**
+   * Get all trips for a driver (both closed and unclosed)
+   */
+  getDriverTrips(driverId: string): Observable<Trip[]> {
+    const httpParams = buildHttpParams({ driverId, limit: '1000', sortOrder: 'DESC' });
+    return this.http.get<PaginatedResponse<Trip>>(this.API_URL, {
+      params: httpParams
+    }).pipe(
+      map(response => response.data || response as any)
+    );
+  }
+
+  /**
+   * Get all trips for a vehicle (both closed and unclosed)
+   */
+  getVehicleTrips(vehicleId: string): Observable<Trip[]> {
+    const httpParams = buildHttpParams({ vehicleId, limit: '1000', sortOrder: 'DESC' });
+    return this.http.get<PaginatedResponse<Trip>>(this.API_URL, {
+      params: httpParams
+    }).pipe(
+      map(response => response.data || response as any)
     );
   }
 
