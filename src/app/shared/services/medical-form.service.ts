@@ -36,7 +36,7 @@ export class MedicalFormService {
     return this.http.put<ApiResponse<MedicalForm>>(
       `${this.API_URL}/${tripId}`,
       { formData }
-    ).pipe(map(response => response.data!));
+    ).pipe(map((response:any) => response));
   }
 
   /**

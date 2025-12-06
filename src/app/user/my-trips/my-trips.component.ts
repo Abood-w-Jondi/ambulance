@@ -9,7 +9,7 @@ import { ToastService } from '../../shared/services/toast.service';
 import { VehicleCookieService } from '../../shared/services/vehicle-cookie.service';
 import { MedicalFormService } from '../../shared/services/medical-form.service';
 import { Trip, TransferStatus } from '../../shared/models/trip.model';
-
+import { GlobalVarsService } from '../../global-vars.service';
 @Component({
   selector: 'app-my-trips',
   standalone: true,
@@ -19,10 +19,10 @@ import { Trip, TransferStatus } from '../../shared/models/trip.model';
 })
 export class MyTripsComponent implements OnInit, OnDestroy {
   // Tab selection
-  selectedTab: 'available' | 'mytrips' = 'available';
+  selectedTab: 'available' | 'mytrips' = 'mytrips';
 
   // My Trips view toggle
-  historyView: 'vehicle' | 'driver' = 'vehicle';
+  historyView: 'vehicle' | 'driver' = 'driver';
 
   // Trip lists
   availableTrips: Trip[] = [];
@@ -81,11 +81,13 @@ export class MyTripsComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private vehicleCookieService: VehicleCookieService,
     private medicalFormService: MedicalFormService,
-    private router: Router
+    private router: Router,
+    public globalVars: GlobalVarsService
   ) {
     const currentUser = this.authService.currentUser();
     this.userId = currentUser?.id || '';
     this.vehicleId = this.vehicleCookieService.getSelectedVehicleId() || '';
+    this.globalVars.setGlobalHeader(' إدارة الرحلات ');
   }
 
   ngOnInit(): void {

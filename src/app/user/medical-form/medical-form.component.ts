@@ -13,6 +13,35 @@ import { MedicalFormService } from '../../shared/services/medical-form.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { AuthService } from '../../shared/services/auth.service';
 
+// Configuration interfaces for JSON-driven form rendering
+interface FieldConfig {
+  type: 'text' | 'textarea' | 'checkbox' | 'checkboxGroup' | 'subsection' | 'table';
+  key: string;
+  label: string;
+  placeholder?: string;
+  colClass?: string;
+  rows?: number;
+  fields?: FieldConfig[];
+  tableConfig?: TableConfig;
+}
+
+interface TableConfig {
+  columns: string[];
+  rows: TableRowConfig[];
+}
+
+interface TableRowConfig {
+  key: string;
+  label: string;
+}
+
+interface SectionConfig {
+  key: string;
+  title: string;
+  icon: string;
+  fields: FieldConfig[];
+}
+
 @Component({
   selector: 'app-medical-form',
   standalone: true,
@@ -50,6 +79,463 @@ export class MedicalFormComponent implements OnInit, OnDestroy {
 
   // Neurovascular sites for multi-site assessment
   neurovascularSites = ['RA', 'LA', 'RL', 'LL'];
+
+  // JSON Configuration for all form sections
+  sectionConfigs: SectionConfig[] = [
+    // Section 1: Patient Information
+    {
+      key: 'Patient_Information',
+      title: 'معلومات المريض',
+      icon: 'fa-user-injured',
+      fields: [
+        { type: 'text', key: 'Patient_Name', label: 'اسم المريض', colClass: 'col-md-6' },
+        { type: 'text', key: 'Date', label: 'التاريخ', colClass: 'col-md-6' },
+        { type: 'textarea', key: 'Patient_Complaint', label: 'شكوى المريض', colClass: 'col-12', rows: 3 },
+        { type: 'text', key: 'Time_to_Treatment_Area', label: 'الوقت إلى منطقة العلاج', colClass: 'col-md-6' },
+        { type: 'text', key: 'X_Ray', label: 'الأشعة السينية', colClass: 'col-md-6' },
+        { type: 'textarea', key: 'Narrative', label: 'السرد', colClass: 'col-12', rows: 4 }
+      ]
+    },
+    // Section 2: Vital Signs
+    {
+      key: 'Vital_Signs',
+      title: 'العلامات الحيوية',
+      icon: 'fa-heartbeat',
+      fields: [
+        { type: 'text', key: 'BP', label: 'ضغط الدم (BP)', placeholder: '120/80', colClass: 'col-md-3' },
+        { type: 'text', key: 'Resp', label: 'التنفس (Resp)', colClass: 'col-md-3' },
+        { type: 'text', key: 'Pulse', label: 'النبض (Pulse)', colClass: 'col-md-3' },
+        { type: 'text', key: 'Temp', label: 'الحرارة (Temp)', colClass: 'col-md-3' }
+      ]
+    },
+    // Section 3: History and Social
+    {
+      key: 'History_and_Social',
+      title: 'التاريخ الطبي والاجتماعي',
+      icon: 'fa-history',
+      fields: [
+        { type: 'text', key: 'Tetanus', label: 'التيتانوس', colClass: 'col-md-6' },
+        { type: 'text', key: 'Flu_Shot', label: 'لقاح الإنفلونزا', colClass: 'col-md-6' },
+        {
+          type: 'subsection',
+          key: 'Social_Status',
+          label: 'الحالة الاجتماعية',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Social_Status',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'Single', label: 'أعزب' },
+                { type: 'checkbox', key: 'Married', label: 'متزوج' },
+                { type: 'checkbox', key: 'Widowed', label: 'أرمل' },
+                { type: 'checkbox', key: 'Divorced', label: 'مطلق' }
+              ]
+            }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Alcohol_Tobacco',
+          label: 'التبغ والكحول',
+          colClass: 'col-12',
+          fields: [
+            { type: 'text', key: 'Tobacco', label: 'التبغ', colClass: 'col-md-4' },
+            { type: 'text', key: 'ETOH_Use', label: 'استخدام الكحول', colClass: 'col-md-4' },
+            { type: 'text', key: 'Freq', label: 'التكرار', colClass: 'col-md-4' }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Visual_Acuity',
+          label: 'حدة البصر',
+          colClass: 'col-12',
+          fields: [
+            { type: 'text', key: 'OU', label: 'OU', colClass: 'col-md-3' },
+            { type: 'text', key: 'OD', label: 'OD', colClass: 'col-md-3' },
+            { type: 'text', key: 'OS', label: 'OS', colClass: 'col-md-3' },
+            { type: 'checkbox', key: 'Corrected', label: 'مصحح', colClass: 'col-md-3' }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Family_History',
+          label: 'التاريخ العائلي',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Family_History',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'Heart_Disease', label: 'أمراض القلب' },
+                { type: 'checkbox', key: 'Cancer', label: 'السرطان' },
+                { type: 'checkbox', key: 'Diabetes', label: 'السكري' }
+              ]
+            },
+            { type: 'text', key: 'Other', label: 'أخرى (التاريخ العائلي)', colClass: 'col-12' }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Past_Medical_History',
+          label: 'التاريخ الطبي السابق',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Past_Medical_History',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'HTN', label: 'ارتفاع ضغط الدم' },
+                { type: 'checkbox', key: 'Heart_Disease', label: 'أمراض القلب' },
+                { type: 'checkbox', key: 'CVA', label: 'سكتة دماغية' },
+                { type: 'checkbox', key: 'Cancer', label: 'السرطان' },
+                { type: 'checkbox', key: 'Diabetes', label: 'السكري' }
+              ]
+            },
+            { type: 'text', key: 'Other', label: 'أخرى (التاريخ الطبي)', colClass: 'col-12' }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Past_Surgeries',
+          label: 'العمليات الجراحية السابقة',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Past_Surgeries',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'Gall_Bladder', label: 'المرارة' },
+                { type: 'checkbox', key: 'Appendix', label: 'الزائدة الدودية' },
+                { type: 'checkbox', key: 'Heart', label: 'القلب' },
+                { type: 'checkbox', key: 'Hysterectomy', label: 'استئصال الرحم' },
+                { type: 'checkbox', key: 'Lung', label: 'الرئة' }
+              ]
+            },
+            { type: 'text', key: 'Other', label: 'أخرى (العمليات الجراحية)', colClass: 'col-12' }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Infectious_History',
+          label: 'التاريخ المعدي',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Infectious_History',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'HIV', label: 'HIV' },
+                { type: 'checkbox', key: 'COPD', label: 'COPD' },
+                { type: 'checkbox', key: 'Asthma', label: 'الربو' },
+                { type: 'checkbox', key: 'Seizures', label: 'النوبات' },
+                { type: 'checkbox', key: 'Diabetes', label: 'السكري' }
+              ]
+            },
+            { type: 'text', key: 'Other', label: 'أخرى (التاريخ المعدي)', colClass: 'col-12' }
+          ]
+        }
+      ]
+    },
+    // Section 4: Medication and Allergies
+    {
+      key: 'Medication_and_Allergies',
+      title: 'الأدوية والحساسية',
+      icon: 'fa-pills',
+      fields: [
+        {
+          type: 'subsection',
+          key: 'Medication',
+          label: 'الأدوية',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Medication',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'None', label: 'لا يوجد' },
+                { type: 'checkbox', key: 'Unknown', label: 'غير معروف' }
+              ]
+            },
+            { type: 'textarea', key: 'Details', label: 'تفاصيل الأدوية', colClass: 'col-12', rows: 3 }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Allergies',
+          label: 'الحساسية',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Allergies',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'None', label: 'لا يوجد' },
+                { type: 'checkbox', key: 'Unknown', label: 'غير معروف' }
+              ]
+            },
+            { type: 'textarea', key: 'Details', label: 'تفاصيل الحساسية', colClass: 'col-12', rows: 3 }
+          ]
+        }
+      ]
+    },
+    // Section 5: Bleeding
+    {
+      key: 'Bleeding',
+      title: 'النزيف',
+      icon: 'fa-tint',
+      fields: [
+        {
+          type: 'checkboxGroup',
+          key: '',
+          label: '',
+          colClass: 'col-12',
+          fields: [
+            { type: 'checkbox', key: 'Present', label: 'موجود' },
+            { type: 'checkbox', key: 'Absent', label: 'غير موجود' },
+            { type: 'checkbox', key: 'OBO_Trauma', label: 'OBO صدمة' },
+            { type: 'checkbox', key: 'Controlled', label: 'تحت السيطرة' },
+            { type: 'checkbox', key: 'Moderate', label: 'معتدل' },
+            { type: 'checkbox', key: 'Hemorrhage', label: 'نزيف حاد' }
+          ]
+        }
+      ]
+    },
+    // Section 6: Physical Assessment
+    {
+      key: 'Physical_Assessment',
+      title: 'التقييم الجسدي',
+      icon: 'fa-stethoscope',
+      fields: [
+        {
+          type: 'subsection',
+          key: 'Mental_Status',
+          label: 'الحالة العقلية',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Mental_Status',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'Alert_Oriented', label: 'متنبه وموجه' },
+                { type: 'checkbox', key: 'Awake_Confused', label: 'مستيقظ مشوش' },
+                { type: 'checkbox', key: 'Verbally_Responsive', label: 'يستجيب شفهيا' },
+                { type: 'checkbox', key: 'Responds_to_Pain', label: 'يستجيب للألم' },
+                { type: 'checkbox', key: 'Aphasic', label: 'فاقد النطق' },
+                { type: 'checkbox', key: 'Combative', label: 'عدواني' },
+                { type: 'checkbox', key: 'Unresponsive', label: 'غير مستجيب' }
+              ]
+            }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Color',
+          label: 'اللون',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Color',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'Pink', label: 'وردي' },
+                { type: 'checkbox', key: 'Mottled', label: 'مرقط' },
+                { type: 'checkbox', key: 'Cyanotic', label: 'زراق' },
+                { type: 'checkbox', key: 'Jaundiced', label: 'يرقاني' },
+                { type: 'checkbox', key: 'Pale', label: 'شاحب' }
+              ]
+            }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Skin',
+          label: 'الجلد',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Skin',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'Warm', label: 'دافئ' },
+                { type: 'checkbox', key: 'Cool', label: 'بارد' },
+                { type: 'checkbox', key: 'Hot', label: 'ساخن' },
+                { type: 'checkbox', key: 'Dry', label: 'جاف' },
+                { type: 'checkbox', key: 'Diaphoretic', label: 'متعرق' }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    // Section 7: Skin Integrity
+    {
+      key: 'Skin_Integrity',
+      title: 'سلامة الجلد',
+      icon: 'fa-hand-paper',
+      fields: [
+        { type: 'checkbox', key: 'INTACT', label: 'سليم', colClass: 'col-12' },
+        { type: 'textarea', key: 'OTHER', label: 'أخرى', colClass: 'col-12', rows: 3, placeholder: 'وصف أي مشاكل في سلامة الجلد...' }
+      ]
+    },
+    // Section 8: Cardiovascular & Respiratory (simplified - can be expanded with subsections)
+    {
+      key: 'Cardiovascular_Respiratory',
+      title: 'القلب والجهاز التنفسي',
+      icon: 'fa-lungs',
+      fields: [
+        { type: 'text', key: 'Summary', label: 'ملخص', colClass: 'col-12' }
+      ]
+    },
+    // Section 9: Neurovascular
+    {
+      key: 'Neurovascular',
+      title: 'التقييم العصبي الوعائي',
+      icon: 'fa-brain',
+      fields: [
+        { type: 'checkbox', key: 'N_A', label: 'غير متاح', colClass: 'col-12' },
+        {
+          type: 'table',
+          key: 'COLOR',
+          label: 'اللون',
+          colClass: 'col-12',
+          tableConfig: {
+            columns: ['RA', 'LA', 'RL', 'LL'],
+            rows: [
+              { key: 'PINK', label: 'وردي' },
+              { key: 'PALE', label: 'شاحب' }
+            ]
+          }
+        },
+        {
+          type: 'table',
+          key: 'TEMP',
+          label: 'الحرارة',
+          colClass: 'col-12',
+          tableConfig: {
+            columns: ['RA', 'LA', 'RL', 'LL'],
+            rows: [
+              { key: 'WARM', label: 'دافئ' },
+              { key: 'COOL', label: 'بارد' }
+            ]
+          }
+        },
+        {
+          type: 'table',
+          key: 'MOTION',
+          label: 'الحركة',
+          colClass: 'col-12',
+          tableConfig: {
+            columns: ['RA', 'LA', 'RL', 'LL'],
+            rows: [
+              { key: 'FULL', label: 'كامل' },
+              { key: 'PARTIAL', label: 'جزئي' }
+            ]
+          }
+        },
+        {
+          type: 'table',
+          key: 'SENSATION',
+          label: 'الإحساس',
+          colClass: 'col-12',
+          tableConfig: {
+            columns: ['RA', 'LA', 'RL', 'LL'],
+            rows: [
+              { key: 'INTACT', label: 'سليم' },
+              { key: 'NUMBNESS', label: 'خدر' },
+              { key: 'PAIN', label: 'ألم' },
+              { key: 'TINGLING', label: 'وخز' }
+            ]
+          }
+        }
+      ]
+    },
+    // Section 10: Abdomen
+    {
+      key: 'Abdomen',
+      title: 'البطن',
+      icon: 'fa-procedures',
+      fields: [
+        {
+          type: 'checkboxGroup',
+          key: '',
+          label: '',
+          colClass: 'col-12',
+          fields: [
+            { type: 'checkbox', key: 'Normal', label: 'طبيعي' },
+            { type: 'checkbox', key: 'Flat', label: 'مسطح' },
+            { type: 'checkbox', key: 'Distended', label: 'منتفخ' },
+            { type: 'checkbox', key: 'Vomiting', label: 'قيء' },
+            { type: 'checkbox', key: 'Diarrhea', label: 'إسهال' },
+            { type: 'checkbox', key: 'Hematemesis', label: 'قيء دموي' },
+            { type: 'checkbox', key: 'Melena', label: 'براز أسود' },
+            { type: 'checkbox', key: 'Continuous', label: 'مستمر' },
+            { type: 'checkbox', key: 'Intermittent', label: 'متقطع' },
+            { type: 'checkbox', key: 'Present', label: 'موجود' },
+            { type: 'checkbox', key: 'Absent', label: 'غير موجود' }
+          ]
+        },
+        { type: 'text', key: 'How_Long', label: 'كم من الوقت', colClass: 'col-md-6' },
+        { type: 'text', key: 'Comments', label: 'تعليقات', colClass: 'col-md-6' }
+      ]
+    },
+    // Section 11: OB/GYN
+    {
+      key: 'OB_GYN',
+      title: 'النساء والتوليد',
+      icon: 'fa-baby',
+      fields: [
+        { type: 'text', key: 'VAG_D_C', label: 'إفرازات مهبلية', colClass: 'col-md-6' },
+        { type: 'text', key: 'COLOR', label: 'اللون', colClass: 'col-md-6' },
+        { type: 'text', key: 'QUANT_PAD_CT', label: 'عدد الفوط', colClass: 'col-md-4' },
+        { type: 'text', key: 'BLEEDING', label: 'النزيف', colClass: 'col-md-4' },
+        { type: 'text', key: 'FHT', label: 'نبضات قلب الجنين (FHT)', colClass: 'col-md-4' }
+      ]
+    },
+    // Section 12: Neurological
+    {
+      key: 'Neurological',
+      title: 'الفحص العصبي',
+      icon: 'fa-head-side-virus',
+      fields: [
+        { type: 'checkbox', key: 'NORMAL', label: 'طبيعي', colClass: 'col-12' },
+        { type: 'text', key: 'PARALYSIS', label: 'الشلل', colClass: 'col-md-4' },
+        { type: 'text', key: 'PUPILS', label: 'البؤبؤات', colClass: 'col-md-4' },
+        { type: 'text', key: 'SENSORY_LOSS', label: 'فقدان الحس', colClass: 'col-md-4' }
+      ]
+    },
+    // Section 13: General
+    {
+      key: 'General',
+      title: 'عام',
+      icon: 'fa-clipboard-list',
+      fields: [
+        { type: 'textarea', key: 'Comments', label: 'تعليقات', colClass: 'col-12', rows: 4, placeholder: 'أي ملاحظات أو تعليقات إضافية...' },
+        { type: 'text', key: 'Time_Assessment_Completed', label: 'وقت إتمام التقييم', colClass: 'col-md-6', placeholder: 'مثال: 14:30' },
+        { type: 'text', key: 'Signature', label: 'التوقيع', colClass: 'col-md-6', placeholder: 'اسم الضابط/المسعف' }
+      ]
+    }
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -276,5 +762,59 @@ export class MedicalFormComponent implements OnInit, OnDestroy {
     if (this.completionPercentage >= 50) return '#ffc107'; // Yellow
     if (this.completionPercentage >= 25) return '#fd7e14'; // Orange
     return '#dc3545'; // Red
+  }
+
+  // Helper methods for dynamic field access
+  getFieldValue(sectionKey: string, fieldKey: string, subKey?: string): any {
+    const section = this.formData[sectionKey as keyof MedicalFormData];
+    if (!section) return undefined;
+
+    if (subKey) {
+      // For nested fields like History_and_Social.Social_Status.Single
+      const subsection = (section as any)[fieldKey];
+      return subsection ? subsection[subKey] : undefined;
+    }
+
+    return (section as any)[fieldKey];
+  }
+
+  setFieldValue(sectionKey: string, fieldKey: string, value: any, subKey?: string): void {
+    const section = this.formData[sectionKey as keyof MedicalFormData];
+    if (!section) return;
+
+    if (subKey) {
+      if (!(section as any)[fieldKey]) {
+        (section as any)[fieldKey] = {};
+      }
+      (section as any)[fieldKey][subKey] = value;
+    } else {
+      (section as any)[fieldKey] = value;
+    }
+  }
+
+  getTableValue(sectionKey: string, tableKey: string, rowKey: string, colIndex: number): any {
+    const section = this.formData[sectionKey as keyof MedicalFormData];
+    if (!section) return '';
+
+    const table = (section as any)[tableKey];
+    if (!table || !table[rowKey]) return '';
+
+    return table[rowKey][colIndex] || '';
+  }
+
+  setTableValue(sectionKey: string, tableKey: string, rowKey: string, colIndex: number, value: any): void {
+    const section = this.formData[sectionKey as keyof MedicalFormData];
+    if (!section) return;
+
+    if (!(section as any)[tableKey]) {
+      (section as any)[tableKey] = {};
+    }
+
+    const table = (section as any)[tableKey];
+    if (!table[rowKey]) {
+      table[rowKey] = ['', '', '', ''];
+    }
+
+    table[rowKey][colIndex] = value;
   }
 }

@@ -6,6 +6,24 @@ import { MedicalFormService } from '../../shared/services/medical-form.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { MedicalForm, MedicalFormFilters } from '../../shared/models/medical-form.model';
 
+interface FilterConfig {
+  key: keyof MedicalFormFilters;
+  label: string;
+  type: 'text' | 'select' | 'date';
+  placeholder?: string;
+  colClass: string;
+  options?: { value: any; label: string }[];
+}
+
+interface ColumnConfig {
+  key: string;
+  label: string;
+  type: 'text' | 'badge' | 'progress' | 'date' | 'actions';
+  getValue?: (form: MedicalForm) => any;
+  getClass?: (form: MedicalForm) => string;
+  render?: (form: MedicalForm) => string;
+}
+
 @Component({
   selector: 'app-medical-forms',
   standalone: true,
@@ -16,6 +34,114 @@ import { MedicalForm, MedicalFormFilters } from '../../shared/models/medical-for
 export class MedicalFormsComponent implements OnInit {
   medicalForms: MedicalForm[] = [];
   isLoading: boolean = false;
+
+  // Configuration for filters
+  filterConfigs: FilterConfig[] = [
+    {
+      key: 'patientName',
+      label: 'اسم المريض',
+      type: 'text',
+      placeholder: 'ابحث باسم المريض...',
+      colClass: 'col-md-3'
+    },
+    {
+      key: 'driverName',
+      label: 'اسم السائق',
+      type: 'text',
+      placeholder: 'ابحث باسم السائق...',
+      colClass: 'col-md-3'
+    },
+    {
+      key: 'isComplete',
+      label: 'حالة الاكتمال',
+      type: 'select',
+      colClass: 'col-md-2',
+      options: [
+        { value: undefined, label: 'الكل' },
+        { value: true, label: 'مكتمل' },
+        { value: false, label: 'غير مكتمل' }
+      ]
+    },
+    {
+      key: 'isLocked',
+      label: 'حالة القفل',
+      type: 'select',
+      colClass: 'col-md-2',
+      options: [
+        { value: undefined, label: 'الكل' },
+        { value: true, label: 'مقفل' },
+        { value: false, label: 'مفتوح' }
+      ]
+    },
+    {
+      key: 'dateFrom',
+      label: 'من تاريخ',
+      type: 'date',
+      colClass: 'col-md-2'
+    },
+    {
+      key: 'dateTo',
+      label: 'إلى تاريخ',
+      type: 'date',
+      colClass: 'col-md-2'
+    }
+  ];
+
+  // Configuration for table columns
+  columnConfigs: ColumnConfig[] = [
+    {
+      key: 'tripId',
+      label: 'معرّف الرحلة',
+      type: 'text',
+      getValue: (form) => form.tripId
+    },
+    {
+      key: 'patientName',
+      label: 'اسم المريض',
+      type: 'text',
+      getValue: (form) => form.patientName || 'غير محدد'
+    },
+    {
+      key: 'driverName',
+      label: 'السائق',
+      type: 'text',
+      getValue: (form) => form.driverName || 'غير محدد'
+    },
+    {
+      key: 'completionPercentage',
+      label: 'نسبة الاكتمال',
+      type: 'progress',
+      getValue: (form) => form.completionPercentage
+    },
+    {
+      key: 'isComplete',
+      label: 'الحالة',
+      type: 'badge',
+      getValue: (form) => form.isComplete,
+      getClass: (form) => form.isComplete ? 'bg-success' : 'bg-warning',
+      render: (form) => form.isComplete ? 'مكتمل' : 'غير مكتمل'
+    },
+    {
+      key: 'isLocked',
+      label: 'القفل',
+      type: 'badge',
+      getValue: (form) => form.isLocked,
+      getClass: (form) => form.isLocked ? 'bg-danger' : 'bg-success',
+      render: (form) => form.isLocked ? 'مقفل' : 'مفتوح'
+    },
+    {
+      key: 'updatedAt',
+      label: 'آخر تحديث',
+      type: 'date',
+      getValue: (form) => form.updatedAt
+    },
+    {
+      key: 'actions',
+      label: 'الإجراءات',
+      type: 'actions',
+      getValue: () => null
+    }
+  ];
 
   // Pagination
   currentPage: number = 1;
