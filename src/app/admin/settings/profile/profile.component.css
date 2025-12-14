@@ -1,41 +1,79 @@
-.modal.show {
-  background-color: rgba(0, 0, 0, 0.5);
+/* General Body and Container Styling */
+.min-vh-100 {
+    min-height: 100vh;
 }
-
-.modal-backdrop.show {
-  opacity: 0.5;
-}
-
 .container {
-    padding-bottom: 80px;
+    /* Reduced padding as the footer is no longer fixed */
+    padding-bottom: 24px; 
 }
 
-input[type="date"] {
-    text-align: right;
+/* Card Styling for Modern Look */
+.card {
+    border: none;
+    transition: all 0.3s ease;
+}
+.shadow-lg {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Form Control Focus and Appearance */
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd; /* Primary color focus */
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
 .form-control:disabled {
-  background-color: #f8f9fa;
-  cursor: not-allowed;
+    background-color: #e9ecef; /* Lighter background for disabled fields */
+    cursor: not-allowed;
 }
 
-.card {
-  border: none;
+/* Profile Image Styling */
+.profile-img-lg {
+    transition: transform 0.3s ease;
 }
 
-.shadow-sm {
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+.edit-img-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #fff; /* Added white border for separation */
 }
 
-.btn-light {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
+.delete-img-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.btn-light:hover {
-  background-color: #e9ecef;
+/* Modal Styling - Enhanced Appearance */
+.modal-header {
+    background-color: var(--bs-primary);
+    color: white;
 }
 
-.fixed-bottom {
-  z-index: 1030;
+.modal-content {
+    border: none;
+}
+
+.btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%); /* Makes close button white */
+}
+
+.alert-info {
+    color: #055160;
+    background-color: #cff4fc;
+}
+
+/* Custom Input Group Style */
+.input-group-text {
+    border-right: none;
+}
+.modal-backdrop.show {
+    /* Standard z-index for backdrop below modal (1055) */
+    z-index: 1050; 
 }

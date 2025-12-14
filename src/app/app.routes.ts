@@ -68,7 +68,6 @@ export const routes = [
 			{ path: 'transportation-types', component: TransportationTypesComponent },
 			{ path: 'maintenance-types', component: MaintenanceTypesComponent },
 			{ path: 'common-locations', component: CommonLocationsComponent },
-			{ path: 'users-management', component: UsersManagementComponent },
 			{ path: 'vehicle-map', component: VehicleMapComponent },
 			{ path: 'audit-logs', component: AuditLogsComponent },
 			{ path: 'vehicle-checklists', component: VehicleChecklistsComponent },

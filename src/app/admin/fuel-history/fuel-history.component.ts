@@ -43,9 +43,7 @@ export class FuelHistoryComponent implements OnInit {
     
     // Form values for new/edit record
     recordForm = {
-        day: 1,
-        month: 1,
-        year: new Date().getFullYear(),
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
         ambulanceName: '',
         ambulanceNumber: '',
         ambulanceId: '',          // Internal ID for backend
@@ -259,9 +257,7 @@ formatDate(date: Date | string | null | undefined): string {
 
     openAddRecordModal(): void {
         this.recordForm = {
-            day: 1,
-            month: new Date().getMonth() + 1,
-            year: new Date().getFullYear(),
+            date: new Date().toISOString().split('T')[0],
             ambulanceName: '',
             ambulanceNumber: '',
             ambulanceId: '',
@@ -278,7 +274,7 @@ formatDate(date: Date | string | null | undefined): string {
     }
 
     addRecord(): void {
-         let date : any= new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day)
+         let date : any= new Date(this.recordForm.date + 'T00:00:00'); // Create Date object from YYYY-MM-DD string
         const validationData = {
             ambulanceId: this.recordForm.ambulanceName,
             liters: this.recordForm.fuelAmount,
@@ -332,10 +328,9 @@ formatDate(date: Date | string | null | undefined): string {
     openEditRecordModal(): void {
         const record = this.selectedRecord();
         if (record) {
+            const dateString = record.date.toISOString().split('T')[0]; // YYYY-MM-DD format
             this.recordForm = {
-                day: record.date.getDate(),
-                month: record.date.getMonth() + 1,
-                year: record.date.getFullYear(),
+                date: dateString,
                 ambulanceName: record.ambulanceName,
                 ambulanceNumber: record.ambulanceNumber,
                 ambulanceId: record.ambulanceId || '',
@@ -354,7 +349,7 @@ formatDate(date: Date | string | null | undefined): string {
     }
 
     saveEditRecord(): void {
-         let date : any= new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day)
+         let date : any= new Date(this.recordForm.date + 'T00:00:00'); // Create Date object from YYYY-MM-DD string
         const record = this.selectedRecord();
         if (record) {
             // Validate fuel record using ValidationService
@@ -456,19 +451,6 @@ formatDate(date: Date | string | null | undefined): string {
         }
     }
 
-    getDaysInMonth(month: number, year: number): number[] {
-        const days = new Date(year, month, 0).getDate();
-        return Array.from({ length: days }, (_, i) => i + 1);
-    }
-
-    getMonths(): number[] {
-        return Array.from({ length: 12 }, (_, i) => i + 1);
-    }
-
-    getYears(): number[] {
-        const currentYear = new Date().getFullYear();
-        return Array.from({ length: 10 }, (_, i) => currentYear - i);
-    }
 
     /**
      * Navigate to fleet page filtered by vehicle
@@ -560,5 +542,28 @@ formatDate(date: Date | string | null | undefined): string {
             this.recordForm.driverId = driver.driver_code;
             this.recordForm.driverName = driver.arabicName;
         }
+    }
+
+    /**
+     * Helper method: Get days in month for date filtering
+     */
+    getDaysInMonth(month: number, year: number): number[] {
+        const daysInMonth = new Date(year, month, 0).getDate();
+        return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    }
+
+    /**
+     * Helper method: Get months for date filtering
+     */
+    getMonths(): number[] {
+        return Array.from({ length: 12 }, (_, i) => i + 1);
+    }
+
+    /**
+     * Helper method: Get years for date filtering
+     */
+    getYears(): number[] {
+        const currentYear = new Date().getFullYear();
+        return Array.from({ length: 20 }, (_, i) => currentYear - 10 + i);
     }
 }

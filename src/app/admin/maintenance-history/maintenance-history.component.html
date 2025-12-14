@@ -14,32 +14,10 @@
                 <div class="modal-body p-4 text-end" style="max-height: 70vh; overflow-y: auto;">
                     <form (ngSubmit)="addRecord()">
                         <div class="row g-3">
-                            <!-- Date Fields -->
+                            <!-- Date Field -->
                             <div class="col-12">
                                 <label class="form-label small fw-medium">التاريخ</label>
-                                <div class="row g-2">
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.day" name="day" required>
-                                            @for (day of getDaysInMonth(recordForm.month, recordForm.year); track day) {
-                                            <option [value]="day">{{ day }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.month" name="month" required>
-                                            @for (month of getMonths(); track month) {
-                                            <option [value]="month">{{ month }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.year" name="year" required>
-                                            @for (year of getYears(); track year) {
-                                            <option [value]="year">{{ year }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </div>
+                                <input type="date" class="form-control" [(ngModel)]="recordForm.date" name="recordDate" required max="9999-12-31">
                             </div>
                             
                             <div class="col-12">
@@ -58,6 +36,25 @@
                                 <small class="text-muted d-block mt-1">
                                     عرض {{ filteredVehicles().length }} من {{ vehiclesList.length }} مركبة
                                 </small>
+                            </div>
+
+                            <!-- Driver Selection (Optional) -->
+                            <div class="col-12">
+                                <label for="driverSelect" class="form-label small fw-medium">السائق (اختياري)</label>
+                                <select
+                                    id="driverSelect"
+                                    class="form-select"
+                                    [(ngModel)]="recordForm.driverId"
+                                    name="driverId"
+                                >
+                                    <option value="">تلقائي (السائق الحالي للمركبة)</option>
+                                    @for (driver of driversList; track driver.id) {
+                                        <option [value]="driver.id">
+                                            {{ driver.arabicName || driver.name }}
+                                        </option>
+                                    }
+                                </select>
+                                <small class="text-muted d-block mt-1">إذا تركت فارغاً، سيتم تعيين السائق الحالي للمركبة</small>
                             </div>
 
                             <div class="col-12">
@@ -147,29 +144,13 @@
                             <!-- Date Fields -->
                             <div class="col-12">
                                 <label class="form-label small fw-medium">التاريخ</label>
-                                <div class="row g-2">
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.day" name="day" required>
-                                            @for (day of getDaysInMonth(recordForm.month, recordForm.year); track day) {
-                                            <option [value]="day">{{ day }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.month" name="month" required>
-                                            @for (month of getMonths(); track month) {
-                                            <option [value]="month">{{ month }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.year" name="year" required>
-                                            @for (year of getYears(); track year) {
-                                            <option [value]="year">{{ year }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </div>
+                                <input
+                                  type="date"
+                                  class="form-control"
+                                  [(ngModel)]="recordForm.date"
+                                  name="recordDate"
+                                  required
+                                  max="9999-12-31">
                             </div>
                             
                             <div class="col-12">
@@ -188,7 +169,26 @@
                                     عرض {{ filteredVehicles().length }} من {{ vehiclesList.length }} مركبة
                                 </small>
                             </div>
-                            
+
+                            <!-- Driver Selection (Optional) -->
+                            <div class="col-12">
+                                <label for="editDriverSelect" class="form-label small fw-medium">السائق (اختياري)</label>
+                                <select
+                                    id="editDriverSelect"
+                                    class="form-select"
+                                    [(ngModel)]="recordForm.driverId"
+                                    name="driverId"
+                                >
+                                    <option value="">تلقائي (السائق الحالي للمركبة)</option>
+                                    @for (driver of driversList; track driver.id) {
+                                        <option [value]="driver.id">
+                                            {{ driver.arabicName || driver.name }}
+                                        </option>
+                                    }
+                                </select>
+                                <small class="text-muted d-block mt-1">إذا تركت فارغاً، سيتم تعيين السائق الحالي للمركبة</small>
+                            </div>
+
                             <div class="col-12">
                                 <app-maintenance-type-search
                                     [label]="'نوع الصيانة'"
@@ -489,6 +489,17 @@
                                     <p class="fw-semibold mb-0">
                                         قبل: {{ record.odometerBefore.toLocaleString() }} ميل /
                                         بعد: {{ record.odometerAfter.toLocaleString() }} ميل
+                                    </p>
+                                </div>
+                                <div class="col-12">
+                                    <p class="text-muted small mb-1">كم منذ الصيانة</p>
+                                    <p class="fw-semibold mb-0">
+                                        @if (record.kmSinceMaintenance !== null && record.kmSinceMaintenance !== undefined) {
+                                            <i class="fa-solid fa-road text-primary me-1"></i>
+                                            {{ record.kmSinceMaintenance | number }} كم
+                                        } @else {
+                                            <span class="text-muted">---</span>
+                                        }
                                     </p>
                                 </div>
                                 <div class="col-12">

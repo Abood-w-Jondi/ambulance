@@ -120,8 +120,16 @@ getPatientLoans(driverId: string, filters?: PatientLoanFilters): Observable<Pati
    * Driver can close at any status to indicate they're done
    * Admin can force-close any trip
    */
-  closeTrip(tripId: string): Observable<any> {
-    return this.http.post(`${this.API_URL}/${tripId}/close`, {});
+  closeTrip(tripId: string, transferStatus: TransferStatus): Observable<any> {
+    return this.http.post(`${this.API_URL}/${tripId}/close`, { transferStatus });
+  }
+
+  /**
+   * Reopen a closed trip - allows editing again (Admin only)
+   * Admin can reopen a trip so driver can edit it
+   */
+  uncloseTrip(tripId: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/${tripId}/unclose`, {});
   }
 
   /**
@@ -202,5 +210,17 @@ getPatientLoans(driverId: string, filters?: PatientLoanFilters): Observable<Pati
    */
   createVehicleTrip(vehicleId: string, trip: Partial<Trip>): Observable<{ id: string }> {
     return this.http.post<{ id: string }>(`${environment.apiEndpoint}/vehicles/${vehicleId}/trips`, trip);
+  }
+
+  /**
+   * Get all trips for export (with high limit to get all matching trips)
+   * Applies same filters as getTrips() but returns all results
+   */
+  getAllTripsForExport(params?: TripQueryParams): Observable<Trip[]> {
+    const exportParams = { ...params, limit: 99999 };
+    const httpParams = buildHttpParams(exportParams);
+    return this.http.get<PaginatedResponse<Trip>>(this.API_URL, { params: httpParams }).pipe(
+      map(response => response.data)
+    );
   }
 }

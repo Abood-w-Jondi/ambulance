@@ -237,10 +237,22 @@
             <p class="text-muted mt-2">جاري تحميل الرحلات السابقة...</p>
         </div>
 
+        <!-- Admin notice when viewing driver trips -->
+        <div *ngIf="isAdmin() && historyView === 'driver'" class="alert alert-warning border-start border-5 border-warning shadow-sm mb-4" role="alert">
+            <i class="fas fa-user-shield me-2"></i>
+            <strong>أنت مسجل كمسؤول النظام</strong> - لا يمكن عرض رحلات السائق لأنك لست سائقاً. يرجى التبديل إلى عرض "المركبة" لرؤية رحلات المركبة.
+        </div>
+
         <div *ngIf="!isLoadingHistory && myTrips?.length === 0" class="text-center py-5">
             <i class="fas fa-route fa-4x text-muted mb-3"></i>
-            <p class="text-muted fw-bold">لا توجد رحلات مطابقة</p>
-            <p class="small text-secondary">حاول تغيير خيارات الفلترة.</p>
+            <ng-container *ngIf="isAdmin() && historyView === 'driver'; else noTripsMessage">
+                <p class="text-muted fw-bold">لا توجد بيانات للعرض</p>
+                <p class="small text-secondary">أنت مسجل كمسؤول وليس كسائق. اختر عرض "المركبة" لرؤية الرحلات.</p>
+            </ng-container>
+            <ng-template #noTripsMessage>
+                <p class="text-muted fw-bold">لا توجد رحلات مطابقة</p>
+                <p class="small text-secondary">حاول تغيير خيارات الفلترة.</p>
+            </ng-template>
         </div>
 
         <div class="row row-cols-1 g-3" *ngIf="!isLoadingHistory && myTrips?.length > 0">

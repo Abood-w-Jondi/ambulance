@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { ToastService } from '../../shared/services/toast.service';
 import { CommonModule } from '@angular/common';
 import { GlobalVarsService } from '../../global-vars.service';
 import { VehicleService } from '../../shared/services/vehicle.service';
 import { DriverService } from '../../shared/services/driver.service';
+import { AuthService } from '../../shared/services/auth.service';
 import { VehicleStatus, DriverStatus } from '../../shared/models'; // Assuming VehicleStatus is defined in models
 import {VehicleCookieService} from "../../shared/services/vehicle-cookie.service";
 
@@ -35,18 +36,23 @@ interface DriverStatusAction {
   styleUrls: ['./status-update.component.css']
 })
 export class StatusUpdateComponent implements OnInit {
+  private vehicleId: string = '';
+  private driverId: string = '';
+
+  // Admin detection
+  isAdmin = computed(() => this.authService.isAdmin());
+
   constructor(
     private globalVarsService: GlobalVarsService,
     private toastService: ToastService,
     private vehicleService: VehicleService,
     private driverService: DriverService,
+    private authService: AuthService,
     private vehicleCookieService: VehicleCookieService
   ) {
     this.globalVarsService.setGlobalHeader('تحديث الحالة');
     this.vehicleId = this.vehicleCookieService.getSelectedVehicleId() || '';
   }
-  private vehicleId: string = '';
-  private driverId: string = '';
 
   // Driver personal status
   currentDriverStatus = {
@@ -101,6 +107,17 @@ export class StatusUpdateComponent implements OnInit {
 
   // Load driver personal status
   loadDriverStatus(): void {
+    // Admin users don't have driver records - show admin-specific status
+    if (this.authService.isAdmin()) {
+      this.currentDriverStatus = {
+        title: 'مسؤول النظام',
+        description: 'أنت مسجل كمسؤول وليس كسائق. لا يمكن تحديث حالة السائق.',
+        icon: 'fa-solid fa-user-shield',
+        alertClass: 'alert-info'
+      };
+      return;
+    }
+
     this.driverService.getCurrentDriver().subscribe({
       next: (driver) => {
         this.driverId = driver.id;
@@ -257,6 +274,12 @@ export class StatusUpdateComponent implements OnInit {
 
   // Update driver personal status
   updateDriverStatus(action: DriverStatusAction) {
+    // Prevent admin from updating driver status
+    if (this.authService.isAdmin()) {
+      this.toastService.error('لا يمكن تحديث حالة السائق لأنك مسجل كمسؤول.', 5000);
+      return;
+    }
+
     if (!this.driverId) {
       this.toastService.error('تعذر تحديث الحالة: مُعرف السائق مفقود.', 5000);
       return;

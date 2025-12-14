@@ -2,14 +2,14 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { ToastService } from '../services/toast.service';
-
+import { Router } from '@angular/router';
 /**
  * Global error interceptor for handling HTTP errors consistently
  * Provides user-friendly error messages in Arabic
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toastService = inject(ToastService);
-
+  const router = inject(Router);
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       let errorMessage = 'حدث خطأ غير متوقع';
@@ -24,7 +24,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             errorMessage = error.error?.message || 'طلب غير صالح';
             break;
           case 401:
-            errorMessage = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+            errorMessage = error.error?.message || 'اسم المستخدم أو كلمة المرور غير صحيحة';
             break;
           case 403:
             errorMessage = 'ليس لديك صلاحية للوصول';
@@ -51,6 +51,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
+      if(error.status === 403){
+         router.navigate(['/user/dashboard']);
+      }
       // Show error toast (except for 401 which is handled by auth interceptor)
       if (error.status !== 401) {
         toastService.error(errorMessage);

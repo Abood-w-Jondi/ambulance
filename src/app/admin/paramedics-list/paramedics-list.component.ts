@@ -9,7 +9,7 @@ import { ParamedicService } from '../../shared/services/paramedic.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
-import { Paramedic, ParamedicFilterStatus } from '../../shared/models';
+import { Paramedic, ParamedicFilterStatus, EducationLevel } from '../../shared/models';
 
 type FilterStatus = ParamedicFilterStatus;
 
@@ -106,6 +106,10 @@ export class ParamedicsListComponent implements OnInit {
         amountOwed: number;
         newPassword: string;
         isActive: boolean;
+        jobTitle: string;
+        educationLevel: EducationLevel | '';
+        phoneNumber: string;
+        profileImageUrl: string;
     } = {
         arabicName: '',
         name: '',
@@ -115,8 +119,20 @@ export class ParamedicsListComponent implements OnInit {
         tripsToday: 0,
         amountOwed: 0,
         newPassword: '',
-        isActive: true
+        isActive: true,
+        jobTitle: '',
+        educationLevel: '',
+        phoneNumber: '',
+        profileImageUrl: ''
     };
+
+    // Education level options for dropdown
+    educationLevelOptions: { value: EducationLevel; label: string }[] = [
+        { value: 'EMI', label: 'EMI - طوارئ طبية متوسطة' },
+        { value: 'B', label: 'B - أساسي' },
+        { value: 'I', label: 'I - متوسط' },
+        { value: 'P', label: 'P - مسعف' }
+    ];
 
     reductionAmounts: { [key: string]: number } = {};
 
@@ -208,7 +224,11 @@ export class ParamedicsListComponent implements OnInit {
             tripsToday: paramedic.tripsToday,
             amountOwed: paramedic.amountOwed,
             newPassword: '',
-            isActive: paramedic.isActive
+            isActive: paramedic.isActive,
+            jobTitle: paramedic.jobTitle || '',
+            educationLevel: paramedic.educationLevel || '',
+            phoneNumber: paramedic.phoneNumber || '',
+            profileImageUrl: paramedic.profileImageUrl || ''
         };
         this.isEditModalOpen.set(true);
     }
@@ -225,7 +245,11 @@ export class ParamedicsListComponent implements OnInit {
             tripsToday: 0,
             amountOwed: 0,
             newPassword: '',
-            isActive: true
+            isActive: true,
+            jobTitle: '',
+            educationLevel: '',
+            phoneNumber: '',
+            profileImageUrl: ''
         };
     }
 
@@ -250,7 +274,11 @@ export class ParamedicsListComponent implements OnInit {
             arabicStatus: this.editParamedic.arabicStatus,
             tripsToday: this.editParamedic.tripsToday,
             amountOwed: this.editParamedic.amountOwed,
-            isActive: this.editParamedic.isActive
+            isActive: this.editParamedic.isActive,
+            jobTitle: this.editParamedic.jobTitle || undefined,
+            educationLevel: this.editParamedic.educationLevel || undefined,
+            phoneNumber: this.editParamedic.phoneNumber || undefined,
+            profileImageUrl: this.editParamedic.profileImageUrl || undefined
         };
 
         if (this.editParamedic.newPassword && this.editParamedic.newPassword.trim() !== '') {
@@ -353,10 +381,20 @@ export class ParamedicsListComponent implements OnInit {
             return;
         }
 
+        // Show warnings (prepayment notification)
+        if (validation.warnings && validation.warnings.length > 0) {
+            validation.warnings.forEach(warning => {
+                this.toastService.warning(warning, 5000);  // 5 second display
+            });
+        }
+
         this.paramedicService.reduceBalance(paramedic.id, amount).subscribe({
             next: () => {
                 delete this.reductionAmounts[paramedic.id];
-                this.toastService.info(`تم خصم ₪${amount} من رصيد المسعف: ${paramedic.arabicName}`, 3000);
+                const message = amount > paramedic.amountOwed
+                    ? `تم الدفع المسبق للمسعف: ${paramedic.arabicName} (₪${amount})`
+                    : `تم خصم ₪${amount} من رصيد المسعف: ${paramedic.arabicName}`;
+                this.toastService.info(message, 3000);
                 this.loadData();
             },
             error: (error) => {
@@ -409,5 +447,36 @@ export class ParamedicsListComponent implements OnInit {
             this.editParamedic.arabicName &&
             (this.editParamedic.username || this.editParamedic.email)
         );
+    }
+
+    onProfileImageSelected(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                this.toastService.error('الرجاء اختيار ملف صورة صحيح');
+                return;
+            }
+
+            // Validate file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                this.toastService.error('حجم الصورة يجب أن لا يتجاوز 2 ميجابايت');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e: ProgressEvent<FileReader>) => {
+                if (e.target?.result) {
+                    this.editParamedic.profileImageUrl = e.target.result as string;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    removeProfileImage(): void {
+        this.editParamedic.profileImageUrl = '';
     }
 }

@@ -17,32 +17,7 @@
               <i class="fas fa-calendar me-2 text-primary"></i>
               التاريخ
             </label>
-            <div class="row">
-              <div class="col-4">
-                <select class="form-select" [(ngModel)]="recordForm.day" name="day" required>
-                  <option *ngFor="let day of getDaysInMonth(recordForm.month, recordForm.year)" [value]="day">
-                    {{ day }}
-                  </option>
-                </select>
-                <small class="text-muted">اليوم</small>
-              </div>
-              <div class="col-4">
-                <select class="form-select" [(ngModel)]="recordForm.month" name="month" required>
-                  <option *ngFor="let month of getMonths()" [value]="month">
-                    {{ month }}
-                  </option>
-                </select>
-                <small class="text-muted">الشهر</small>
-              </div>
-              <div class="col-4">
-                <select class="form-select" [(ngModel)]="recordForm.year" name="year" required>
-                  <option *ngFor="let year of getYears()" [value]="year">
-                    {{ year }}
-                  </option>
-                </select>
-                <small class="text-muted">السنة</small>
-              </div>
-            </div>
+            <input type="date" class="form-control" [(ngModel)]="recordForm.date" name="date" required max="9999-12-31">
           </div>
 
           <!-- قراءة العداد -->

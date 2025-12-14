@@ -30,9 +30,7 @@ export class TripFormComponent implements OnInit {
   
   // Form data
   tripForm = {
-    day: new Date().getDate(),
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
+    date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     driverId: '',
     paramedicId: '',
     vehicleId: '',
@@ -60,7 +58,8 @@ export class TripFormComponent implements OnInit {
     driverShare: null as number | null,
     eqShare: null as number | null,
     ymdValue: null as number | null,
-    ymdPeriod: ''
+    ymdPeriod: '',
+    tripNotes: ''
   };
 
   // Options
@@ -114,6 +113,18 @@ export class TripFormComponent implements OnInit {
     this.route.params.subscribe(params => {
       this.tripId = params['id'] || null;
     });
+
+    this.vehicleService.getCurrentOdometer(this.tripForm.vehicleId).subscribe({
+      next: (odometer) => {
+        if (odometer !== null && odometer !== undefined) {
+          this.tripForm.start = odometer.currentOdometer;
+        }
+      },
+      error: () => {this.toastService.error('فشل جلب عداد المركبة الحالي')}
+    }
+      
+    );
+
 
     // Load options
     this.loadOptions();
@@ -208,9 +219,7 @@ export class TripFormComponent implements OnInit {
 
   populateForm(trip: Trip): void {
     this.tripForm = {
-      day: trip.day,
-      month: trip.month,
-      year: trip.year,
+      date: this.formatDateForInput(trip.day, trip.month, trip.year),
       driverId: trip.driverId || '',
       paramedicId: trip.paramedicId || '',
       vehicleId: trip.vehicleId || '',
@@ -238,7 +247,8 @@ export class TripFormComponent implements OnInit {
       driverShare: trip.driverShare,
       eqShare: trip.eqShare,
       ymdValue: trip.ymdValue || null,
-      ymdPeriod: trip.ymdPeriod || ''
+      ymdPeriod: trip.ymdPeriod || '',
+      tripNotes: trip.tripNotes || ''
     };
   }
 
@@ -284,8 +294,9 @@ export class TripFormComponent implements OnInit {
     // eqShare = (afterFuel / 3) * 2
     const afterParamedic = totalPrice - paramedicShare;
     const afterFuel = afterParamedic - fuelCost;  // Deduct fuel BEFORE splitting
-    const driverShare = afterFuel / 3;
-    const eqShare = (afterFuel / 3) * 2;  // 2/3 of remaining
+    const afterOtherCosts = afterFuel - (this.tripForm.otherExpenses || 0); // Deduct other expenses BEFORE splitting
+    const driverShare = afterOtherCosts / 3;
+    const eqShare = (afterOtherCosts / 3) * 2;  // 2/3 of remaining
     return { paramedicShare, driverShare, eqShare };
   }
 
@@ -375,10 +386,13 @@ export class TripFormComponent implements OnInit {
       fuelCost
     );
 
+    // Extract day, month, year from date string for backend compatibility
+    const dateparts = this.extractDateParts(this.tripForm.date);
+
     return {
-      day: this.tripForm.day,
-      month: this.tripForm.month,
-      year: this.tripForm.year,
+      day: dateparts.day,
+      month: dateparts.month,
+      year: dateparts.year,
       driverId: this.tripForm.driverId || null,
       paramedicId: this.tripForm.paramedicId || null,
       vehicleId: this.tripForm.vehicleId || null,
@@ -402,7 +416,8 @@ export class TripFormComponent implements OnInit {
       payedPrice: this.tripForm.payedPrice || 0,
       ...shares,  // Include calculated shares (paramedicShare, driverShare, eqShare)
       ymdValue: this.tripForm.ymdValue || null,
-      ymdPeriod: this.tripForm.ymdPeriod || null
+      ymdPeriod: this.tripForm.ymdPeriod || null,
+      tripNotes: this.tripForm.tripNotes || null
     };
   }
 
@@ -431,8 +446,8 @@ export class TripFormComponent implements OnInit {
 
   confirmCloseTrip(): void {
     if (!this.tripId) return;
-    
-    this.tripService.closeTrip(this.tripId).subscribe({
+
+    this.tripService.closeTrip(this.tripId, this.tripForm.transferStatus).subscribe({
       next: () => {
         this.toastService.success('تم إغلاق الرحلة بنجاح');
         this.closeConfirmModal();
@@ -472,6 +487,25 @@ export class TripFormComponent implements OnInit {
     if (this.isCreateMode) return 'إنشاء رحلة جديدة';
     if (this.isEditMode) return 'تعديل الرحلة';
     return 'عرض تفاصيل الرحلة';
+  }
+
+  /**
+   * Helper method: Extract day, month, year from YYYY-MM-DD date string
+   */
+  private extractDateParts(dateString: string): { day: number, month: number, year: number } {
+    const date = new Date(dateString + 'T00:00:00'); // Force local timezone
+    return {
+      day: date.getDate(),
+      month: date.getMonth() + 1, // Convert 0-11 to 1-12
+      year: date.getFullYear()
+    };
+  }
+
+  /**
+   * Helper method: Format date parts to YYYY-MM-DD string
+   */
+  private formatDateForInput(day: number, month: number, year: number): string {
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   }
 }
 

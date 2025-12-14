@@ -1,3 +1,5 @@
+import { EducationLevel } from './driver.model';
+
 /**
  * Complete Paramedic model with properties actually used in the application
  */
@@ -26,6 +28,12 @@ export interface Paramedic {
     // Display Information
     imageUrl: string;
     imageAlt: string;
+
+    // New Profile Fields
+    jobTitle?: string;                    // الوظيفة - Job title (free text)
+    educationLevel?: EducationLevel;      // المستوى التعليمي
+    phoneNumber?: string;                 // رقم الهاتف (Palestinian format)
+    profileImageUrl?: string;             // Base64 encoded profile image
 }
 
 export type ParamedicStatus = 'متاح' | 'في رحلة' | 'غير متصل' | 'في إجازة';

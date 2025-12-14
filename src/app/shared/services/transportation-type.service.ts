@@ -22,7 +22,7 @@ export class TransportationTypeService {
     searchTransportationTypes(searchTerm: string): Observable<TransportationTypeReference[]> {
         const params = new HttpParams().set('searchTerm', searchTerm);
         return this.http.get<{success: boolean, data: TransportationTypeReference[]}>(`${this.API_URL}/search`, { params })
-            .pipe(map(response => response.data || []));
+            .pipe(map((response:any) => response || []));
     }
 
     getTransportationTypes(queryParams?: any): Observable<any> {

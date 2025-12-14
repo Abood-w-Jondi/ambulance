@@ -2,6 +2,9 @@
     <div *ngIf="showSideBar">
         <i class="fa-solid fa-bars d-md-none" (click)="toggleSidebar()" style="cursor:pointer;"></i>
     </div>
+    <div *ngIf="!showSideBar && isAdmin()" class="d-flex align-items-center p-2 border-bottom" style="height: 61px; background-color: #f8f9fa; cursor: pointer;" (click)="returnToAdmin()">
+      <i class="fas fa-user-shield"></i>
+    </div>
     <h1 class="h5 fw-bold flex-grow-1 text-center m-0">{{ header$ | async }}</h1>
   <div class="d-flex align-items-center">
     <button class="btn btn-sm p-0 text-dark" (click)="navigateTo('profile')">
@@ -10,8 +13,7 @@
   </div>
 </header>
 <div class="sidebar-overlay" *ngIf="showSideBar" [class.active]="sidebarOpen" (click)="closeSidebar()"></div>
-
-<aside class="sidebar" *ngIf="showSideBar" [class.active]="sidebarOpen">
+<aside class="sidebar" *ngIf="showSideBar && isAdmin()" [class.active]="sidebarOpen">
 
   <div class="sidebar-header">
     <h2 class="sidebar-title">القائمة</h2>
@@ -114,9 +116,9 @@
 
     <ul class="nav-group nav-group-footer">
       <li>
-        <a (click)="navigateTo('users-management')" [class.active]="isActive('users-management')">
+        <a (click)="navigateToUser()">
           <i class="fa-solid fa-users-gear nav-icon"></i>
-          <span>إدارة المستخدمين</span>
+          <span>صفحة المستخدمين</span>
         </a>
       </li>
       <li>

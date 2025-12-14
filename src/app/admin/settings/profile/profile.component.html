@@ -1,15 +1,31 @@
-<div dir="rtl" class="container py-4">
+<div dir="rtl" class="container py-4 px-3 px-md-5 bg-light min-vh-100">
 
     <main class="row justify-content-center">
-        <div class="col-lg-8 col-md-10">
-            <div class="card shadow-sm mb-4 text-center">
-                <div class="card-body">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-7 col-xl-6">
+
+            <div class="card shadow-lg mb-4 border-0 rounded-4">
+                <div class="card-body p-4 text-center bg-white rounded-4">
+                    
                     <div class="position-relative d-inline-block mb-3">
-                        <img
-                            [src]="userProfile().profileImage || 'geminiBroNotPro.png'"
-                            alt="صورة الملف الشخصي"
-                            class="rounded-circle border border-5 border-white"
-                            style="width: 112px; height: 112px; object-fit: cover;">
+                        @if (userProfile() && userProfile()?.profileImageUrl) {
+                            <img
+                                [src]="userProfile()!.profileImageUrl"
+                                alt="صورة الملف الشخصي"
+                                class="rounded-circle object-fit-cover profile-img-lg"
+                                style="width: 120px; height: 120px; border: 5px solid #fff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm rounded-circle position-absolute top-0 start-0 p-0 delete-img-btn"
+                                (click)="removeProfileImage()"
+                                title="إزالة الصورة">
+                                <i class="fa-solid fa-times" style="font-size: 12px;"></i>
+                            </button>
+                        } @else {
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center profile-img-lg"
+                                style="width: 120px; height: 120px; border: 5px solid #fff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+                                <i class="fa-solid fa-user text-white" style="font-size: 50px;"></i>
+                            </div>
+                        }
                         <input
                             type="file"
                             #fileInput
@@ -18,183 +34,223 @@
                             (change)="onImageSelected($event)"
                         />
                         <button
-                            class="btn btn-primary rounded-circle position-absolute bottom-0 end-0 p-1"
+                            class="btn btn-primary rounded-circle position-absolute bottom-0 end-0 p-1 edit-img-btn"
                             (click)="fileInput.click()">
-                            <i class="fa-solid fa-pen" style="font-size: 0.75rem;"></i>
+                            <i class="fa-solid fa-pen" style="font-size: 0.8rem;"></i>
                         </button>
                     </div>
 
-                    <h2 class="h4 fw-bold text-dark mb-1">{{ userProfile().name }}</h2>
-                    <p class="text-secondary mb-3">{{ getRoleLabel(userProfile().role) }}</p>
+                    <h2 class="h4 fw-bold text-dark mb-1 mt-3">{{ userProfile().arabicName }}</h2>
+                    <p class="text-primary mb-1 fw-semibold">{{ getRoleLabel(userProfile().role) }}</p>
+                    <small class="text-muted d-block mb-2">الحد الأقصى: 2 ميجابايت</small>
 
-                    <div class="d-flex justify-content-center gap-4">
-                        <div class="d-flex align-items-center">
-                            <i class="fa-solid fa-envelope text-secondary me-2"></i>
-                            <p class="text-dark mb-0 small">{{ userProfile().email }}</p>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="fa-solid fa-phone text-secondary me-2"></i>
-                            <p class="text-dark mb-0 small">{{ userProfile().phone }}</p>
-                        </div>
-                    </div>
+                    @if (userProfile().username) {
+                        <p class="text-secondary small mb-0">
+                            <i class="fa-solid fa-at me-1 text-primary"></i>
+                            <span dir="ltr">{{ userProfile().username }}</span>
+                        </p>
+                    }
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h3 class="h5 fw-bold text-dark mb-4">التفاصيل الشخصية</h3>
+            <div class="card shadow-lg mb-4 border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h3 class="h5 fw-bold text-dark mb-4 border-bottom pb-2">
+                        <i class="fa-solid fa-address-card me-2 text-primary"></i>
+                        المعلومات الشخصية
+                    </h3>
 
                     <form>
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="fullName" class="form-label fw-medium">الاسم الكامل</label>
+                            <div class="col-12 col-md-6">
+                                <label for="arabicName" class="form-label fw-medium">الاسم بالعربي <span class="text-danger">*</span></label>
+                                <input
+                                    type="text"
+                                    id="arabicName"
+                                    class="form-control"
+                                    [(ngModel)]="profileForm.arabicName"
+                                    name="arabicName"
+                                    placeholder="مثال: أحمد محمد">
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label for="fullName" class="form-label fw-medium">الاسم بالإنجليزي</label>
                                 <input
                                     type="text"
                                     id="fullName"
                                     class="form-control"
-                                    [(ngModel)]="profileForm.name"
-                                    name="fullName">
+                                    [(ngModel)]="profileForm.fullName"
+                                    name="fullName"
+                                    placeholder="Example: Ahmad Mohammad"
+                                    dir="ltr">
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-6">
+                                <label for="username" class="form-label fw-medium">اسم المستخدم <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fa-solid fa-user"></i></span>
+                                    <input
+                                        type="text"
+                                        id="username"
+                                        class="form-control"
+                                        [(ngModel)]="profileForm.username"
+                                        name="username"
+                                        placeholder="username"
+                                        dir="ltr">
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
                                 <label for="email" class="form-label fw-medium">البريد الإلكتروني</label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    class="form-control"
-                                    [(ngModel)]="profileForm.email"
-                                    name="email">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fa-solid fa-envelope"></i></span>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        class="form-control"
+                                        [(ngModel)]="profileForm.email"
+                                        name="email"
+                                        placeholder="example@mail.com"
+                                        dir="ltr">
+                                </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="phone" class="form-label fw-medium">الهاتف</label>
-                                <input
-                                    type="tel"
-                                    id="phone"
-                                    class="form-control"
-                                    [(ngModel)]="profileForm.phone"
-                                    name="phone"
-                                    dir="ltr">
+                            <div class="col-12 col-md-6">
+                                <label for="phoneNumber" class="form-label fw-medium">رقم الهاتف</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fa-solid fa-phone"></i></span>
+                                    <input
+                                        type="tel"
+                                        id="phoneNumber"
+                                        class="form-control"
+                                        [(ngModel)]="profileForm.phoneNumber"
+                                        name="phoneNumber"
+                                        placeholder="05XXXXXXXX"
+                                        dir="ltr">
+                                </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="nationalId" class="form-label fw-medium">الهوية الوطنية</label>
+                            <div class="col-12 col-md-6">
+                                <label for="jobTitle" class="form-label fw-medium">الوظيفة</label>
                                 <input
                                     type="text"
-                                    id="nationalId"
+                                    id="jobTitle"
                                     class="form-control"
-                                    [(ngModel)]="profileForm.nationalId"
-                                    name="nationalId"
-                                    dir="ltr">
+                                    [(ngModel)]="profileForm.jobTitle"
+                                    name="jobTitle"
+                                    placeholder="مثال: سائق إسعاف">
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="dob" class="form-label fw-medium">تاريخ الميلاد</label>
-                                <input
-                                    type="date"
-                                    id="dob"
-                                    class="form-control"
-                                    [(ngModel)]="profileForm.dateOfBirth"
-                                    name="dob">
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="city" class="form-label fw-medium">المدينة</label>
-                                <input
-                                    type="text"
-                                    id="city"
-                                    class="form-control"
-                                    [(ngModel)]="profileForm.city"
-                                    name="city">
-                            </div>
-
-                            <div class="col-12">
-                                <label for="address" class="form-label fw-medium">العنوان</label>
-                                <input
-                                    type="text"
-                                    id="address"
-                                    class="form-control"
-                                    [(ngModel)]="profileForm.address"
-                                    name="address">
+                            <div class="col-12 col-md-6">
+                                <label for="educationLevel" class="form-label fw-medium">المستوى التعليمي</label>
+                                <select
+                                    id="educationLevel"
+                                    class="form-select"
+                                    [(ngModel)]="profileForm.educationLevel"
+                                    name="educationLevel">
+                                    <option value="">-- اختر المستوى --</option>
+                                    @for (option of educationLevelOptions; track option.value) {
+                                        <option [value]="option.value">{{ option.label }}</option>
+                                    }
+                                </select>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h3 class="h5 fw-bold text-dark mb-4">الأمان</h3>
+            <div class="card shadow-lg mb-5 border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h3 class="h5 fw-bold text-dark mb-4 border-bottom pb-2">
+                        <i class="fa-solid fa-lock me-2 text-primary"></i>
+                        الأمان
+                    </h3>
                     <button
-                        class="btn btn-outline-secondary d-flex justify-content-between align-items-center w-100 p-3"
+                        class="btn btn-outline-primary d-flex justify-content-between align-items-center w-100 p-3 rounded-3"
                         (click)="openChangePasswordModal()">
-                        <span>تغيير كلمة المرور</span>
+                        <span class="fw-semibold">تغيير كلمة المرور</span>
                         <i class="fa-solid fa-chevron-left"></i>
                     </button>
                 </div>
             </div>
-        </div>
-    </main>
-
-    <footer class="fixed-bottom bg-white border-top p-3 shadow-lg">
-        <div class="container">
-            <div class="row g-3 justify-content-center">
-                <div class="col-12 col-sm-6 col-lg-4 d-grid">
-                    <button class="btn btn-secondary btn-lg" (click)="cancelChanges()">إلغاء التعديلات</button>
+            
+            <div class="row g-3 justify-content-center mt-4 mb-5">
+                <div class="col-12 col-sm-6 d-grid">
+                    <button 
+                        class="btn btn-outline-secondary btn-lg rounded-3 fw-semibold" 
+                        (click)="cancelChanges()">
+                        إلغاء التعديلات
+                    </button>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 d-grid">
-                    <button class="btn btn-primary btn-lg" (click)="saveProfile()">حفظ التغييرات</button>
+                <div class="col-12 col-sm-6 d-grid">
+                    <button 
+                        class="btn btn-primary btn-lg rounded-3 fw-semibold" 
+                        (click)="saveProfile()">
+                        <i class="fa-solid fa-save me-2"></i>
+                        حفظ التغييرات
+                    </button>
                 </div>
             </div>
+            
+
         </div>
-    </footer>
+    </main>
 </div>
 
-<!-- Change Password Modal -->
-<div class="modal fade" [class.show]="isChangePasswordModalOpen()" [style.display]="isChangePasswordModalOpen() ? 'block' : 'none'" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">تغيير كلمة المرور</h5>
-        <button type="button" class="btn-close" (click)="closeChangePasswordModal()"></button>
-      </div>
-      <div class="modal-body">
-        <div class="alert alert-info" role="alert">
-          <i class="fa-solid fa-info-circle me-2"></i>
-          يمكنك تغيير كلمة المرور دون الحاجة لمعرفة كلمة المرور الحالية
+<div class="modal fade" [class.show]="isChangePasswordModalOpen()" [style.display]="isChangePasswordModalOpen() ? 'block' : 'none'" tabindex="-1" role="dialog" aria-labelledby="changePasswordModalLabel" [attr.aria-hidden]="!isChangePasswordModalOpen()">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0 rounded-top-4">
+                <h5 class="modal-title" id="changePasswordModalLabel"><i class="fa-solid fa-key me-2"></i>تغيير كلمة المرور</h5>
+                <button type="button" class="btn-close btn-close-white" (click)="closeChangePasswordModal()" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-info border-0 rounded-3" role="alert">
+                    <i class="fa-solid fa-shield-halved me-2"></i>
+                    **ملاحظة الأمان:** يجب إدخال كلمة المرور الحالية للتحقق من هويتك.
+                </div>
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">كلمة المرور الحالية <span class="text-danger">*</span></label>
+                        <input
+                            type="password"
+                            class="form-control"
+                            [(ngModel)]="passwordForm.currentPassword"
+                            name="currentPassword"
+                            placeholder="••••••••"
+                        />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">كلمة المرور الجديدة <span class="text-danger">*</span></label>
+                        <input
+                            type="password"
+                            class="form-control"
+                            [(ngModel)]="passwordForm.newPassword"
+                            name="newPassword"
+                            placeholder="••••••••"
+                        />
+                        <small class="text-muted">يجب أن تكون **6 أحرف** على الأقل.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">تأكيد كلمة المرور الجديدة <span class="text-danger">*</span></label>
+                        <input
+                            type="password"
+                            class="form-control"
+                            [(ngModel)]="passwordForm.confirmPassword"
+                            name="confirmPassword"
+                            placeholder="••••••••"
+                        />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-between p-3 border-top-0">
+                <button type="button" class="btn btn-outline-secondary rounded-3" (click)="closeChangePasswordModal()">إلغاء</button>
+                <button type="button" class="btn btn-primary rounded-3" (click)="changePassword()">
+                    <i class="fa-solid fa-save me-2"></i>
+                    حفظ كلمة المرور
+                </button>
+            </div>
         </div>
-        <form>
-          <div class="mb-3">
-            <label class="form-label">كلمة المرور الجديدة <span class="text-danger">*</span></label>
-            <input
-              type="password"
-              class="form-control"
-              [(ngModel)]="passwordForm.newPassword"
-              name="newPassword"
-              placeholder="••••••••"
-            />
-            <small class="text-muted">يجب أن تكون 6 أحرف على الأقل</small>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">تأكيد كلمة المرور الجديدة <span class="text-danger">*</span></label>
-            <input
-              type="password"
-              class="form-control"
-              [(ngModel)]="passwordForm.confirmPassword"
-              name="confirmPassword"
-              placeholder="••••••••"
-            />
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeChangePasswordModal()">إلغاء</button>
-        <button type="button" class="btn btn-primary" (click)="changePassword()">
-          <i class="fa-solid fa-save me-2"></i>
-          حفظ كلمة المرور
-        </button>
-      </div>
     </div>
-  </div>
 </div>
 <div class="modal-backdrop fade" [class.show]="isChangePasswordModalOpen()" *ngIf="isChangePasswordModalOpen()"></div>

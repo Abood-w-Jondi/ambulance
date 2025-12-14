@@ -267,15 +267,15 @@ export class AuthService {
    * Handle HTTP errors
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'حدث خطأ غير متوقع';
-
+    let errorMessage = error.message || 'حدث خطأ غير متوقع';
+    console.log(error, "handling error in AuthService");
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = `خطأ: ${error.error.message}`;
     } else {
       // Server-side error
       if (error.status === 401) {
-        errorMessage = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+        errorMessage = error.message || 'اسم المستخدم أو كلمة المرور غير صحيحة';
       } else if (error.status === 403) {
         errorMessage = 'ليس لديك صلاحية للوصول';
       } else if (error.status === 404) {

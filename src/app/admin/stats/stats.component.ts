@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, Component, signal, computed, OnInit } from '@a
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlobalVarsService } from '../../global-vars.service';
-import { StatsService, StatisticsResponse } from '../../shared/services/stats.service';
+import { StatsService, StatisticsResponse, MonthlyBreakdownResponse } from '../../shared/services/stats.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { ExportService, ExportSheet } from '../../shared/services/export.service';
+import { VehicleService } from '../../shared/services/vehicle.service';
 
 // واجهة لبطاقات الملخص الإحصائي
 interface StatCard {
@@ -40,13 +42,16 @@ export class StatsComponent implements OnInit {
   constructor(
     private globalVarsService: GlobalVarsService,
     private statsService: StatsService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private exportService: ExportService,
+    private vehicleService: VehicleService
   ) {
     this.globalVarsService.setGlobalHeader('الإحصائيات');
   }
 
   ngOnInit(): void {
     this.loadStats();
+    this.loadVehicles();
   }
 
   // --- الحالة والبيانات ---
@@ -55,6 +60,16 @@ export class StatsComponent implements OnInit {
   customEndDate = signal<string>('');
   isLoading = signal<boolean>(false);
   statsData = signal<StatisticsResponse | null>(null);
+
+  // Export state
+  isExportModalOpen = signal<boolean>(false);
+  isExporting = signal<boolean>(false);
+  exportYear = signal<number>(new Date().getFullYear());
+  exportStartDate = signal<string>('');
+  exportEndDate = signal<string>('');
+  exportVehicleId = signal<string>('');
+  exportPeriodType = signal<'yearly' | 'custom'>('yearly');
+  vehicles = signal<any[]>([]);
 
   // Load statistics from API
   loadStats(): void {
@@ -258,5 +273,231 @@ export class StatsComponent implements OnInit {
 
     // الإزاحة هي سالب النسبة المئوية التراكمية للأجزاء السابقة
     return '-' + offset;
+  }
+
+  // Load vehicles for vehicle-specific export
+  loadVehicles(): void {
+    this.vehicleService.getVehicles({ limit: 1000 }).subscribe({
+      next: (response) => {
+        this.vehicles.set(response.data);
+      },
+      error: (error) => {
+        console.error('Error loading vehicles:', error);
+      }
+    });
+  }
+
+  // Open export modal
+  openExportModal(): void {
+    this.isExportModalOpen.set(true);
+  }
+
+  // Close export modal
+  closeExportModal(): void {
+    this.isExportModalOpen.set(false);
+  }
+
+  // Export annual statement to Excel
+  exportAnnualStatement(): void {
+    const periodType = this.exportPeriodType();
+    const vehicleId = this.exportVehicleId();
+
+    // Validate inputs
+    if (periodType === 'yearly') {
+      const year = this.exportYear();
+      if (!year || year < 2020 || year > 2100) {
+        this.toastService.error('الرجاء إدخال سنة صحيحة');
+        return;
+      }
+    } else if (periodType === 'custom') {
+      const startDate = this.exportStartDate();
+      const endDate = this.exportEndDate();
+      if (!startDate || !endDate) {
+        this.toastService.error('الرجاء تحديد تاريخ البداية والنهاية');
+        return;
+      }
+    }
+
+    this.isExporting.set(true);
+
+    // Fetch monthly breakdown data
+    const observable = periodType === 'yearly'
+      ? this.statsService.getYearlyBreakdown(this.exportYear(), vehicleId || undefined)
+      : this.statsService.getCustomRangeBreakdown(this.exportStartDate(), this.exportEndDate(), vehicleId || undefined);
+
+    observable.subscribe({
+      next: (data) => {
+        this.generateExcelReport(data);
+        this.isExporting.set(false);
+        this.closeExportModal();
+      },
+      error: (error) => {
+        console.error('Error fetching monthly breakdown:', error);
+        this.toastService.error('فشل جلب البيانات للتصدير');
+        this.isExporting.set(false);
+      }
+    });
+  }
+
+  // Generate multi-sheet Excel report
+  private generateExcelReport(data: MonthlyBreakdownResponse): void {
+    const sheets: ExportSheet[] = [];
+
+    // Sheet 1: Monthly Summary
+    const summaryColumns = [
+      { header: 'الشهر', key: 'monthName', width: 12 },
+      { header: 'السنة', key: 'year', width: 10 },
+      { header: 'عدد الرحلات', key: 'totalTrips', width: 12 },
+      { header: 'الإيرادات (₪)', key: 'totalRevenue', width: 15 },
+      { header: 'المبلغ المدفوع (₪)', key: 'totalPaid', width: 15 },
+      { header: 'الوقود (لتر)', key: 'fuelLiters', width: 12 },
+      { header: 'تكلفة الوقود (₪)', key: 'fuelCost', width: 15 },
+      { header: 'الصيانة (₪)', key: 'maintenanceCost', width: 15 },
+      { header: 'حصة المسعفين (₪)', key: 'paramedicShare', width: 15 },
+      { header: 'حصة السائقين (₪)', key: 'driverShare', width: 15 },
+      { header: 'حصة الشركة (₪)', key: 'companyShare', width: 15 },
+      { header: 'حصة المالك (₪)', key: 'ownerShare', width: 15 }
+    ];
+
+    // Add odometer columns for vehicle-specific exports
+    if (data.vehicleId) {
+      summaryColumns.push(
+        { header: 'قراءة العداد (بداية)', key: 'odometerStart', width: 18 },
+        { header: 'قراءة العداد (نهاية)', key: 'odometerEnd', width: 18 },
+        { header: 'إجمالي الكيلومترات', key: 'totalKm', width: 18 }
+      );
+    }
+
+    const summaryData = data.monthlyBreakdown.map(month => ({
+      monthName: month.monthName,
+      year: month.year,
+      totalTrips: month.trips.total,
+      totalRevenue: month.revenue.totalRevenue.toFixed(2),
+      totalPaid: month.revenue.totalPaid.toFixed(2),
+      fuelLiters: month.fuel.totalLiters.toFixed(2),
+      fuelCost: month.fuel.totalCost.toFixed(2),
+      maintenanceCost: month.maintenance.totalCost.toFixed(2),
+      paramedicShare: month.revenue.totalParamedicShare.toFixed(2),
+      driverShare: month.revenue.totalDriverShare.toFixed(2),
+      companyShare: month.revenue.totalCompanyShare.toFixed(2),
+      ownerShare: month.revenue.totalOwnerShare.toFixed(2),
+      ...(month.odometer ? {
+        odometerStart: month.odometer.startReading,
+        odometerEnd: month.odometer.endReading,
+        totalKm: month.odometer.totalKm
+      } : {})
+    }));
+
+    // Add totals row
+    summaryData.push({
+      monthName: 'الإجمالي',
+      year: '',
+      totalTrips: data.totals.trips.total,
+      totalRevenue: data.totals.revenue.totalRevenue.toFixed(2),
+      totalPaid: data.totals.revenue.totalPaid.toFixed(2),
+      fuelLiters: data.totals.fuel.totalLiters.toFixed(2),
+      fuelCost: data.totals.fuel.totalCost.toFixed(2),
+      maintenanceCost: data.totals.maintenance.totalCost.toFixed(2),
+      paramedicShare: data.totals.revenue.totalParamedicShare.toFixed(2),
+      driverShare: data.totals.revenue.totalDriverShare.toFixed(2),
+      companyShare: data.totals.revenue.totalCompanyShare.toFixed(2),
+      ownerShare: data.totals.revenue.totalOwnerShare.toFixed(2)
+    } as any);
+
+    sheets.push({
+      name: 'ملخص شهري',
+      data: summaryData,
+      columns: summaryColumns
+    });
+
+    // Sheet 2: Trip Status Breakdown
+    const statusColumns = [
+      { header: 'الشهر', key: 'monthName', width: 12 },
+      { header: 'السنة', key: 'year', width: 10 }
+    ];
+
+    // Dynamically add columns for each status
+    const allStatuses = new Set<string>();
+    data.monthlyBreakdown.forEach(month => {
+      Object.keys(month.trips.statusBreakdown).forEach(status => allStatuses.add(status));
+    });
+
+    allStatuses.forEach(status => {
+      statusColumns.push({ header: status, key: status, width: 12 });
+    });
+
+    const statusData = data.monthlyBreakdown.map(month => {
+      const row: any = {
+        monthName: month.monthName,
+        year: month.year
+      };
+      allStatuses.forEach(status => {
+        row[status] = month.trips.statusBreakdown[status] || 0;
+      });
+      return row;
+    });
+
+    // Add totals row for status breakdown
+    const statusTotalsRow: any = {
+      monthName: 'الإجمالي',
+      year: ''
+    };
+    allStatuses.forEach(status => {
+      statusTotalsRow[status] = data.totals.trips.statusBreakdown[status] || 0;
+    });
+    statusData.push(statusTotalsRow);
+
+    sheets.push({
+      name: 'حالات الرحلات',
+      data: statusData,
+      columns: statusColumns
+    });
+
+    // Sheet 3: Financial Distribution
+    const financialColumns = [
+      { header: 'الشهر', key: 'monthName', width: 12 },
+      { header: 'السنة', key: 'year', width: 10 },
+      { header: 'المسعفين (₪)', key: 'paramedicShare', width: 15 },
+      { header: 'السائقين (₪)', key: 'driverShare', width: 15 },
+      { header: 'الشركة (₪)', key: 'companyShare', width: 15 },
+      { header: 'المالك (₪)', key: 'ownerShare', width: 15 },
+      { header: 'القروض (₪)', key: 'loanAmount', width: 15 }
+    ];
+
+    const financialData = data.monthlyBreakdown.map(month => ({
+      monthName: month.monthName,
+      year: month.year,
+      paramedicShare: month.revenue.totalParamedicShare.toFixed(2),
+      driverShare: month.revenue.totalDriverShare.toFixed(2),
+      companyShare: month.revenue.totalCompanyShare.toFixed(2),
+      ownerShare: month.revenue.totalOwnerShare.toFixed(2),
+      loanAmount: month.revenue.loanAmount.toFixed(2)
+    }));
+
+    // Add totals row
+    financialData.push({
+      monthName: 'الإجمالي',
+      year: '',
+      paramedicShare: data.totals.revenue.totalParamedicShare.toFixed(2),
+      driverShare: data.totals.revenue.totalDriverShare.toFixed(2),
+      companyShare: data.totals.revenue.totalCompanyShare.toFixed(2),
+      ownerShare: data.totals.revenue.totalOwnerShare.toFixed(2),
+      loanAmount: data.totals.revenue.loanAmount.toFixed(2)
+    } as any);
+
+    sheets.push({
+      name: 'التوزيع المالي',
+      data: financialData,
+      columns: financialColumns
+    });
+
+    // Generate filename
+    const filename = data.vehicleId
+      ? `annual_statement_vehicle_${data.vehicleId}_${data.period.startDate}`
+      : `annual_statement_${data.period.startDate}`;
+
+    // Export to Excel
+    this.exportService.exportToExcelMultiSheet(sheets, filename);
+    this.toastService.success('تم تصدير التقرير السنوي بنجاح');
   }
 }

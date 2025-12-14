@@ -1,9 +1,11 @@
-import { Component, Input } from '@angular/core';
+import { Component, computed, Input } from '@angular/core';
 import { GlobalVarsService } from '../global-vars.service';
 import { Observable } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../shared/services/auth.service';
+import{ ToastService } from '../shared/services/toast.service';
 @Component({
   selector: 'app-side-bar',
   imports: [AsyncPipe, CommonModule],
@@ -16,11 +18,14 @@ export class SideBarComponent {
 
   constructor(
     private globalVarsService: GlobalVarsService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService,
+    private toastService: ToastService
   ) {
     this.header$ = this.globalVarsService.globalHeader$;
     
   }
+  isAdmin = computed(() => this.authService.isAdmin());
 
   sidebarOpen = false;
 
@@ -36,14 +41,24 @@ export class SideBarComponent {
     this.router.navigate([`admin/${path}`]);
     this.closeSidebar();
   }
+  navigateToUser(){
+    this.router.navigate(['/user/driver-dashboard']);
+    this.closeSidebar();
+  }
 
   isActive(path: string): boolean {
     return this.router.isActive(`admin/${path}`, false);
   }
 
-  logout() {
-    // TODO: Implement logout logic (clear auth tokens, session, etc.)
-    this.router.navigate(['/login']);
-    this.closeSidebar();
+   logout(): void {
+    this.authService.logout().subscribe({
+      next: () => this.toastService.success('تم تسجيل الخروج بنجاح'),
+      error: () => {
+        this.toastService.error('فشل تسجيل الخروج');
+      }
+    });
+  }
+  returnToAdmin(): void {
+    this.router.navigate(['/admin/admin-dashboard']);
   }
 }

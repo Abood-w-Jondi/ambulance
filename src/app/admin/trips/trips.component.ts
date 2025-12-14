@@ -8,6 +8,7 @@ import { TripService } from '../../shared/services/trip.service';
 import { DriverService } from '../../shared/services/driver.service';
 import { ParamedicService } from '../../shared/services/paramedic.service';
 import { VehicleService } from '../../shared/services/vehicle.service';
+import { ExportService } from '../../shared/services/export.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
@@ -72,6 +73,7 @@ export class TripsComponent implements OnInit {
     isViewTripModalOpen = signal(false);
     isEditTripModalOpen = signal(false);
     isDeleteTripModalOpen = signal(false);
+    isAddingNewTrip = signal(false); // Track if we're in "add" mode (vs "edit" mode) for conditional field display
     selectedTrip = signal<Trip | null>(null);
     tripToDelete = signal<Trip | null>(null);
 
@@ -86,9 +88,7 @@ export class TripsComponent implements OnInit {
 
     // Form values for new/edit trip
     tripForm = {
-        day: this.thisday,
-        month: this.thismonth,
-        year: this.thisyear,
+        date: this.getFormattedDateForInput(this.thisday, this.thismonth, this.thisyear),
         vehicleId: '',
         vehicleName: '',
         transferFrom: '',
@@ -111,8 +111,24 @@ export class TripsComponent implements OnInit {
         otherExpenses: 0,
         totalPrice: 0,
         payedPrice: 0,
-        paramedicShare: 0
+        paramedicShare: 0,
+        paramedicPaidAmount: 0,
+        tripNotes: ''
     };
+
+    // Helper methods for date conversion
+    private getFormattedDateForInput(day: number, month: number, year: number): string {
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+
+    private extractDateParts(dateString: string): { day: number, month: number, year: number } {
+        const date = new Date(dateString + 'T00:00:00'); // Force local timezone
+        return {
+            day: date.getDate(),
+            month: date.getMonth() + 1, // Convert 0-11 to 1-12
+            year: date.getFullYear()
+        };
+    }
 
     // Computed diesel value based on end - start
     get calculatedDiesel(): number {
@@ -142,7 +158,8 @@ export class TripsComponent implements OnInit {
         private toastService: ToastService,
         private validationService: ValidationService,
         private tripService: TripService,
-        private vehicleService: VehicleService
+        private vehicleService: VehicleService,
+        private exportService: ExportService
     ) {
         this.globalVars.setGlobalHeader('الرحلات والنقليات');
     }
@@ -176,6 +193,7 @@ export class TripsComponent implements OnInit {
     itemsPerPage = 10;
     totalRecords = 0;
     isLoading = signal(false);
+    isExporting = signal(false);
 
     // Calculate money distribution based on total price (full service value)
     // IMPORTANT: Must match backend logic (trips.php:1108-1127)
@@ -414,11 +432,15 @@ export class TripsComponent implements OnInit {
         return this.selectedStatus === status ? 'btn-primary-custom' : 'btn-outline-secondary text-dark';
     }
 
+    closeAddTripModal(): void {
+        this.isAddTripModalOpen.set(false);
+        this.isAddingNewTrip.set(false); // Reset flag when closing modal
+    }
+
     openAddTripModal(): void {
+        this.isAddingNewTrip.set(true); // Set flag for conditional field display
         this.tripForm = {
-            day: this.thisday,
-            month: this.thismonth + 1,
-            year: this.thisyear,
+            date: this.getFormattedDateForInput(this.thisday, this.thismonth + 1, this.thisyear),
             vehicleId: '',
             vehicleName: '',
             transferFrom: '',
@@ -433,7 +455,7 @@ export class TripsComponent implements OnInit {
             patientContact: '',
             ymdNumber: null,
             ymdPeriod: 'يوم',
-            transferStatus: 'لم يتم النقل',
+            transferStatus: 'ينقل', // Changed default from 'لم يتم النقل' to 'ينقل'
             diagnosis: '',
             transportationTypeId: '',
             transportationTypeName: '',
@@ -441,7 +463,9 @@ export class TripsComponent implements OnInit {
             otherExpenses: 0,
             totalPrice: 0,
             payedPrice: 0,
-            paramedicShare: 0
+            paramedicShare: 0,
+            paramedicPaidAmount: 0,
+            tripNotes: ''
         };
         this.vehicleSearchTerm.set('');
         this.isAddTripModalOpen.set(true);
@@ -488,6 +512,7 @@ export class TripsComponent implements OnInit {
         if (!vehicleId) {
             this.tripForm.vehicleId = '';
             this.tripForm.vehicleName = '';
+            this.tripForm.start = null;
             return;
         }
 
@@ -495,6 +520,14 @@ export class TripsComponent implements OnInit {
         if (vehicle) {
             this.tripForm.vehicleId = vehicleId;
             this.tripForm.vehicleName = vehicle.vehicleName;
+
+            // Auto-populate start odometer from vehicle's current_odometer
+            this.vehicleService.getCurrentOdometer(vehicleId).subscribe({
+                next: (response) => {
+                    this.tripForm.start = response.currentOdometer;
+                },
+                error: (error) => console.error('Failed to load current odometer:', error)
+            });
         }
     }
 
@@ -541,11 +574,12 @@ export class TripsComponent implements OnInit {
     addTrip(): void {
         const fuelCost = this.calculatedDiesel * 1.0;  // 1 NIS per km
         const shares = this.calculateShares(this.tripForm.totalPrice, this.tripForm.paramedicShare, fuelCost);
+        const { day, month, year } = this.extractDateParts(this.tripForm.date);
 
         this.tripService.createTrip({
-            day: this.tripForm.day,
-            month: this.tripForm.month,
-            year: this.tripForm.year,
+            day,
+            month,
+            year,
             vehicleId: this.tripForm.vehicleId,
             vehicleName: this.tripForm.vehicleName,
             driver: '', // Will be populated by driver
@@ -571,6 +605,8 @@ export class TripsComponent implements OnInit {
             otherExpenses: this.tripForm.otherExpenses,
             totalPrice: this.tripForm.totalPrice,
             payedPrice: this.tripForm.payedPrice,
+            paramedicPaidAmount: this.tripForm.paramedicPaidAmount,
+            tripNotes: this.tripForm.tripNotes,
             ...shares
         }).subscribe({
             next: () => {
@@ -586,12 +622,11 @@ export class TripsComponent implements OnInit {
     }
 
     openEditTripModal(): void {
+        this.isAddingNewTrip.set(false); // Set flag to false for edit mode
         const trip = this.selectedTrip();
         if (trip) {
             this.tripForm = {
-                day: trip.day,
-                month: trip.month,
-                year: trip.year,
+                date: this.getFormattedDateForInput(trip.day, trip.month, trip.year),
                 vehicleId: trip.vehicleId || '',
                 vehicleName: trip.vehicleName || '',
                 transferFrom: trip.transferFrom,
@@ -614,7 +649,9 @@ export class TripsComponent implements OnInit {
                 otherExpenses: trip.otherExpenses || 0,
                 totalPrice: trip.totalPrice,
                 payedPrice: trip.payedPrice,
-                paramedicShare: trip.paramedicShare
+                paramedicShare: trip.paramedicShare,
+                paramedicPaidAmount: trip.paramedicPaidAmount || 0,
+                tripNotes: trip.tripNotes || ''
             };
             this.vehicleSearchTerm.set('');
             this.isViewTripModalOpen.set(false);
@@ -627,11 +664,12 @@ export class TripsComponent implements OnInit {
         if (trip) {
             const fuelCost = this.calculatedDiesel * 1.0;  // 1 NIS per km
             const shares = this.calculateShares(this.tripForm.totalPrice, this.tripForm.paramedicShare, fuelCost);
+            const { day, month, year } = this.extractDateParts(this.tripForm.date);
 
             const updatedData = {
-                day: this.tripForm.day,
-                month: this.tripForm.month,
-                year: this.tripForm.year,
+                day,
+                month,
+                year,
                 vehicleId: this.tripForm.vehicleId,
                 vehicleName: this.tripForm.vehicleName,
                 transferFrom: this.tripForm.transferFrom,
@@ -655,6 +693,8 @@ export class TripsComponent implements OnInit {
                 otherExpenses: this.tripForm.otherExpenses,
                 totalPrice: this.tripForm.totalPrice,
                 payedPrice: this.tripForm.payedPrice,
+                paramedicPaidAmount: this.tripForm.paramedicPaidAmount,
+                tripNotes: this.tripForm.tripNotes,
                 ...shares
             };
 
@@ -694,6 +734,7 @@ export class TripsComponent implements OnInit {
 
     closeEditTripModal(): void {
         this.isEditTripModalOpen.set(false);
+        this.isAddingNewTrip.set(false); // Reset flag when closing modal
     }
 
     showDeleteConfirmation(trip: Trip): void {
@@ -738,32 +779,20 @@ export class TripsComponent implements OnInit {
         return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
     }
 
-    getDaysInMonth(month: number, year: number): number[] {
-        const days = new Date(year, month, 0).getDate();
-        return Array.from({ length: days }, (_, i) => i + 1);
-    }
-
-    getMonths(): number[] {
-        return Array.from({ length: 12 }, (_, i) => i + 1);
-    }
-
-    getYears(): number[] {
-        const currentYear = new Date().getFullYear();
-        return Array.from({ length: 10 }, (_, i) => currentYear - i);
-    }
 
     /**
-     * Format timestamp for display in admin view
+     * Format timestamp for display in admin view (using Gregorian calendar)
      */
     formatTimestamp(date: Date | string | undefined): string {
         if (!date) return 'غير متاح';
         const d = typeof date === 'string' ? new Date(date) : date;
-        return d.toLocaleString('ar-SA', {
+        return d.toLocaleString('en-GB', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
+            hour12: false
         });
     }
 
@@ -793,7 +822,14 @@ export class TripsComponent implements OnInit {
             return;
         }
 
-        this.tripService.closeTrip(trip.id).subscribe({
+        // Check if trip has a final status before allowing closure
+        const finalStatuses: TransferStatus[] = ['تم النقل', 'رفض النقل', 'بلاغ كاذب'];
+        if (!finalStatuses.includes(trip.transferStatus)) {
+            this.toastService.error(`لا يمكن إغلاق الرحلة بحالة "${trip.transferStatus}". يرجى تغيير الحالة إلى حالة نهائية أولاً.`);
+            return;
+        }
+
+        this.tripService.closeTrip(trip.id, trip.transferStatus).subscribe({
             next: () => {
                 this.toastService.success('تم إغلاق الرحلة بنجاح');
                 this.selectedTrip.update(t => t ? { ...t, isClosed: true } : null);
@@ -804,6 +840,205 @@ export class TripsComponent implements OnInit {
                 this.toastService.error('فشل إغلاق الرحلة');
             }
         });
+    }
+
+    /**
+     * Admin reopen a closed trip (unclose)
+     */
+    uncloseTrip(): void {
+        const trip = this.selectedTrip();
+        if (!trip) return;
+
+        if (!trip.isClosed) {
+            this.toastService.error('الرحلة غير مغلقة');
+            return;
+        }
+
+        this.tripService.uncloseTrip(trip.id).subscribe({
+            next: () => {
+                this.toastService.success('تم إعادة فتح الرحلة بنجاح');
+                this.selectedTrip.update(t => t ? { ...t, isClosed: false, closedAt: null, closedBy: null } : null);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error reopening trip:', error);
+                this.toastService.error('فشل إعادة فتح الرحلة');
+            }
+        });
+    }
+
+    /**
+     * Export filtered trips to Excel
+     */
+    exportToExcel(): void {
+        this.isExporting.set(true);
+
+        // Build query params - same as loadData() but without pagination
+        const params: any = {
+            status: this.filterStatus() !== 'All' ? this.filterStatus() : undefined
+        };
+
+        // Add date filters if set
+        const dateFilterData = this.dateFilter();
+        if (dateFilterData.type === 'single' && dateFilterData.single) {
+            params.startDate = dateFilterData.single.toISOString().split('T')[0];
+            params.endDate = dateFilterData.single.toISOString().split('T')[0];
+        } else if (dateFilterData.type === 'range' && dateFilterData.from && dateFilterData.to) {
+            params.startDate = dateFilterData.from.toISOString().split('T')[0];
+            params.endDate = dateFilterData.to.toISOString().split('T')[0];
+        } else {
+            // Default to current month if no date filter
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            params.startDate = firstDay.toISOString().split('T')[0];
+            params.endDate = lastDay.toISOString().split('T')[0];
+        }
+
+        // Add other filters
+        if (this.patientNameFilter()) {
+            params.patientName = this.patientNameFilter();
+        }
+
+        if (this.filterTransferToId) {
+            params.transferToId = this.filterTransferToId;
+        }
+
+        if (this.selectedLocationTag !== 'all') {
+            params.locationTag = this.selectedLocationTag;
+        }
+
+        if (this.selectedLocationType !== 'all') {
+            params.locationType = this.selectedLocationType;
+        }
+
+        // Fetch all trips matching the filters
+        this.tripService.getAllTripsForExport(params).subscribe({
+            next: (trips) => {
+                if (trips.length === 0) {
+                    this.toastService.error('لا توجد رحلات لتصديرها');
+                    this.isExporting.set(false);
+                    return;
+                }
+
+                // Define Arabic column headers
+                const columns = [
+                    { header: 'التاريخ', key: 'formattedDate', width: 12 },
+                    { header: 'اسم المريض', key: 'patientName', width: 20 },
+                    { header: 'هاتف المريض', key: 'patientContact', width: 15 },
+                    { header: 'من', key: 'transferFrom', width: 20 },
+                    { header: 'إلى', key: 'transferTo', width: 20 },
+                    { header: 'المركبة', key: 'vehicleName', width: 15 },
+                    { header: 'السائق', key: 'driver', width: 18 },
+                    { header: 'المسعف', key: 'paramedic', width: 18 },
+                    { header: 'نوع الرحلة', key: 'tripType', width: 12 },
+                    { header: 'حالة النقل', key: 'transferStatus', width: 15 },
+                    { header: 'التشخيص', key: 'transportationTypeName', width: 25 },
+                    { header: 'السعر الكامل', key: 'totalPrice', width: 12 },
+                    { header: 'المبلغ المدفوع', key: 'payedPrice', width: 12 },
+                    { header: 'الديزل المستخدم', key: 'diesel', width: 12 },
+                    { header: 'حصة المسعف', key: 'paramedicShare', width: 12 },
+                    { header: 'حصة السائق', key: 'driverShare', width: 12 },
+                    { header: 'حصة الشركة', key: 'companyShare', width: 12 },
+                    { header: 'حصة المالك', key: 'ownerShare', width: 12 },
+                    { header: 'مصاريف أخرى', key: 'otherExpenses', width: 12 },
+                    { header: 'الملاحظات', key: 'tripNotes', width: 30 },
+                    { header: 'تم القبول في', key: 'acceptedAt', width: 18 },
+                    { header: 'تم الإغلاق في', key: 'closedAt', width: 18 },
+                    { header: 'مغلقة؟', key: 'isClosedText', width: 10 }
+                ];
+
+                // Format data for export
+                const exportData = trips.map(trip => ({
+                    ...trip,
+                    formattedDate: this.exportService.formatDate(trip.day, trip.month, trip.year),
+                    diesel: trip.diesel || 0,
+                    otherExpenses: trip.otherExpenses || 0,
+                    companyShare: trip.companyShare || 0,
+                    ownerShare: trip.ownerShare || 0,
+                    tripNotes: trip.tripNotes || '',
+                    acceptedAt: trip.acceptedAt ? new Date(trip.acceptedAt).toLocaleString('ar-EG') : '',
+                    closedAt: trip.closedAt ? new Date(trip.closedAt).toLocaleString('ar-EG') : '',
+                    isClosedText: this.exportService.formatBoolean(trip.isClosed)
+                }));
+
+                // Calculate totals
+                const totals = {
+                    formattedDate: 'الإجمالي',
+                    patientName: '',
+                    patientContact: '',
+                    transferFrom: '',
+                    transferTo: '',
+                    vehicleName: '',
+                    driver: '',
+                    paramedic: '',
+                    tripType: '',
+                    transferStatus: '',
+                    transportationTypeName: '',
+                    totalPrice: Number(trips.reduce((sum, t) => sum + (Number(t.totalPrice) || 0), 0)).toFixed(2),
+                    payedPrice: Number(trips.reduce((sum, t) => sum + (Number(t.payedPrice) || 0), 0)).toFixed(2),
+                    diesel: Number(trips.reduce((sum, t) => sum + (Number(t.diesel) || 0), 0)).toFixed(2),
+                    paramedicShare: Number(trips.reduce((sum, t) => sum + (Number(t.paramedicShare) || 0), 0)).toFixed(2),
+                    driverShare: Number(trips.reduce((sum, t) => sum + (Number(t.driverShare) || 0), 0)).toFixed(2),
+                    companyShare: Number(trips.reduce((sum, t) => sum + (Number(t.companyShare) || 0), 0)).toFixed(2),
+                    ownerShare: Number(trips.reduce((sum, t) => sum + (Number(t.ownerShare) || 0), 0)).toFixed(2),
+                    otherExpenses: Number(trips.reduce((sum, t) => sum + (Number(t.otherExpenses) || 0), 0)).toFixed(2),
+                    tripNotes: '',
+                    acceptedAt: '',
+                    closedAt: '',
+                    isClosedText: ''
+                };
+
+                // Add totals row
+                exportData.push(totals as any);
+
+                // Generate filename
+                const filename = this.exportService.generateFilenameWithDates(
+                    'trips_export',
+                    params.startDate,
+                    params.endDate
+                );
+
+                // Export to Excel
+                this.exportService.exportToExcel(
+                    exportData,
+                    columns,
+                    filename,
+                    'الرحلات'
+                );
+
+                this.toastService.success(`تم تصدير ${trips.length} رحلة بنجاح`);
+                this.isExporting.set(false);
+            },
+            error: (error) => {
+                console.error('Error exporting trips:', error);
+                this.toastService.error('فشل تصدير الرحلات');
+                this.isExporting.set(false);
+            }
+        });
+    }
+
+    /**
+     * Helper method: Get days in month for date filtering
+     */
+    getDaysInMonth(month: number, year: number): number[] {
+        const daysInMonth = new Date(year, month, 0).getDate();
+        return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    }
+
+    /**
+     * Helper method: Get months for date filtering
+     */
+    getMonths(): number[] {
+        return Array.from({ length: 12 }, (_, i) => i + 1);
+    }
+
+    /**
+     * Helper method: Get years for date filtering
+     */
+    getYears(): number[] {
+        const currentYear = new Date().getFullYear();
+        return Array.from({ length: 20 }, (_, i) => currentYear - 10 + i);
     }
 
 }

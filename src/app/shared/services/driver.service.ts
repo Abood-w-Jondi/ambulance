@@ -137,4 +137,11 @@ export class DriverService {
   getCurrentDriver(): Observable<Driver> {
     return this.http.get<Driver>(`${this.API_URL}/me`);
   }
+
+  /**
+   * Get all drivers (for dropdowns/selects)
+   */
+  getAllDrivers(): Observable<{ data: Driver[]; total: number }> {
+    return this.http.get<{ data: Driver[]; total: number }>(`${this.API_URL}?limit=1000`);
+  }
 }

@@ -113,3 +113,21 @@
     height: 200px;
   }
 }
+
+.row.mb-4.g-3 {
+  /* 1. Enable Flexbox on the container */
+  display: flex;
+  /* 2. Ensure alignment in a row and wrapping on small screens */
+  flex-wrap: wrap; 
+  /* 3. Vertically align items to the top (default) */
+  align-items: stretch;
+}
+
+.row.mb-4.g-3 .col-6 .card {
+  /* 4. Make the card take up the full height of its column (which is stretched by flexbox) */
+  height: 100%;
+}
+
+.money h2{
+  font-size: 1.8rem;
+}

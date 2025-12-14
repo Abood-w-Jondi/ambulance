@@ -15,7 +15,7 @@ export interface GeoPosition {
   providedIn: 'root'
 })
 export class LocationTrackingService implements OnDestroy {
-  private readonly UPDATE_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+  private readonly UPDATE_INTERVAL_MS = 15 * 1000; // 2 minutes
   
   private currentPosition$ = new BehaviorSubject<GeoPosition | null>(null);
   private isTracking$ = new BehaviorSubject<boolean>(false);

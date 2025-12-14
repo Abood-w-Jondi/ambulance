@@ -14,41 +14,16 @@
                 <div class="modal-header bg-primary-custom rounded-top-xl border-0 justify-content-between text-white">
                     <h5 class="modal-title fw-bold">إضافة رحلة/نقل جديد</h5>
                     <button type="button" style="background-color: transparent; border: none; color: white;"
-                        data-bs-dismiss="modal" aria-label="Close" (click)="isAddTripModalOpen.set(false)"><i
+                        data-bs-dismiss="modal" aria-label="Close" (click)="closeAddTripModal()"><i
                             class="fa fa-times"></i></button>
                 </div>
                 <div class="modal-body p-4 text-end" style="max-height: 70vh; overflow-y: auto;">
                     <form (ngSubmit)="addTrip()">
                         <div class="row g-3">
-                            <!-- Date Fields -->
+                            <!-- Date Field -->
                             <div class="col-12">
                                 <label class="form-label small fw-medium">التاريخ</label>
-                                <div class="row g-2">
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.day" name="day" required>
-                                            <option value="" disabled>اليوم</option>
-                                            @for (day of getDaysInMonth(tripForm.month, tripForm.year); track day) {
-                                            <option [value]="day">{{ day }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.month" name="month" required>
-                                            <option value="" disabled>الشهر</option>
-                                            @for (month of getMonths(); track month) {
-                                            <option [value]="month">{{ month }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.year" name="year" required>
-                                            <option value="" disabled>السنة</option>
-                                            @for (year of getYears(); track year) {
-                                            <option [value]="year">{{ year }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </div>
+                                <input type="date" class="form-control" [(ngModel)]="tripForm.date" name="tripDate" required max="9999-12-31">
                             </div>
 
                             <!-- YMD Fields -->
@@ -57,7 +32,8 @@
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <input type="number" class="form-select" [(ngModel)]="tripForm.ymdNumber"
-                                            name="ymdNumber" min="0" max="365" placeholder="العمر (اتركه فارغاً إذا كان 0)">
+                                            name="ymdNumber" min="0" max="365"
+                                            placeholder="العمر (اتركه فارغاً إذا كان 0)">
                                     </div>
                                     <div class="col-6">
                                         <select class="form-select" [(ngModel)]="tripForm.ymdPeriod" name="ymdPeriod"
@@ -80,7 +56,8 @@
                                     (change)="onVehicleSelect($event)" name="vehicleId" required>
                                     <option value="">اختر المركبة</option>
                                     @for (vehicle of filteredVehiclesList(); track vehicle.id) {
-                                    <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
+                                    <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})
+                                    </option>
                                     }
                                 </select>
                                 <small class="text-muted">سيتم ملء السائق والضابط من قبل السائق عند القبول</small>
@@ -88,25 +65,22 @@
 
                             <!-- Transfer From Location -->
                             <div class="col-md-6">
-                                <app-location-search
-                                    label="نقل من (اختياري)"
-                                    placeholder="ابحث عن موقع الانطلاق..."
-                                    [required]="false"
-                                    [selectedLocationName]="tripForm.transferFrom"
+                                <app-location-search label="نقل من (اختياري)" placeholder="ابحث عن موقع الانطلاق..."
+                                    [required]="false" [selectedLocationName]="tripForm.transferFrom"
                                     (locationSelected)="onTransferFromSelected($event)">
                                 </app-location-search>
                             </div>
 
                             <!-- Transfer To Location -->
                             <div class="col-md-6">
-                                <app-location-search
-                                    label="نقل الى (اختياري)"
-                                    placeholder="ابحث عن موقع الوصول..."
-                                    [required]="false"
-                                    [selectedLocationName]="tripForm.transferTo"
+                                <app-location-search label="نقل الى (اختياري)" placeholder="ابحث عن موقع الوصول..."
+                                    [required]="false" [selectedLocationName]="tripForm.transferTo"
                                     (locationSelected)="onTransferToSelected($event)">
                                 </app-location-search>
                             </div>
+
+                            <!-- Odometer fields - hidden when adding new trip (admin only fills basic info) -->
+                            @if (!isAddingNewTrip()) {
                             <div class="col-4">
                                 <label for="start" class="form-label small fw-medium">بدء</label>
                                 <input id="start" type="number" class="form-control text-end" placeholder=""
@@ -119,9 +93,12 @@
                             </div>
                             <div class="col-4">
                                 <label for="diesel" class="form-label small fw-medium">سولار (كيلومتر)</label>
-                                <input id="diesel" type="number" class="form-control text-end" [value]="calculatedDiesel"
-                                    readonly style="direction: ltr; background-color: #e9ecef;">
+                                <input id="diesel" type="number" class="form-control text-end"
+                                    [value]="calculatedDiesel" readonly
+                                    style="direction: ltr; background-color: #e9ecef;">
                             </div>
+                            }
+
                             <div class="col-md-6">
                                 <label for="patientName" class="form-label small fw-medium">المريض</label>
                                 <input id="patientName" type="text" class="form-control" placeholder="اسم المريض"
@@ -135,9 +112,7 @@
                                     style="direction: ltr;">
                             </div>
                             <div class="col-md-12">
-                                <app-transportation-type-search
-                                    [label]="'التشخيص'"
-                                    [placeholder]="'ابحث عن التشخيص...'"
+                                <app-transportation-type-search [label]="'التشخيص'" [placeholder]="'ابحث عن التشخيص...'"
                                     [selectedTypeName]="tripForm.transportationTypeName"
                                     (typeSelected)="onTransportationTypeSelected($event)">
                                 </app-transportation-type-search>
@@ -161,6 +136,9 @@
                                     }
                                 </select>
                             </div>
+
+                            <!-- Money fields - hidden when adding new trip (driver fills these later) -->
+                            @if (!isAddingNewTrip()) {
                             <div class="col-6">
                                 <label for="totalPrice" class="form-label small fw-medium">المبلغ الكلي (₪)</label>
                                 <input id="totalPrice" type="number" class="form-control text-end" placeholder="0.00"
@@ -187,13 +165,29 @@
                                     placeholder="0.00" [(ngModel)]="tripForm.paramedicShare" name="paramedicShare"
                                     min="0" step="0.01" style="direction: ltr;"
                                     [readonly]="tripForm.tripType !== 'اخرى' && tripForm.tripType !== ''"
-                                    [style.background-color]="tripForm.tripType !== 'اخرى' && tripForm.tripType !== '' ? '#e9ecef' : 'white'" required>
+                                    [style.background-color]="tripForm.tripType !== 'اخرى' && tripForm.tripType !== '' ? '#e9ecef' : 'white'"
+                                    required>
                                 <small class="text-muted">يتم خصمها أولاً قبل توزيع الباقي</small>
+                            </div>
+                            <div class="col-12">
+                                <label for="paramedicPaidAmount" class="form-label small fw-medium">المبلغ المدفوع
+                                    للضابط في الموقع (₪)</label>
+                                <input id="paramedicPaidAmount" type="number" class="form-control text-end"
+                                    placeholder="0.00" [(ngModel)]="tripForm.paramedicPaidAmount"
+                                    name="paramedicPaidAmount" min="0" step="0.01" style="direction: ltr;">
+                                <small class="text-muted">المبلغ الذي تم دفعه فعلياً للضابط (الباقي يضاف للذمم)</small>
+                            </div>
+                            }
+                            <div class="col-12">
+                                <label for="tripNotes" class="form-label small fw-medium">ملاحظات الرحلة</label>
+                                <textarea id="tripNotes" class="form-control" [(ngModel)]="tripForm.tripNotes"
+                                    name="tripNotes" rows="3" placeholder="ملاحظات عامة عن الرحلة..."></textarea>
+                                <small class="text-muted">ملاحظات إضافية عن الرحلة</small>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
-                                (click)="isAddTripModalOpen.set(false)">إلغاء</button>
+                                (click)="closeAddTripModal()">إلغاء</button>
                             <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold">إضافة
                                 الرحلة</button>
                         </div>
@@ -221,29 +215,13 @@
                             <!-- Date Fields -->
                             <div class="col-12">
                                 <label class="form-label small fw-medium">التاريخ</label>
-                                <div class="row g-2">
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.day" name="day" required>
-                                            @for (day of getDaysInMonth(tripForm.month, tripForm.year); track day) {
-                                            <option [value]="day">{{ day }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.month" name="month" required>
-                                            @for (month of getMonths(); track month) {
-                                            <option [value]="month">{{ month }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="tripForm.year" name="year" required>
-                                            @for (year of getYears(); track year) {
-                                            <option [value]="year">{{ year }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </div>
+                                <input
+                                  type="date"
+                                  class="form-control"
+                                  [(ngModel)]="tripForm.date"
+                                  name="tripDate"
+                                  required
+                                  max="9999-12-31">
                             </div>
 
                             <!-- YMD Fields -->
@@ -252,7 +230,8 @@
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <input type="number" class="form-select" [(ngModel)]="tripForm.ymdNumber"
-                                            name="ymdNumber" min="0" max="365" placeholder="العمر (اتركه فارغاً إذا كان 0)">
+                                            name="ymdNumber" min="0" max="365"
+                                            placeholder="العمر (اتركه فارغاً إذا كان 0)">
                                     </div>
                                     <div class="col-6">
                                         <select class="form-select" [(ngModel)]="tripForm.ymdPeriod" name="ymdPeriod"
@@ -276,29 +255,24 @@
                                     (change)="onVehicleSelect($event)" name="vehicleId" required>
                                     <option value="">اختر المركبة</option>
                                     @for (vehicle of filteredVehiclesList(); track vehicle.id) {
-                                    <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
+                                    <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})
+                                    </option>
                                     }
                                 </select>
                             </div>
 
                             <!-- Transfer From Location -->
                             <div class="col-md-6">
-                                <app-location-search
-                                    label="نقل من (اختياري)"
-                                    placeholder="ابحث عن موقع الانطلاق..."
-                                    [required]="false"
-                                    [selectedLocationName]="tripForm.transferFrom"
+                                <app-location-search label="نقل من (اختياري)" placeholder="ابحث عن موقع الانطلاق..."
+                                    [required]="false" [selectedLocationName]="tripForm.transferFrom"
                                     (locationSelected)="onTransferFromSelected($event)">
                                 </app-location-search>
                             </div>
 
                             <!-- Transfer To Location -->
                             <div class="col-md-6">
-                                <app-location-search
-                                    label="نقل الى (اختياري)"
-                                    placeholder="ابحث عن موقع الوصول..."
-                                    [required]="false"
-                                    [selectedLocationName]="tripForm.transferTo"
+                                <app-location-search label="نقل الى (اختياري)" placeholder="ابحث عن موقع الوصول..."
+                                    [required]="false" [selectedLocationName]="tripForm.transferTo"
                                     (locationSelected)="onTransferToSelected($event)">
                                 </app-location-search>
                             </div>
@@ -314,8 +288,9 @@
                             </div>
                             <div class="col-4">
                                 <label for="editDiesel" class="form-label small fw-medium">سولار (كيلومتر)</label>
-                                <input id="editDiesel" type="number" class="form-control text-end" [value]="calculatedDiesel"
-                                    readonly style="direction: ltr; background-color: #e9ecef;">
+                                <input id="editDiesel" type="number" class="form-control text-end"
+                                    [value]="calculatedDiesel" readonly
+                                    style="direction: ltr; background-color: #e9ecef;">
                             </div>
                             <div class="col-md-6">
                                 <label for="editPatientName" class="form-label small fw-medium">المريض</label>
@@ -330,9 +305,7 @@
                                     style="direction: ltr;">
                             </div>
                             <div class="col-md-12">
-                                <app-transportation-type-search
-                                    [label]="'التشخيص'"
-                                    [placeholder]="'ابحث عن التشخيص...'"
+                                <app-transportation-type-search [label]="'التشخيص'" [placeholder]="'ابحث عن التشخيص...'"
                                     [selectedTypeName]="tripForm.transportationTypeName"
                                     (typeSelected)="onTransportationTypeSelected($event)">
                                 </app-transportation-type-search>
@@ -364,26 +337,46 @@
                                 <small class="text-muted">المبلغ المفترض دفعه</small>
                             </div>
                             <div class="col-md-6">
-                                <label for="editPayedPrice" class="form-label small fw-medium">المبلغ المدفوع (₪)</label>
+                                <label for="editPayedPrice" class="form-label small fw-medium">المبلغ المدفوع
+                                    (₪)</label>
                                 <input id="editPayedPrice" type="number" class="form-control text-end"
                                     placeholder="0.00" [(ngModel)]="tripForm.payedPrice" name="payedPrice" min="0"
                                     step="0.01" style="direction: ltr;" required>
                                 <small class="text-muted">المبلغ الذي دفعه المريض</small>
                             </div>
                             <div class="col-md-6">
-                                <label for="editOtherExpenses" class="form-label small fw-medium">مصاريف أخرى (₪)</label>
-                                <input id="editOtherExpenses" type="number" class="form-control text-end" placeholder="0.00"
-                                    [(ngModel)]="tripForm.otherExpenses" name="otherExpenses" min="0" step="0.01"
-                                    style="direction: ltr;">
+                                <label for="editOtherExpenses" class="form-label small fw-medium">مصاريف أخرى
+                                    (₪)</label>
+                                <input id="editOtherExpenses" type="number" class="form-control text-end"
+                                    placeholder="0.00" [(ngModel)]="tripForm.otherExpenses" name="otherExpenses" min="0"
+                                    step="0.01" style="direction: ltr;">
                             </div>
                             <div class="col-md-6">
-                                <label for="editParamedicShare" class="form-label small fw-medium">حصة الضابط (₪)</label>
+                                <label for="editParamedicShare" class="form-label small fw-medium">حصة الضابط
+                                    (₪)</label>
                                 <input id="editParamedicShare" type="number" class="form-control text-end"
                                     placeholder="0.00" [(ngModel)]="tripForm.paramedicShare" name="paramedicShare"
                                     min="0" step="0.01" style="direction: ltr;"
                                     [readonly]="tripForm.tripType !== 'اخرى' && tripForm.tripType !== ''"
-                                    [style.background-color]="tripForm.tripType !== 'اخرى' && tripForm.tripType !== '' ? '#e9ecef' : 'white'" required>
+                                    [style.background-color]="tripForm.tripType !== 'اخرى' && tripForm.tripType !== '' ? '#e9ecef' : 'white'"
+                                    required>
                                 <small class="text-muted">يتم خصمها أولاً قبل توزيع الباقي</small>
+                            </div>
+                            <div class="col-md-12">
+                                <label for="editParamedicPaidAmount" class="form-label small fw-medium">المبلغ المدفوع
+                                    للضابط في الموقع (₪)</label>
+                                <input id="editParamedicPaidAmount" type="number" class="form-control text-end"
+                                    placeholder="0.00" [(ngModel)]="tripForm.paramedicPaidAmount"
+                                    name="paramedicPaidAmount" min="0" step="0.01" style="direction: ltr;">
+                                <small class="text-muted">المبلغ الذي تم دفعه فعلياً للضابط (الباقي يضاف للذمم)</small>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-1">
+                            <div class="col-12">
+                                <label for="editTripNotes" class="form-label small fw-medium">ملاحظات الرحلة</label>
+                                <textarea id="editTripNotes" class="form-control" [(ngModel)]="tripForm.tripNotes"
+                                    name="tripNotes" rows="3" placeholder="ملاحظات عامة عن الرحلة..."></textarea>
+                                <small class="text-muted">ملاحظات إضافية عن الرحلة</small>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end gap-2 mt-4">
@@ -419,7 +412,8 @@
                         </div>
                         <div class="col-6">
                             <p class="text-muted small mb-1">YMD</p>
-                            <p class="fw-bold">{{ trip.ymdValue && trip.ymdPeriod ? trip.ymdValue + ' ' + trip.ymdPeriod : 'غير محدد' }}</p>
+                            <p class="fw-bold">{{ trip.ymdValue && trip.ymdPeriod ? trip.ymdValue + ' ' + trip.ymdPeriod
+                                : 'غير محدد' }}</p>
                         </div>
                         <div class="col-6">
                             <p class="text-muted small mb-1">السائق</p>
@@ -486,6 +480,13 @@
                             <p class="text-muted small mb-1">المبلغ المدفوع</p>
                             <p class="fw-bold" dir="ltr">₪{{ trip.payedPrice.toFixed(2) }}</p>
                         </div>
+                        @if (trip.tripNotes) {
+                        <div class="col-12">
+                            <hr class="my-2">
+                            <p class="text-muted small mb-1">ملاحظات الرحلة</p>
+                            <p class="fw-medium">{{ trip.tripNotes }}</p>
+                        </div>
+                        }
                         <div class="col-12">
                             <hr class="my-2">
                             <h6 class="fw-bold mb-3">توزيع المبلغ المدفوع</h6>
@@ -514,9 +515,6 @@
                             <p class="text-muted small mb-1">تم الإغلاق</p>
                             <p class="fw-bold">
                                 {{ formatTimestamp(trip.closedAt) }}
-                                @if (trip.closedBy) {
-                                <span class="badge bg-secondary ms-2">بواسطة: {{ trip.closedBy }}</span>
-                                }
                             </p>
                         </div>
                         @if (trip.acceptedAt && trip.closedAt) {
@@ -544,6 +542,12 @@
                                 (click)="forceCloseTrip()">
                                 <i class="fa-solid fa-lock me-1"></i>
                                 إغلاق الرحلة
+                            </button>
+                            } @else {
+                            <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold"
+                                (click)="uncloseTrip()">
+                                <i class="fa-solid fa-lock-open me-1"></i>
+                                إعادة فتح الرحلة
                             </button>
                             }
                             <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
@@ -734,8 +738,7 @@
 
                             <!-- Location Dropdown Filter (by ID) -->
                             <div class="col-12">
-                                <app-location-search
-                                    [placeholder]="'اختر الموقع...'"
+                                <app-location-search [placeholder]="'اختر الموقع...'"
                                     (locationSelected)="onTransferToFilterSelected($event)">
                                 </app-location-search>
                                 <small class="text-muted">اختر موقع للتصفية بدلاً من الكتابة</small>
@@ -766,7 +769,13 @@
                 </div>
 
                 <div class="col-12 col-lg-7">
-                    <div class="d-flex justify-content-end mb-3">
+                    <div class="d-flex justify-content-end mb-3 gap-2">
+                        <button
+                            class="btn btn-primary rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3 fw-bold"
+                            (click)="exportToExcel()" [disabled]="isExporting()">
+                            <i class="fas" [ngClass]="isExporting() ? 'fa-spinner fa-spin' : 'fa-file-excel'"></i>
+                            {{ isExporting() ? 'جاري التصدير...' : 'تصدير Excel' }}
+                        </button>
                         <button
                             class="btn btn-success rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3 fw-bold"
                             (click)="openAddTripModal()">
@@ -797,7 +806,8 @@
 
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <p class="text-muted small m-0">
-                                                المركبة: <span class="fw-medium">{{ trip.vehicleName || 'غير محدد' }}</span>
+                                                المركبة: <span class="fw-medium">{{ trip.vehicleName || 'غير محدد'
+                                                    }}</span>
                                             </p>
                                             <p class="text-muted small m-0 clickable-field"
                                                 (click)="quickFilterByDate(trip.day, trip.month, trip.year)"
@@ -807,7 +817,8 @@
                                         </div>
 
                                         <p class="text-muted small mb-3">
-                                            <span class="fw-medium">التشخيص:</span> {{ trip.transportationTypeName || trip.diagnosis || 'غير محدد' }}
+                                            <span class="fw-medium">التشخيص:</span> {{ trip.transportationTypeName ||
+                                            trip.diagnosis || 'غير محدد' }}
                                         </p>
 
                                         <div

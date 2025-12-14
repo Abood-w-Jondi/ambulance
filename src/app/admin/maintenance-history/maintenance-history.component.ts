@@ -13,6 +13,8 @@ import { MAINTENANCE_STATUS } from '../../shared/constants/status.constants';
 import { MaintenanceRecord, MaintenanceStatus } from '../../shared/models';
 import { VehicleService } from '../../shared/services/vehicle.service';
 import { Vehicle } from '../../shared/models/vehicle.model';
+import { DriverService } from '../../shared/services/driver.service';
+import { Driver } from '../../shared/models';
 @Component({
     selector: 'app-maintenance-history',
     standalone: true,
@@ -30,7 +32,7 @@ export class MaintenanceHistoryComponent implements OnInit {
     startYear: number = 2020;
     endDay: number = new Date().getDate();
     endMonth: number = new Date().getMonth() + 1;
-    endYear: number = new Date().getFullYear() + 10;
+    endYear: number = new Date().getFullYear();
     selectedVehicle: string = 'جميع المركبات';
     selectedMaintenanceType: string = 'جميع الأنواع';
     
@@ -48,9 +50,7 @@ export class MaintenanceHistoryComponent implements OnInit {
     
     // Form values for new/edit record
     recordForm = {
-        day: 1,
-        month: 1,
-        year: new Date().getFullYear(),
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
         vehicleId: '',
         maintenanceTypeId: '',
         type: '', // Maintenance type name for display in search component
@@ -59,7 +59,8 @@ export class MaintenanceHistoryComponent implements OnInit {
         odometerBefore: 0,
         odometerAfter: 0,
         notes: '',
-        status: 'مجدولة' as MaintenanceStatus
+        status: 'مجدولة' as MaintenanceStatus,
+        driverId: '' // Add driver field
     };
 
     // Computed kilometers traveled
@@ -79,6 +80,10 @@ export class MaintenanceHistoryComponent implements OnInit {
             v.vehicleId.toLowerCase().includes(term)
         );
     });
+
+    // Driver selection
+    driversList: Driver[] = [];
+    selectedDriverId: string = ''; // For filters
     // Maintenance types will come from database/API in the future
     maintenanceTypes: string[] = [
         'تغيير الزيت',
@@ -107,6 +112,7 @@ export class MaintenanceHistoryComponent implements OnInit {
         private validationService: ValidationService,
         private maintenanceService: MaintenanceService,
         private vehicleService: VehicleService,
+        private driverService: DriverService,
         private router: Router
     ) {
         this.globalVars.setGlobalHeader('سجل الصيانة');
@@ -128,6 +134,7 @@ export class MaintenanceHistoryComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadVehicles();
+        this.loadDrivers();
         this.loadData();
     }
     
@@ -142,6 +149,18 @@ export class MaintenanceHistoryComponent implements OnInit {
             error: (error) => {
                 console.error('Error loading vehicles:', error);
                 this.toastService.error('فشل تحميل المركبات');
+            }
+        });
+    }
+
+    loadDrivers(): void {
+        this.driverService.getAllDrivers().subscribe({
+            next: (res) => {
+                this.driversList = res.data;
+            },
+            error: (error) => {
+                console.error('Error loading drivers:', error);
+                this.toastService.error('فشل تحميل السائقين');
             }
         });
     }
@@ -375,9 +394,7 @@ formatDate(date: Date | string | null | undefined): string {
 
     openAddRecordModal(): void {
         this.recordForm = {
-            day: 1,
-            month: 1,
-            year: new Date().getFullYear(),
+            date: new Date().toISOString().split('T')[0],
             vehicleId: '',
             maintenanceTypeId: '',
             type: '',
@@ -386,14 +403,14 @@ formatDate(date: Date | string | null | undefined): string {
             odometerBefore: 0,
             odometerAfter: 0,
             notes: '',
-            status: 'مجدولة'
+            status: 'مجدولة',
+            driverId: ''
         };
         this.isAddRecordModalOpen.set(true);
     }
 
     addRecord(): void {
-        let date : any= new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day)
-        date = date.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        const date = this.recordForm.date; // Already in YYYY-MM-DD format from HTML5 input
        console.log('Adding record with date:', date);
         const validationData = {
             ambulanceId: this.recordForm.vehicleId,
@@ -415,14 +432,15 @@ formatDate(date: Date | string | null | undefined): string {
 
         this.maintenanceService.createMaintenanceRecord({
             vehicleId: this.recordForm.vehicleId,
-            date: date,
+            date: date as any, // Convert string to Date for service compatibility
             maintenanceTypeId: this.recordForm.maintenanceTypeId,
             cost: this.recordForm.cost,
             serviceLocation: this.recordForm.serviceLocation,
             odometerBefore: this.recordForm.odometerBefore,
             odometerAfter: this.recordForm.odometerAfter,
             notes: this.recordForm.notes,
-            status: this.recordForm.status
+            status: this.recordForm.status,
+            driverId: this.recordForm.driverId || undefined
         }).subscribe({
             next: () => {
                 this.isAddRecordModalOpen.set(false);
@@ -442,10 +460,9 @@ formatDate(date: Date | string | null | undefined): string {
             // Parse date from string to Date object if needed
             const dateObj = typeof record.date === 'string' ? new Date(record.date) : record.date;
 
+            const dateString = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD format
             this.recordForm = {
-                day: dateObj.getDate(),
-                month: dateObj.getMonth() + 1,
-                year: dateObj.getFullYear(),
+                date: dateString,
                 vehicleId: record.vehicleId,
                 maintenanceTypeId: record.maintenanceTypeId || '',
                 type: record.maintenanceTypeName || record.type || '',
@@ -454,7 +471,8 @@ formatDate(date: Date | string | null | undefined): string {
                 odometerBefore: record.odometerBefore,
                 odometerAfter: record.odometerAfter,
                 notes: record.notes,
-                status: record.status
+                status: record.status,
+                driverId: record.driverId || ''
             };
             this.isViewRecordModalOpen.set(false);
             this.isEditRecordModalOpen.set(true);
@@ -464,9 +482,8 @@ formatDate(date: Date | string | null | undefined): string {
     saveEditRecord(): void {
         const record = this.selectedRecord();
         if (record) {
-            // Format date as string like in addRecord
-            let date: any = new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day);
-            date = date.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            // Date is already in YYYY-MM-DD format from HTML5 input
+            const date = this.recordForm.date;
             console.log('Updating record with date:', date);
 
             // Validate the maintenance record
@@ -490,14 +507,15 @@ formatDate(date: Date | string | null | undefined): string {
 
             const updatePayload = {
                 vehicleId: this.recordForm.vehicleId,
-                date: date,
+                date: date as any, // Convert string to Date for service compatibility
                 maintenanceTypeId: this.recordForm.maintenanceTypeId,
                 cost: this.recordForm.cost,
                 serviceLocation: this.recordForm.serviceLocation,
                 odometerBefore: this.recordForm.odometerBefore,
                 odometerAfter: this.recordForm.odometerAfter,
                 notes: this.recordForm.notes,
-                status: this.recordForm.status
+                status: this.recordForm.status,
+                driverId: this.recordForm.driverId || undefined
             };
 
             this.maintenanceService.updateMaintenanceRecord(record.id, updatePayload).subscribe({
@@ -554,19 +572,6 @@ formatDate(date: Date | string | null | undefined): string {
         }
     }
 
-    getDaysInMonth(month: number, year: number): number[] {
-        const days = new Date(year, month, 0).getDate();
-        return Array.from({ length: days }, (_, i) => i + 1);
-    }
-
-    getMonths(): number[] {
-        return Array.from({ length: 12 }, (_, i) => i + 1);
-    }
-
-    getYears(): number[] {
-        const currentYear = new Date().getFullYear();
-        return Array.from({ length: 10 }, (_, i) => currentYear - i);
-    }
 
     /**
      * Navigate to fleet page filtered by vehicle
@@ -616,5 +621,33 @@ formatDate(date: Date | string | null | undefined): string {
             event.stopPropagation();
         }
         this.searchTerm.set(location);
+    }
+
+    /**
+     * Helper method: Get days in month for date filtering
+     */
+    getDaysInMonth(month: number, year: number): number[] {
+        const daysInMonth = new Date(year, month, 0).getDate();
+        return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    }
+
+    /**
+     * Helper method: Get months for date filtering
+     */
+    getMonths(): number[] {
+        return Array.from({ length: 12 }, (_, i) => i + 1);
+    }
+
+    /**
+     * Helper method: Get years for date filtering
+     */
+    getYears(): number[] {
+        const currentYear = new Date().getFullYear();
+        const startYear = 2020;
+        const years: number[] = [];
+        for (let year = startYear; year <= currentYear + 10; year++) {
+            years.push(year);
+        }
+        return years;
     }
 }

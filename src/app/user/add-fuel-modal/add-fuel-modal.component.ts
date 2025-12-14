@@ -23,9 +23,7 @@ export class AddFuelModalComponent implements OnInit {
   @Output() fuelAdded = new EventEmitter<FuelRecord>();
 
   recordForm = {
-    day: new Date().getDate(),
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
+    date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     ambulanceName: '',
     ambulanceNumber: '',
     ambulanceId: '',          // vehicleInternalId
@@ -54,7 +52,7 @@ export class AddFuelModalComponent implements OnInit {
     this.recordForm.driverInternalId = this.driverInternalId;
     this.recordForm.driverId = this.driverId;
 
-    // Load vehicle name using VehicleService
+    // Load vehicle name and current odometer using VehicleService
     if (this.vehicleInternalId) {
       this.vehicleService.getVehicleById(this.vehicleInternalId).subscribe({
         next: (vehicle) => {
@@ -62,6 +60,14 @@ export class AddFuelModalComponent implements OnInit {
           this.recordForm.ambulanceNumber = vehicle.vehicleId;
         },
         error: (error) => console.error('Failed to load vehicle:', error)
+      });
+
+      // Auto-populate odometerBefore with vehicle's current odometer
+      this.vehicleService.getCurrentOdometer(this.vehicleInternalId).subscribe({
+        next: (response) => {
+          this.recordForm.odometerBefore = response.currentOdometer;
+        },
+        error: (error) => console.error('Failed to load current odometer:', error)
       });
     }
 
@@ -89,8 +95,8 @@ export class AddFuelModalComponent implements OnInit {
 
     this.isSubmitting = true;
 
-    // Prepare date
-    let date: any = new Date(this.recordForm.year, this.recordForm.month - 1, this.recordForm.day);
+    // Prepare date from YYYY-MM-DD string
+    let date: any = new Date(this.recordForm.date + 'T00:00:00');
 
     // Call FuelService.createFuelRecord()
     this.fuelService.createFuelRecord({
@@ -137,17 +143,4 @@ export class AddFuelModalComponent implements OnInit {
     this.close.emit();
   }
 
-  getDaysInMonth(month: number, year: number): number[] {
-    const days = new Date(year, month, 0).getDate();
-    return Array.from({ length: days }, (_, i) => i + 1);
-  }
-
-  getMonths(): number[] {
-    return Array.from({ length: 12 }, (_, i) => i + 1);
-  }
-
-  getYears(): number[] {
-    const currentYear = new Date().getFullYear();
-    return Array.from({ length: 10 }, (_, i) => currentYear - i);
-  }
 }

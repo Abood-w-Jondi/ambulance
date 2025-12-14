@@ -1,4 +1,9 @@
 /**
+ * Education level enum matching database values
+ */
+export type EducationLevel = 'EMI' | 'B' | 'I' | 'P';
+
+/**
  * Complete Driver model with properties actually used in the application
  */
 export interface Driver {
@@ -22,7 +27,13 @@ export interface Driver {
     // Profile Media
     imageUrl: string;
     imageAlt: string;
-    driver_status: DriverStatus
+    driver_status: DriverStatus;
+
+    // New Profile Fields
+    jobTitle?: string;                    // الوظيفة - Job title (free text)
+    educationLevel?: EducationLevel;      // المستوى التعليمي
+    phoneNumber?: string;                 // رقم الهاتف (Palestinian format)
+    profileImageUrl?: string;             // Base64 encoded profile image
 }
 
 export type DriverStatus = 'متاح' | 'في رحلة' | 'غير متصل';

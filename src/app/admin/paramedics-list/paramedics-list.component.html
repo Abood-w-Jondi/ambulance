@@ -145,6 +145,75 @@
                                     [(ngModel)]="editParamedic.email" name="email">
                             </div>
 
+                            <!-- Profile & Job Information -->
+                            <div class="col-12 mt-4">
+                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">معلومات الوظيفة والملف الشخصي</h6>
+                            </div>
+
+                            <!-- Profile Image -->
+                            <div class="col-12">
+                                <label class="form-label small fw-medium">الصورة الشخصية</label>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="position-relative">
+                                        @if (editParamedic.profileImageUrl) {
+                                            <img [src]="editParamedic.profileImageUrl"
+                                                alt="صورة المسعف"
+                                                class="rounded-circle object-fit-cover border"
+                                                style="width: 80px; height: 80px;">
+                                            <button type="button"
+                                                class="btn btn-danger btn-sm rounded-circle position-absolute top-0 start-0"
+                                                style="width: 24px; height: 24px; padding: 0;"
+                                                (click)="removeProfileImage()"
+                                                title="إزالة الصورة">
+                                                <i class="fa-solid fa-times" style="font-size: 12px;"></i>
+                                            </button>
+                                        } @else {
+                                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                                                style="width: 80px; height: 80px;">
+                                                <i class="fa-solid fa-user text-white" style="font-size: 32px;"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div>
+                                        <input type="file"
+                                            class="d-none"
+                                            #profileImageInput
+                                            accept="image/*"
+                                            (change)="onProfileImageSelected($event)">
+                                        <button type="button"
+                                            class="btn btn-outline-primary btn-sm"
+                                            (click)="profileImageInput.click()">
+                                            <i class="fa-solid fa-upload me-1"></i>
+                                            {{ editParamedic.profileImageUrl ? 'تغيير الصورة' : 'رفع صورة' }}
+                                        </button>
+                                        <small class="text-muted d-block mt-1">الحد الأقصى: 2 ميجابايت</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editJobTitle" class="form-label small fw-medium">الوظيفة</label>
+                                <input id="editJobTitle" type="text" class="form-control" placeholder="مثال: مسعف طوارئ"
+                                    [(ngModel)]="editParamedic.jobTitle" name="jobTitle">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editEducationLevel" class="form-label small fw-medium">المستوى التعليمي</label>
+                                <select id="editEducationLevel" class="form-select"
+                                    [(ngModel)]="editParamedic.educationLevel" name="educationLevel">
+                                    <option value="">-- اختر المستوى --</option>
+                                    @for (option of educationLevelOptions; track option.value) {
+                                        <option [value]="option.value">{{ option.label }}</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editPhoneNumber" class="form-label small fw-medium">رقم الهاتف</label>
+                                <input id="editPhoneNumber" type="tel" class="form-control" placeholder="05XX-XXX-XXXX"
+                                    [(ngModel)]="editParamedic.phoneNumber" name="phoneNumber" dir="ltr">
+                            </div>
+
                             <!-- Paramedic Status -->
                             <div class="col-12 mt-4">
                                 <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">حالة المسعف</h6>
@@ -331,13 +400,6 @@
                                         (click)="openEditModal(paramedic)"
                                         title="تعديل معلومات المسعف">
                                         <i class="fa-solid fa-pen"></i>
-                                    </button>
-                                    <button
-                                        class="btn btn-sm btn-outline-success rounded-circle"
-                                        style="width: 32px; height: 32px; padding: 0;"
-                                        (click)="viewUserProfile(paramedic)"
-                                        title="عرض/تعديل الملف الشخصي">
-                                        <i class="fa-solid fa-user"></i>
                                     </button>
                                     <button
                                         class="btn btn-sm btn-outline-info rounded-circle"

@@ -2,6 +2,7 @@ import { Component, EventEmitter, OnInit, Output, Input } from '@angular/core';
 import { ToastService } from '../../shared/services/toast.service';
 import { MaintenanceService } from '../../shared/services/maintenance.service';
 import { VehicleService } from '../../shared/services/vehicle.service';
+import { DriverService } from '../../shared/services/driver.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MaintenanceTypeSearchComponent, MaintenanceTypeSelection } from '../../shared/maintenance-type-search/maintenance-type-search.component';
@@ -21,9 +22,7 @@ export class AddMaintenanceModalComponent implements OnInit {
   @Output() maintenanceAdded = new EventEmitter<MaintenanceRecord>();
 
   recordForm = {
-    day: new Date().getDate(),
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
+    date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     vehicleId: '',
     maintenanceTypeId: '',
     type: '', // Maintenance type name for display
@@ -38,18 +37,28 @@ export class AddMaintenanceModalComponent implements OnInit {
   maintenanceStatuses: MaintenanceStatus[] = ['مكتملة', 'مجدولة', 'قيد التنفيذ'];
 
   isSubmitting: boolean = false;
+  kmSinceLast: number | null = null;
+
+  // Driver properties
+  currentDriverId: string = '';
+  currentDriverName: string = '';
+  isLoadingDriver: boolean = true;
 
   constructor(
     private toastService: ToastService,
     private maintenanceService: MaintenanceService,
-    private vehicleService: VehicleService
+    private vehicleService: VehicleService,
+    private driverService: DriverService
   ) { }
 
   ngOnInit(): void {
+    // Load current driver
+    this.loadCurrentDriver();
+
     // Pre-populate vehicle from input
     this.recordForm.vehicleId = this.vehicleInternalId;
 
-    // Load vehicle name if needed for display
+    // Load vehicle name and current odometer
     if (this.vehicleInternalId) {
       this.vehicleService.getVehicleById(this.vehicleInternalId).subscribe({
         next: (vehicle) => {
@@ -57,7 +66,30 @@ export class AddMaintenanceModalComponent implements OnInit {
         },
         error: (error) => console.error('Failed to load vehicle:', error)
       });
+
+      // Auto-populate odometerBefore with vehicle's current odometer
+      this.vehicleService.getCurrentOdometer(this.vehicleInternalId).subscribe({
+        next: (response) => {
+          this.recordForm.odometerBefore = response.currentOdometer;
+        },
+        error: (error) => console.error('Failed to load current odometer:', error)
+      });
     }
+  }
+
+  loadCurrentDriver(): void {
+    this.isLoadingDriver = true;
+    this.driverService.getCurrentDriver().subscribe({
+      next: (driver) => {
+        this.currentDriverId = driver.id;
+        this.currentDriverName = driver.arabicName || driver.name || 'السائق';
+        this.isLoadingDriver = false;
+      },
+      error: (error) => {
+        console.error('Error loading current driver:', error);
+        this.isLoadingDriver = false;
+      }
+    });
   }
 
   onMaintenanceTypeSelected(selection: MaintenanceTypeSelection): void {
@@ -85,17 +117,17 @@ export class AddMaintenanceModalComponent implements OnInit {
       this.recordForm.maintenanceTypeId
     ).subscribe({
       next: (response) => {
-        if (response.success && response.data.lastOdometerAfter !== null) {
-          this.recordForm.odometerBefore = response.data.lastOdometerAfter;
-        } else {
-          // No previous record, leave empty (0)
-          this.recordForm.odometerBefore = 0;
+        if (response.success && response.data) {
+          // Auto-populate with current odometer from vehicle
+          this.recordForm.odometerBefore = response.data.currentOdometer;
+          // Store km since last for display
+          this.kmSinceLast = response.data.kmSinceLast;
         }
       },
       error: (error) => {
         console.error('Error loading last odometer reading:', error);
         // Don't show error toast, just leave the field empty
-        this.recordForm.odometerBefore = 0;
+        this.kmSinceLast = null;
       }
     });
   }
@@ -113,11 +145,8 @@ export class AddMaintenanceModalComponent implements OnInit {
 
     this.isSubmitting = true;
 
-    // Format date as YYYY-MM-DD string to avoid timezone issues
-    const year = this.recordForm.year;
-    const month = String(this.recordForm.month).padStart(2, '0');
-    const day = String(this.recordForm.day).padStart(2, '0');
-    const dateString = `${year}-${month}-${day}`;
+    // Date is already in YYYY-MM-DD format from HTML5 input
+    const dateString = this.recordForm.date;
 
     console.log('Submitting maintenance record for date:', dateString);
     this.maintenanceService.createMaintenanceRecord({
@@ -129,7 +158,8 @@ export class AddMaintenanceModalComponent implements OnInit {
       odometerBefore: this.recordForm.odometerBefore,
       odometerAfter: this.recordForm.odometerAfter,
       notes: this.recordForm.notes,
-      status: this.recordForm.status
+      status: this.recordForm.status,
+      driverId: this.currentDriverId
     }).subscribe({
       next: (record) => {
         this.isSubmitting = false;
@@ -161,17 +191,4 @@ export class AddMaintenanceModalComponent implements OnInit {
     this.close.emit();
   }
 
-  getDaysInMonth(month: number, year: number): number[] {
-    const days = new Date(year, month, 0).getDate();
-    return Array.from({ length: days }, (_, i) => i + 1);
-  }
-
-  getMonths(): number[] {
-    return Array.from({ length: 12 }, (_, i) => i + 1);
-  }
-
-  getYears(): number[] {
-    const currentYear = new Date().getFullYear();
-    return Array.from({ length: 10 }, (_, i) => currentYear - i);
-  }
 }

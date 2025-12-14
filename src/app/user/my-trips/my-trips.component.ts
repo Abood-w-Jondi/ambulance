@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -74,6 +74,9 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   medicalFormCompletionPercentage: number = 0;
   isMedicalFormComplete: boolean = false;
 
+  // Admin detection
+  isAdmin = computed(() => this.authService.isAdmin());
+
   constructor(
     private tripService: TripService,
     private authService: AuthService,
@@ -96,7 +99,17 @@ export class MyTripsComponent implements OnInit, OnDestroy {
       this.router.navigate(['/select-vehicle']);
       return;
     }
-    
+
+    // Admin users don't have driver records - handle gracefully
+    if (this.authService.isAdmin()) {
+      // Admin can still view vehicle trips, but not driver-specific trips
+      this.driverId = '';
+      this.historyView = 'vehicle'; // Default to vehicle view for admins
+      this.loadData();
+      this.startAutoRefresh();
+      return;
+    }
+
     // Get driver record ID from current user
     this.driverService.getCurrentDriver().subscribe({
       next: (driver) => {
@@ -165,6 +178,16 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   loadMyTrips(): void {
     this.isLoadingHistory = true;
     this.currentPage = 1; // Reset to first page
+
+    // Admin users can only view vehicle trips (they don't have driver records)
+    if (this.authService.isAdmin() && this.historyView === 'driver') {
+      // For admin in driver view, show empty list with message handled in template
+      this.allMyTrips = [];
+      this.applyHistoryFilters();
+      this.isLoadingHistory = false;
+      return;
+    }
+
     const observable = this.historyView === 'vehicle'
       ? this.tripService.getVehicleTrips(this.vehicleId)
       : this.tripService.getDriverTrips(this.driverId);
@@ -347,6 +370,13 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   }
 
   openCloseConfirmModal(trip: Trip): void {
+    // Check if trip has a final status before allowing closure
+    const finalStatuses: TransferStatus[] = ['تم النقل', 'رفض النقل', 'بلاغ كاذب'];
+    if (!finalStatuses.includes(trip.transferStatus)) {
+      this.toastService.error(`لا يمكن إغلاق الرحلة بحالة "${trip.transferStatus}". يرجى تغيير الحالة إلى حالة نهائية أولاً.`);
+      return;
+    }
+
     this.selectedTripForClose = trip;
 
     // Check if medical form is complete before showing close modal
@@ -394,8 +424,9 @@ export class MyTripsComponent implements OnInit, OnDestroy {
 
     const tripId = this.selectedTripForClose.id;
     const patientName = this.selectedTripForClose.patientName;
+    const transferStatus = this.selectedTripForClose.transferStatus;
 
-    this.tripService.closeTrip(tripId).subscribe({
+    this.tripService.closeTrip(tripId, transferStatus).subscribe({
       next: () => {
         this.toastService.success(`تم إغلاق الرحلة للمريض ${patientName}`);
         this.closeMedicalFormWarningModal();
@@ -414,8 +445,9 @@ export class MyTripsComponent implements OnInit, OnDestroy {
 
     const tripId = this.selectedTripForClose.id;
     const patientName = this.selectedTripForClose.patientName;
+    const transferStatus = this.selectedTripForClose.transferStatus;
 
-    this.tripService.closeTrip(tripId).subscribe({
+    this.tripService.closeTrip(tripId, transferStatus).subscribe({
       next: () => {
         this.toastService.success(`تم إغلاق الرحلة للمريض ${patientName}`);
         this.closeConfirmModal();
@@ -444,8 +476,10 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   }
 
   canCloseTrip(trip: Trip): boolean {
-    // Can close if not already closed (allow closing at any status)
-    return !trip.isClosed;
+    // Can close if not already closed AND has a final status
+    // Final statuses are: تم النقل, رفض النقل, بلاغ كاذب
+    const finalStatuses: TransferStatus[] = ['تم النقل', 'رفض النقل', 'بلاغ كاذب'];
+    return !trip.isClosed && finalStatuses.includes(trip.transferStatus);
   }
 
   formatDate(trip: Trip): string {

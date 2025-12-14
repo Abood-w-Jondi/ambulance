@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,7 +6,7 @@ import { ChecklistService } from '../../shared/services/checklist.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { VehicleCookieService } from '../../shared/services/vehicle-cookie.service';
 import { ChecklistItem, CHECKLIST_ITEMS, VehicleChecklist } from '../../shared/models/checklist.model';
-
+import { GlobalVarsService } from '../../global-vars.service';
 @Component({
   selector: 'app-vehicle-checklist',
   standalone: true,
@@ -67,8 +67,12 @@ export class VehicleChecklistComponent implements OnInit {
     private checklistService: ChecklistService,
     private toastService: ToastService,
     private router: Router,
-    private vehicleCookieService: VehicleCookieService
-  ) {}
+    private vehicleCookieService: VehicleCookieService,
+    public globalVars: GlobalVarsService
+
+  ) {
+    this.globalVars.setGlobalHeader(' قائمة فحص المركبة ');
+  }
 
   ngOnInit(): void {
     this.loadSession();
@@ -115,11 +119,34 @@ export class VehicleChecklistComponent implements OnInit {
     this.items.set(initialItems);
   }
 
-  toggleCategory(categoryName: string): void {
-    if (this.expandedCategory() === categoryName) {
+ toggleCategory(categoryName: string): void {
+    const isCurrentlyExpanded = this.expandedCategory() === categoryName;
+    
+    // 1. Update the expanded state immediately
+    if (isCurrentlyExpanded) {
       this.expandedCategory.set(null);
     } else {
       this.expandedCategory.set(categoryName);
+    }
+
+    // 2. Add a small delay to allow Angular and Bootstrap's collapse transition
+    // to complete and update the DOM before scrolling.
+    if (!isCurrentlyExpanded) {
+      setTimeout(() => {
+        // Find the accordion button element
+        const headerElement = document.getElementById('header-' + categoryName);
+        if (headerElement) {
+          // Find the actual button inside the header
+          const buttonElement = headerElement.querySelector('button');
+          if (buttonElement) {
+            // Scroll the button into view, aligning it to the top.
+            buttonElement.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' // Aligns the top of the element to the top of the viewport
+            });
+          }
+        }
+      },50); // A slight delay (e.g., 350ms) to ensure the collapse transition finishes
     }
   }
 
@@ -180,7 +207,7 @@ export class VehicleChecklistComponent implements OnInit {
     this.checklistService.submitChecklist(checklist).subscribe({
       next: (response) => {
         this.loading.set(false);
-        if (response.success) {
+        if (response) {
           this.toastService.success('تم حفظ قائمة الفحص بنجاح');
           this.router.navigate(['/user/driver-dashboard']);
         }

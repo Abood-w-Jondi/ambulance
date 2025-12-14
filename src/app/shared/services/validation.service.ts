@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
+  warnings?: string[];
 }
 
 @Injectable({
@@ -239,16 +240,19 @@ export class ValidationService {
   // Validate balance reduction
   validateBalanceReduction(amount: number, amountOwed: number): ValidationResult {
     const errors: string[] = [];
+    const warnings: string[] = [];
 
     if (!this.isPositiveNumber(amount)) {
       errors.push('المبلغ يجب أن يكون رقم موجب');
     } else if (amount > amountOwed) {
-      errors.push('المبلغ المطلوب أكبر من المبلغ المستحق');
+      const prepayAmount = amount - amountOwed;
+      warnings.push(`تحذير: هذا الدفع (${amount} ₪) يتجاوز المبلغ المستحق (${amountOwed} ₪). سيتم الدفع المسبق بمبلغ ${prepayAmount} ₪`);
     }
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
+      warnings
     };
   }
 }

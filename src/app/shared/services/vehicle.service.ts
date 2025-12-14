@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Vehicle, VehicleStatus } from '../models';
 import { PaginatedResponse } from './driver.service';
@@ -96,5 +97,38 @@ export class VehicleService {
    */
   getAllVehicleLocations(): Observable<VehicleLocation[]> {
     return this.http.get<VehicleLocation[]>(`${this.API_URL}/locations`);
+  }
+
+  /**
+   * Get current odometer reading for a vehicle
+   * Used for auto-populating odometer fields in forms
+   */
+  getCurrentOdometer(vehicleId: string): Observable<{currentOdometer: number}> {
+    return this.http.get<{success: boolean, data: {currentOdometer: number}}>(
+      `${this.API_URL}/${vehicleId}/current-odometer`
+    ).pipe(
+      map((response : any) => response)
+    );
+  }
+
+  /**
+   * Get all maintenance type odometer readings for a vehicle
+   * Shows last odometer and km since last for each maintenance type
+   */
+  getMaintenanceOdometers(vehicleId: string): Observable<{
+    currentOdometer: number;
+    maintenanceTypes: Array<{
+      maintenanceTypeId: string;
+      maintenanceTypeName: string;
+      lastOdometerAfter: number | null;
+      lastMaintenanceDate: string | null;
+      kmSinceLast: number | null;
+    }>;
+  }> {
+    return this.http.get<{success: boolean, data: any}>(
+      `${this.API_URL}/${vehicleId}/maintenance-odometers`
+    ).pipe(
+      map((response: any) => response)
+    );
   }
 }

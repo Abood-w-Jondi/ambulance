@@ -56,7 +56,7 @@ export class LocationService {
   searchLocations(searchTerm: string): Observable<LocationReference[]> {
     const httpParams = buildHttpParams({ searchTerm });
     return this.http.get<{success: boolean, data: LocationReference[]}>(`${this.API_URL}/search`, { params: httpParams })
-      .pipe(map(response => response.data || []));
+      .pipe(map((response:any) => response || []));
   }
 
   /**

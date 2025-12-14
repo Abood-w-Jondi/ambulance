@@ -90,12 +90,6 @@ export class MedicalFormsComponent implements OnInit {
   // Configuration for table columns
   columnConfigs: ColumnConfig[] = [
     {
-      key: 'tripId',
-      label: 'معرّف الرحلة',
-      type: 'text',
-      getValue: (form) => form.tripId
-    },
-    {
       key: 'patientName',
       label: 'اسم المريض',
       type: 'text',
@@ -106,12 +100,6 @@ export class MedicalFormsComponent implements OnInit {
       label: 'السائق',
       type: 'text',
       getValue: (form) => form.driverName || 'غير محدد'
-    },
-    {
-      key: 'completionPercentage',
-      label: 'نسبة الاكتمال',
-      type: 'progress',
-      getValue: (form) => form.completionPercentage
     },
     {
       key: 'isComplete',

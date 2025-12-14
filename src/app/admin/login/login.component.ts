@@ -43,11 +43,10 @@ export class LoginComponent {
     }).subscribe({
       next: () => {
         this.isLoading = false;
-          this.router.navigate(['/user/status-update']);
+          this.router.navigate(['/user/driver-dashboard']);
       },
       error: (error) => {
         this.isLoading = false;
-        console.error('Login error:', error);
         this.errorMessage = error.message || 'فشل تسجيل الدخول. الرجاء التحقق من البيانات والمحاولة مرة أخرى.';
       }
     });

@@ -1,189 +1,207 @@
-<div class="container-fluid py-4 bg-light-subtle">
-  <div class="row justify-content-center">
-    <div class="col-lg-10 col-xl-9">
-      <div class="card shadow-lg border-light custom-checklist-card">
+<div class="modern-form-container fade-in">
+
+  <div class="card card-modern header-card mb-4">
+    <div class="card-body p-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         
-        <div class="card-header bg-white border-bottom p-3">
-          <h4 class="mb-0 text-primary text-center fw-bold">
-            <i class="bi bi-gear-wide-connected me-2"></i>
-            قائمة فحص المعدات - <span class="text-secondary">{{ vehicleName() }}</span>
-          </h4>
+        <div>
+          <h1 class="form-title mb-1">
+            <span class="icon-circle me-2"><i class="fas fa-truck-moving"></i></span>
+            {{ vehicleName() }}
+          </h1>
+          <p class="text-muted mb-0 trip-id-text">
+            <i class="far fa-clipboard me-1"></i> قائمة الفحص الدورية للمركبة
+          </p>
         </div>
         
-        <div class="card-body p-4">
+        <div class="d-flex gap-2 order-first order-lg-last">
+           <button class="btn btn-light-secondary" (click)="cancel()" [disabled]="loading()">
+             <i class="fas fa-arrow-right-from-bracket me-2"></i> خروج
+           </button>
+        </div>
+      </div>
+
+      <div class="status-section rounded-3 p-3 border border-dashed">
+        <div class="row g-3 align-items-center">
           
-          <div class="progress-summary-v3 p-3 mb-4 rounded-3 border bg-white">
-            <h6 class="text-center mb-3 fw-bold text-dark">📊 ملخص حالة الفحص الإجمالي</h6>
-            <div class="row text-center align-items-center mb-3">
-              <div class="col-4">
-                <p class="text-success fw-bold mb-0 fs-5">{{ availableCount() }}</p>
-                <small class="text-success">متوفر</small>
-              </div>
-              <div class="col-4 border-start border-end">
-                <p class="text-danger fw-bold mb-0 fs-5">{{ unavailableCount() }}</p>
-                <small class="text-danger">غير متوفر</small>
-              </div>
-              <div class="col-4">
-                <p class="text-warning fw-bold mb-0 fs-5">{{ uncheckedCount() }}</p>
-                <small class="text-warning">لم يتم الفحص</small>
-              </div>
-            </div>
-            
-            <div class="progress mt-3" style="height: 10px;">
-              <div class="progress-bar bg-success"
-                   [style.width.%]="(availableCount() / items().length) * 100"
-                   role="progressbar">
-              </div>
-              <div class="progress-bar bg-danger"
-                   [style.width.%]="(unavailableCount() / items().length) * 100"
-                   role="progressbar">
-              </div>
+          <div class="col-12 col-md-6">
+            <div class="d-flex gap-2 justify-content-center justify-content-md-start flex-wrap">
+              <span class="badge rounded-pill bg-success-soft text-success p-2 px-3 fw-bold">
+                <i class="fas fa-check-circle me-1"></i> متوفر: {{ availableCount() }}
+              </span>
+              <span class="badge rounded-pill bg-danger-soft text-danger p-2 px-3 fw-bold">
+                <i class="fas fa-times-circle me-1"></i> غير متوفر: {{ unavailableCount() }}
+              </span>
+              <span class="badge rounded-pill bg-warning-soft text-warning-emphasis p-2 px-3 fw-bold">
+                <i class="fas fa-clock me-1"></i> متبقي: {{ uncheckedCount() }}
+              </span>
             </div>
           </div>
 
-          <div class="accordion accordion-flush" id="checklistAccordion">
-            @for (category of categories(); track category.name) {
-              <div class="accordion-item category-item-v3 mb-3 border rounded-3 shadow-sm">
-                <h2 class="accordion-header">
-                  <button
-                    class="accordion-button p-3 category-header-v3"
-                    [class.collapsed]="!isCategoryExpanded(category.name)"
-                    type="button"
-                    (click)="toggleCategory(category.name)">
-                    <div class="d-flex w-100 justify-content-between align-items-center">
-                        <strong class="category-title me-auto"><i class="bi bi-folder me-2"></i> {{ category.name }}</strong>
-                        <span class="badge bg-light text-secondary border fw-normal ms-2 py-2 px-3">
-                            {{ category.items.length }} عناصر
-                        </span>
-                    </div>
-                  </button>
-                </h2>
-                <div 
-                  class="accordion-collapse collapse"
-                  [class.show]="isCategoryExpanded(category.name)">
-                  <div class="accordion-body p-3 pt-0">
-                    
-                    @for (item of category.items; track item.order) {
-                      <div class="item-card-v3 p-3 mb-3 border rounded-3" 
-                           [ngClass]="{
-                               'border-success bg-light-green': item.isAvailable === true,
-                               'border-danger bg-light-red': item.isAvailable === false,
-                               'bg-light': item.isAvailable === null
-                           }">
-                        
-                        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
-                          <h6 class="mb-0 fw-bold item-name-v3">
-                            <span class="text-muted me-2">{{ item.order }}.</span> 
-                            {{ item.name }}
-                          </h6>
-                          
-                          <div class="btn-group btn-group-sm status-buttons-v3" role="group">
-                            <input
-                              type="radio"
-                              class="btn-check"
-                              [name]="'available_' + item.order"
-                              [id]="'available_yes_' + item.order"
-                              [checked]="item.isAvailable === true"
-                              (change)="updateItemAvailability(item.order - 1, true)">
-                            <label
-                              class="btn btn-outline-success"
-                              [for]="'available_yes_' + item.order">
-                              <i class="bi bi-check-circle me-1"></i> متوفر
-                            </label>
-
-                            <input
-                              type="radio"
-                              class="btn-check"
-                              [name]="'available_' + item.order"
-                              [id]="'available_no_' + item.order"
-                              [checked]="item.isAvailable === false"
-                              (change)="updateItemAvailability(item.order - 1, false)">
-                            <label
-                              class="btn btn-outline-danger"
-                              [for]="'available_no_' + item.order">
-                              <i class="bi bi-x-circle me-1"></i> غير متوفر
-                            </label>
-                          </div>
-                        </div>
-
-                        <div class="row g-2">
-                            <div class="col-12 col-sm-3">
-                                <label class="form-label d-block mb-1 text-muted small">الكمية:</label>
-                                <input
-                                  type="number"
-                                  class="form-control form-control-sm text-center"
-                                  [value]="item.quantity || ''"
-                                  (input)="updateItemQuantity(item.order - 1, $any($event.target).value)"
-                                  placeholder="0"
-                                  min="0">
-                            </div>
-                            <div class="col-12 col-sm-9">
-                                <label class="form-label d-block mb-1 text-muted small">الملاحظات (للتفاصيل/العيوب):</label>
-                                <input
-                                  type="text"
-                                  class="form-control form-control-sm"
-                                  [value]="item.notes"
-                                  (input)="updateItemNotes(item.order - 1, $any($event.target).value)"
-                                  placeholder="سجل ملاحظاتك هنا...">
-                            </div>
-                        </div>
-                        
-                      </div>
-                    }
-                    </div>
-                </div>
+          <div class="col-12 col-md-6">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold text-dark fs-sm">نسبة الفحص المكتملة</span>
+                <span class="text-muted small">{{ items().length }} عنصر</span>
               </div>
-            }
-          </div>
-
-          <div class="mt-4 p-3 bg-white rounded-3 border shadow-sm">
-            <label for="generalNotes" class="form-label mb-2">
-              <i class="bi bi-journal-text me-1 text-primary"></i>
-              <strong>ملاحظات عامة حول المركبة/الإرسالية (اختياري)</strong>
-            </label>
-            <textarea
-              id="generalNotes"
-              class="form-control"
-              rows="4"
-              [value]="generalNotes()"
-              (input)="generalNotes.set($any($event.target).value)"
-              placeholder="سجل هنا أي ملاحظات عامة مهمة أو تقارير شاملة..."></textarea>
-          </div>
-
-          <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-            <button
-              type="button"
-              class="btn btn-outline-secondary btn-lg"
-              (click)="cancel()"
-              [disabled]="loading()">
-              <i class="bi bi-arrow-left me-1"></i>
-              إلغاء والعودة
-            </button>
-            <button
-              type="button"
-              class="btn btn-success btn-lg save-button-v3"
-              (click)="submitChecklist()"
-              [disabled]="!allItemsChecked() || loading()">
-              @if (loading()) {
-                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                جاري الحفظ والإنهاء...
-              } @else {
-                <i class="bi bi-save me-1"></i>
-                حفظ قائمة الفحص
-              }
-            </button>
-          </div>
-
-          @if (!allItemsChecked()) {
-            <div class="alert alert-danger mt-3 mb-0 d-flex align-items-center" role="alert">
-              <i class="bi bi-x-octagon-fill me-2 fs-5"></i>
-              <div>
-                **تنبيه:** يجب فحص جميع العناصر (<span class="fw-bold">{{ uncheckedCount() }}</span> عنصر متبقي) قبل التمكن من حفظ القائمة.
+              <div class="progress custom-progress">
+                <div class="progress-bar bg-success"
+                     [style.width.%]="(availableCount() / items().length) * 100"
+                     role="progressbar"></div>
+                <div class="progress-bar bg-danger"
+                     [style.width.%]="(unavailableCount() / items().length) * 100"
+                     role="progressbar"></div>
               </div>
-            </div>
-          }
+          </div>
+
         </div>
       </div>
     </div>
   </div>
+
+  <div class="accordion custom-accordion">
+    @for (category of categories(); track category.name) {
+      <div class="accordion-item card-modern mb-3 shadow-none">
+        <h2 class="accordion-header" [id]="'header-' + category.name">
+          <button class="accordion-button"
+                  [class.collapsed]="!isCategoryExpanded(category.name)"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  [attr.data-bs-target]="'#collapse-' + category.name"
+                  aria-expanded="false"
+                  [attr.aria-controls]="'collapse-' + category.name"
+                  (click)="toggleCategory(category.name)">
+            <div class="d-flex align-items-center w-100">
+              <span class="section-icon-wrapper me-3">
+                <i class="fas fa-folder"></i>
+              </span>
+              <span class="fw-bold me-auto fs-5">{{ category.name }}</span>
+              
+              <span class="badge bg-light text-secondary border fw-normal ms-3 p-2 px-3">
+                <i class="fas fa-list-ul me-1"></i> {{ category.items.length }} بند
+              </span>
+            </div>
+          </button>
+        </h2>
+
+        <div [id]="'collapse-' + category.name"
+              class="accordion-collapse collapse"
+              [class.show]="isCategoryExpanded(category.name)"
+              [attr.aria-labelledby]="'header-' + category.name">
+          <div class="accordion-body">
+            
+            @for (item of category.items; track item.order) {
+              <div class="modern-item-card p-4 mb-3 rounded-3 border transition-all"
+                   [ngClass]="{
+                      'bg-success-soft border-success': item.isAvailable === true,
+                      'bg-danger-soft border-danger': item.isAvailable === false,
+                      'bg-light border-light-subtle': item.isAvailable === null
+                    }">
+                
+                <div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
+                  <h5 class="mb-0 fw-bold text-dark me-3">
+                    <span class="text-secondary me-2 small">{{ item.order }}.</span> 
+                    {{ item.name }}
+                  </h5>
+                  
+                  <div class="custom-toggle-group flex-shrink-0">
+                    <input type="radio" class="toggle-check"
+                           [name]="'available_' + item.order"
+                           [id]="'available_yes_' + item.order"
+                           [checked]="item.isAvailable === true"
+                           (change)="updateItemAvailability(item.order - 1, true)">
+                    <label class="toggle-label toggle-success" [for]="'available_yes_' + item.order">
+                        <i class="fas fa-thumbs-up me-1"></i> متوفر
+                    </label>
+
+                    <input type="radio" class="toggle-check"
+                           [name]="'available_' + item.order"
+                           [id]="'available_no_' + item.order"
+                           [checked]="item.isAvailable === false"
+                           (change)="updateItemAvailability(item.order - 1, false)">
+                    <label class="toggle-label toggle-danger" [for]="'available_no_' + item.order">
+                        <i class="fas fa-thumbs-down me-1"></i> غير متوفر
+                    </label>
+                  </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-sm-3">
+                      <div class="form-group-modern">
+                        <label class="form-label small mb-1">الكمية/القيمة</label>
+                        <input type="number"
+                               class="form-control form-control-sm text-center bg-white border-0 shadow-sm"
+                               [value]="item.quantity || ''"
+                               (input)="updateItemQuantity(item.order - 1, $any($event.target).value)"
+                               placeholder="0" min="0">
+                      </div>
+                    </div>
+                    <div class="col-12 col-sm-9">
+                      <div class="form-group-modern">
+                        <label class="form-label small mb-1">الملاحظات (اختياري)</label>
+                        <textarea
+                               class="form-control form-control-sm bg-white border-0 shadow-sm custom-textarea"
+                               rows="4"
+                               [value]="item.notes"
+                               (input)="updateItemNotes(item.order - 1, $any($event.target).value)"
+                               placeholder="اكتب ملاحظاتك..."></textarea>
+                      </div>
+                    </div>
+                </div>
+              </div>
+            }
+
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="card card-modern mb-4 mt-4">
+      <div class="card-body p-4">
+        <label for="generalNotes" class="form-label d-flex align-items-center mb-3 fw-bold">
+             <span class="icon-circle me-3" style="width: 38px; height: 38px; font-size: 1.1rem; background-color: #f0f3f6; color: #475569;">
+                <i class="fas fa-pencil-alt"></i>
+             </span>
+             الملاحظات العامة
+        </label>
+        <textarea id="generalNotes"
+                  class="form-control custom-textarea"
+                  rows="4"
+                  [value]="generalNotes()"
+                  (input)="generalNotes.set($any($event.target).value)"
+                  placeholder="سجل هنا أي ملاحظات عامة مهمة..."></textarea>
+      </div>
+  </div>
+
+  <div class="d-flex justify-content-start flex-row-reverse gap-3 mt-4 pt-3 border-top">
+    <button type="button"
+            class="btn btn-primary btn-lg px-5 shadow-lg"
+            (click)="submitChecklist()"
+            [disabled]="!allItemsChecked() || loading()">
+      @if (loading()) {
+        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+        جاري الحفظ...
+      } @else {
+        <i class="fas fa-save me-2"></i>
+        حفظ القائمة
+      }
+    </button>
+    
+    <button type="button"
+            class="btn btn-light-secondary btn-lg"
+            (click)="cancel()"
+            [disabled]="loading()">
+      إلغاء
+    </button>
+  </div>
+
+  @if (!allItemsChecked()) {
+    <div class="alert alert-danger mt-4 border-0 shadow-sm d-flex align-items-center rounded-3 alert-custom" role="alert">
+      <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+      <div>
+        <strong>تنبيه:</strong> يرجى إكمال جميع العناصر المتبقية ({{ uncheckedCount() }}) قبل الحفظ.
+      </div>
+    </div>
+  }
+
 </div>

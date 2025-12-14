@@ -10,7 +10,7 @@ import { PaginationComponent } from '../../shared/pagination/pagination.componen
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 import { DRIVER_STATUS } from '../../shared/constants/status.constants';
-import { Driver, DriverFilterStatus } from '../../shared/models';
+import { Driver, DriverFilterStatus, EducationLevel } from '../../shared/models';
 
 type FilterStatus = DriverFilterStatus;
 
@@ -101,6 +101,10 @@ export class DriversListComponent implements OnInit {
         amountOwed: number;
         newPassword: string;
         isActive: boolean;
+        jobTitle: string;
+        educationLevel: EducationLevel | '';
+        phoneNumber: string;
+        profileImageUrl: string;
     } = {
         arabicName: '',
         name: '',
@@ -110,8 +114,20 @@ export class DriversListComponent implements OnInit {
         tripsToday: 0,
         amountOwed: 0,
         newPassword: '',
-        isActive: true
+        isActive: true,
+        jobTitle: '',
+        educationLevel: '',
+        phoneNumber: '',
+        profileImageUrl: ''
     };
+
+    // Education level options for dropdown
+    educationLevelOptions: { value: EducationLevel; label: string }[] = [
+        { value: 'EMI', label: 'EMI - طوارئ طبية متوسطة' },
+        { value: 'B', label: 'B - أساسي' },
+        { value: 'I', label: 'I - متوسط' },
+        { value: 'P', label: 'P - مسعف' }
+    ];
 
     reductionAmounts: { [key: string]: number } = {};
 
@@ -205,7 +221,11 @@ export class DriversListComponent implements OnInit {
             tripsToday: driver.tripsToday,
             amountOwed: driver.amountOwed,
             newPassword: '',
-            isActive: driver.isActive
+            isActive: driver.isActive,
+            jobTitle: driver.jobTitle || '',
+            educationLevel: driver.educationLevel || '',
+            phoneNumber: driver.phoneNumber || '',
+            profileImageUrl: driver.profileImageUrl || ''
         };
         this.isEditModalOpen.set(true);
     }
@@ -222,7 +242,11 @@ export class DriversListComponent implements OnInit {
             tripsToday: 0,
             amountOwed: 0,
             newPassword: '',
-            isActive: true
+            isActive: true,
+            jobTitle: '',
+            educationLevel: '',
+            phoneNumber: '',
+            profileImageUrl: ''
         };
     }
 
@@ -248,7 +272,11 @@ export class DriversListComponent implements OnInit {
             arabicStatus: this.editDriver.arabicStatus,
             tripsToday: this.editDriver.tripsToday,
             amountOwed: this.editDriver.amountOwed,
-            isActive: this.editDriver.isActive
+            isActive: this.editDriver.isActive,
+            jobTitle: this.editDriver.jobTitle || undefined,
+            educationLevel: this.editDriver.educationLevel || undefined,
+            phoneNumber: this.editDriver.phoneNumber || undefined,
+            profileImageUrl: this.editDriver.profileImageUrl || undefined
         };
 
         if (this.editDriver.newPassword && this.editDriver.newPassword.trim() !== '') {
@@ -358,29 +386,55 @@ export class DriversListComponent implements OnInit {
         this.loadData();
     }
 
-    reduceBalance(driver: Driver, amount: number) {
-        // Use validation service
-        const validation = this.validationService.validateBalanceReduction(amount, driver.amountOwed);
+reduceBalance(driver: Driver, amount: number) {
+    // Use validation service
+    const validation = this.validationService.validateBalanceReduction(amount, driver.amountOwed);
 
-        if (!validation.valid) {
-            validation.errors.forEach(error => {
-                this.toastService.error(error);
-            });
-            return;
-        }
+    if (!validation.valid) {
+        validation.errors.forEach(error => {
+            this.toastService.error(error);
+        });
+        return;
+    }
 
-        this.driverService.reduceBalance(driver.id, amount).subscribe({
-            next: () => {
-                delete this.reductionAmounts[driver.id];
-                this.toastService.info(`تم خصم ₪${amount} من رصيد السائق: ${driver.arabicName}`, 3000);
-                this.loadData();
-            },
-            error: (error) => {
-                console.error('Error reducing balance:', error);
-                this.toastService.error('فشلت عملية خصم الرصيد');
-            }
+    // Show warnings for prepayment scenarios
+    if (validation.warnings && validation.warnings.length > 0) {
+        validation.warnings.forEach(warning => {
+            this.toastService.warning(warning, 5000);  // 5 second display
         });
     }
+
+    // Additional warning for prepayment when balance is already 0
+    if (driver.amountOwed === 0) {
+        this.toastService.warning(`تنبيه: سيتم الدفع المسبق للسائق ${driver.arabicName} بمبلغ ₪${amount}`, 5000);
+    }
+
+    this.driverService.reduceBalance(driver.id, amount).subscribe({
+        next: () => {
+            delete this.reductionAmounts[driver.id];
+            
+            let message: string;
+            if (driver.amountOwed === 0) {
+                // Pure prepayment
+                message = `تم الدفع المسبق للسائق: ${driver.arabicName} (₪${amount})`;
+            } else if (amount > driver.amountOwed) {
+                // Partial payment + prepayment
+                const prepayAmount = amount - driver.amountOwed;
+                message = `تم تصفية الحساب والدفع المسبق للسائق: ${driver.arabicName} (دفع مسبق: ₪${prepayAmount.toFixed(2)})`;
+            } else {
+                // Normal reduction
+                message = `تم خصم ₪${amount} من رصيد السائق: ${driver.arabicName}`;
+            }
+            
+            this.toastService.success(message, 3000);
+            this.loadData();
+        },
+        error: (error) => {
+            console.error('Error reducing balance:', error);
+            this.toastService.error('فشلت عملية خصم الرصيد');
+        }
+    });
+}
 
     toggleMobileFilters() {
         this.showFiltersOnMobile.update(val => !val);
@@ -420,5 +474,36 @@ export class DriversListComponent implements OnInit {
             this.editDriver.arabicName &&
             (this.editDriver.username || this.editDriver.email)
         );
+    }
+
+    onProfileImageSelected(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                this.toastService.error('الرجاء اختيار ملف صورة صحيح');
+                return;
+            }
+
+            // Validate file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                this.toastService.error('حجم الصورة يجب أن لا يتجاوز 2 ميجابايت');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e: ProgressEvent<FileReader>) => {
+                if (e.target?.result) {
+                    this.editDriver.profileImageUrl = e.target.result as string;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    removeProfileImage(): void {
+        this.editDriver.profileImageUrl = '';
     }
 }

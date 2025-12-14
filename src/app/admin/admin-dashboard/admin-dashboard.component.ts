@@ -63,18 +63,6 @@ export class AdminDashboardComponent implements OnInit {
     this.router.navigate(['/user/driver-dashboard']);
   }
 
-  logout(): void {
-    const confirmed = confirm('هل أنت متأكد من تسجيل الخروج؟');
-    if (!confirmed) return;
-
-    this.authService.logout().subscribe({
-      next: () => this.toastService.success('تم تسجيل الخروج بنجاح'),
-      error: (err) => {
-        console.error('Logout failed:', err);
-        this.toastService.error('فشل تسجيل الخروج');
-      }
-    });
-  }
 
   getRecentTripIcon(status: string): string {
     switch (status) {

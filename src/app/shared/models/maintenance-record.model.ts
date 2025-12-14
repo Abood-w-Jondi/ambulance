@@ -27,6 +27,11 @@ export interface MaintenanceRecord {
     // Odometer Information
     odometerBefore: number;    // Odometer reading before service
     odometerAfter: number;     // Odometer reading after service
+    kmSinceMaintenance?: number; // Kilometers driven since this maintenance (calculated from current odometer)
+
+    // Driver Information
+    driverId?: string;         // Driver ID (optional, falls back to vehicle's current driver)
+    driverName?: string;       // Driver name (populated from join)
 
     // Documentation
     notes: string;             // General notes

@@ -13,12 +13,13 @@ import { AddFuelModalComponent } from '../add-fuel-modal/add-fuel-modal.componen
 import { ChecklistReminderComponent } from '../../shared/checklist-reminder/checklist-reminder.component';
 import { Driver } from '../../shared/models';
 import { Subscription } from 'rxjs';
+import { ConfirmationModalComponent , ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 import * as L from 'leaflet';
 
 @Component({
   selector: 'app-driver-dashboard',
   standalone: true,
-  imports: [AddMaintenanceModalComponent, AddFuelModalComponent, ChecklistReminderComponent, CommonModule],
+  imports: [AddMaintenanceModalComponent, AddFuelModalComponent, ChecklistReminderComponent, CommonModule , ConfirmationModalComponent],
   templateUrl: './driver-dashboard.component.html',
   styleUrls: ['./driver-dashboard.component.css']
 })
@@ -47,6 +48,17 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
   // Modals
   showFuelModal: boolean = false;
   showMaintenanceModal: boolean = false;
+
+  // Confirmation modal
+  showEndShiftConfirmation = signal<boolean>(false);
+ endShiftModalConfig = signal<ConfirmationModalConfig>({
+  type: 'warning',
+  title: 'إنهاء الدوام',
+  message: 'هل أنت متأكد من إنهاء الدوام؟ سيتم تسجيل خروجك وتحديث حالتك إلى "غير متصل".',
+  highlightedText: '"غير متصل"',
+  confirmButtonText: 'نعم، إنهاء الدوام',
+  cancelButtonText: 'إلغاء'
+ });
 
   // Checklist reminder
   showChecklistReminder = signal(false);
@@ -267,27 +279,35 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   endShift(): void {
-    const confirmed = confirm('هل أنت متأكد من إنهاء الدوام؟ سيتم تسجيل خروجك وتحديث حالتك إلى "غير متصل".');
+  this.showEndShiftConfirmation.set(true);
+ }
 
-    if (!confirmed) return;
+// 💡 New method called when the user confirms the action
+ confirmEndShift(): void {
+  this.showEndShiftConfirmation.set(false); // Close the modal
+  
+  // Call logout API which will:
+  // 1. Update driver status to غير متصل
+  // 2. Log the action in audit logs
+  // 3. Clear authentication tokens
+  // 4. Redirect to login
+  this.authService.logout().subscribe({
+   next: () => {
+    this.locationTrackingService.stopTracking();
+    this.toastService.success('تم إنهاء الدوام بنجاح');
+    // Router will handle redirect to login
+   },
+   error: (err) => {
+    console.error('Logout failed:', err);
+    this.toastService.error('فشل إنهاء الدوام');
+   }
+  });
+ }
 
-    // Call logout API which will:
-    // 1. Update driver status to غير متصل
-    // 2. Log the action in audit logs
-    // 3. Clear authentication tokens
-    // 4. Redirect to login
-    this.authService.logout().subscribe({
-      next: () => {
-        this.locationTrackingService.stopTracking();
-        this.toastService.success('تم إنهاء الدوام بنجاح');
-        // Router will handle redirect to login
-      },
-      error: (err) => {
-        console.error('Logout failed:', err);
-        this.toastService.error('فشل إنهاء الدوام');
-      }
-    });
-  }
+ // 💡 New method called when the user cancels the action
+ cancelEndShift(): void {
+  this.showEndShiftConfirmation.set(false); // Close the modal
+ }
 
   openFuelModal(): void {
     this.showFuelModal = true;
@@ -339,6 +359,11 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
 
   // Checklist reminder methods
   checkReminderStatus(): void {
+    // Skip checklist reminder for admins (they don't have driver records)
+    if (this.authService.isAdmin()) {
+      return;
+    }
+
     // Get vehicle ID from cookie
     const vehicleId = this.vehicleCookieService.getSelectedVehicleId();
 

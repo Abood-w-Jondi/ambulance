@@ -63,12 +63,28 @@ export class MaintenanceService {
 
   /**
    * Get last odometer reading for a specific vehicle and maintenance type
-   * Used for auto-populating odometerBefore field
+   * Also returns km since last maintenance
    */
-  getLastOdometerReading(vehicleId: string, maintenanceTypeId: string): Observable<{success: boolean, data: {lastOdometerAfter: number | null}}> {
+  getLastOdometerReading(vehicleId: string, maintenanceTypeId: string): Observable<{
+    success: boolean,
+    data: {
+      currentOdometer: number;
+      lastOdometerAfter: number | null;
+      lastMaintenanceDate: string | null;
+      kmSinceLast: number | null;
+    }
+  }> {
     const httpParams = buildHttpParams({ vehicleId, maintenanceTypeId });
 
-    return this.http.get<{success: boolean, data: {lastOdometerAfter: number | null}}>(
+    return this.http.get<{
+      success: boolean,
+      data: {
+        currentOdometer: number;
+        lastOdometerAfter: number | null;
+        lastMaintenanceDate: string | null;
+        kmSinceLast: number | null;
+      }
+    }>(
       `${this.API_URL}/last-odometer`,
       { params: httpParams }
     );

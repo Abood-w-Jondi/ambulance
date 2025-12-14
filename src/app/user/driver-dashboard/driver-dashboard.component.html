@@ -1,16 +1,4 @@
 <div class="container-fluid py-4" dir="rtl">
-  <!-- Admin Alert - Show only for admins -->
-  <div *ngIf="isAdmin()" class="alert alert-info d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <i class="fas fa-user-shield me-2"></i>
-      <strong>أنت مسجل كمسؤول</strong> - تعرض حالياً واجهة السائق
-    </div>
-    <button class="btn btn-sm btn-primary" (click)="returnToAdmin()">
-      <i class="fas fa-arrow-left me-2"></i>
-      العودة إلى لوحة الإدارة
-    </button>
-  </div>
-
   <!-- حالة السائق -->
   <div class="row mb-4">
     <div class="col-12">
@@ -42,7 +30,7 @@
   <div class="row mb-4 g-3">
     <div class="col-6 col-md-3">
       <div class="card border shadow-sm">
-        <div class="card-body">
+        <div class="card-body money">
           <p class="text-muted mb-2">الرحلات المكتملة</p>
           <h2 class="display-5 fw-bold mb-0">{{ tripsCompleted() }}</h2>
         </div>
@@ -50,7 +38,7 @@
     </div>
     <div class="col-6 col-md-3">
       <div class="card border shadow-sm">
-        <div class="card-body">
+        <div class="card-body money">
           <p class="text-muted mb-2">أرباح اليوم</p>
           <h2 class="display-5 fw-bold mb-0">{{ totalEarnings() | number:'1.0-2' }} ₪</h2>
         </div>
@@ -58,7 +46,7 @@
     </div>
     <div class="col-6 col-md-3">
       <div class="card border shadow-sm" [class.border-warning]="pendingLoansCount() > 0">
-        <div class="card-body">
+        <div class="card-body money">
           <p class="text-muted mb-2">ديون غير محصّلة</p>
           <h2 class="display-5 fw-bold mb-0" [class.text-warning]="pendingLoansCount() > 0">{{ pendingLoansCount() }}</h2>
         </div>
@@ -66,7 +54,7 @@
     </div>
     <div class="col-6 col-md-3">
       <div class="card border shadow-sm" [class.border-warning]="pendingLoansAmount() > 0">
-        <div class="card-body">
+        <div class="card-body money">
           <p class="text-muted mb-2">إجمالي الديون</p>
           <h2 class="display-5 fw-bold mb-0" [class.text-warning]="pendingLoansAmount() > 0">{{ pendingLoansAmount() | number:'1.0-2' }} ₪</h2>
         </div>
@@ -176,6 +164,14 @@
   (close)="closeFuelModal()"
   (fuelAdded)="onFuelAdded()">
 </app-add-fuel-modal>
+
+<!-- End Shift Confirmation Modal -->
+<app-confirmation-modal
+ [isOpen]="showEndShiftConfirmation()"
+ [config]="endShiftModalConfig()"
+ (confirmed)="confirmEndShift()"
+ (cancelled)="cancelEndShift()">
+</app-confirmation-modal>
 
 <!-- Maintenance Modal -->
 <app-add-maintenance-modal

@@ -57,6 +57,7 @@ export interface Trip {
     totalPrice: number;        // Total amount supposed to pay
     payedPrice: number;        // Amount already paid by patient
     paramedicShare: number;    // Paramedic's share (deducted first before splitting remaining)
+    paramedicPaidAmount?: number; // Amount actually paid to paramedic on spot
     driverShare: number;       // Driver's share
     eqShare: number;           // Equipment/Company share (DEPRECATED - split into companyShare and ownerShare)
     companyShare: number;      // Company (الشركة) share
@@ -68,6 +69,9 @@ export interface Trip {
     loanCollected: boolean;    // True when driver has collected the loan from patient
     loanCollectedAt?: Date;    // When loan was collected
     loanCollectionNotes?: string; // Notes about loan collection
+
+    // General Trip Notes
+    tripNotes?: string;        // General notes about the trip (editable by admin and driver when trip is open)
 
     // Vehicle Information (assigned by admin, name populated from database join)
     vehicleId?: string;        // Vehicle assigned to the trip (by admin)
