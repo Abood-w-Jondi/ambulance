@@ -117,10 +117,6 @@ export class ValidationService {
       errors.push('رقم الهاتف غير صالح (يجب أن يبدأ بـ 05)');
     }
 
-    if (driver.amountOwed !== undefined && !this.isNonNegativeNumber(driver.amountOwed)) {
-      errors.push('المبلغ المستحق يجب أن يكون رقم موجب أو صفر');
-    }
-
     if (driver.tripsToday !== undefined && !this.isNonNegativeNumber(driver.tripsToday)) {
       errors.push('عدد الرحلات يجب أن يكون رقم موجب أو صفر');
     }
@@ -241,12 +237,14 @@ export class ValidationService {
   validateBalanceReduction(amount: number, amountOwed: number): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
+    if (amount > amountOwed) {
+      if(amountOwed <= 0) {
 
-    if (!this.isPositiveNumber(amount)) {
-      errors.push('المبلغ يجب أن يكون رقم موجب');
-    } else if (amount > amountOwed) {
-      const prepayAmount = amount - amountOwed;
-      warnings.push(`تحذير: هذا الدفع (${amount} ₪) يتجاوز المبلغ المستحق (${amountOwed} ₪). سيتم الدفع المسبق بمبلغ ${prepayAmount} ₪`);
+      }
+      else{
+        const debtAmount = amount - amountOwed;
+        warnings.push(`تحذير: هذا الدفع (${amount} ₪) يتجاوز المبلغ المستحق (${amountOwed} ₪). سيتم تسجيل دين بمبلغ ${debtAmount} ₪`);
+      }
     }
 
     return {

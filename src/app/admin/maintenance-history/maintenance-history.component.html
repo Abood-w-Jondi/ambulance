@@ -539,3 +539,10 @@
         <i class="fa-solid fa-plus fa-lg"></i>
     </button>
 </div>
+
+<app-confirmation-modal 
+  [isOpen]="isDeleteRecordModalOpen()"
+  [config]="deleteRecordModalConfig()"
+  (confirmed)="handleDeleteRecordConfirmation(true)"
+  (cancelled)="handleDeleteRecordConfirmation(false)">  
+</app-confirmation-modal>

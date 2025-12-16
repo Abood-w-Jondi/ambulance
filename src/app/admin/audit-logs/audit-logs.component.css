@@ -25,3 +25,24 @@ pre {
 .table > tbody > tr > td {
   vertical-align: middle;
 }
+.badge{
+  background-color: cornflowerblue ;
+}
+.bg-sever{
+  background-color: blueviolet;
+}
+.TA-bg{
+  background-color: darkgreen;
+}
+.TC-bg{
+  background-color: darkred;
+}
+.cl-bg{
+  background-color: rgb(255, 105, 125);
+}
+.UT-bg{
+  background-color: rgb(208, 226, 43);  
+}
+.MA-bg{
+  background-color: rgb(37, 66, 182);  
+}

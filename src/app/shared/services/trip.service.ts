@@ -196,8 +196,8 @@ getPatientLoans(driverId: string, filters?: PatientLoanFilters): Observable<Pati
   /**
    * Get all trips for a vehicle (both closed and unclosed)
    */
-  getVehicleTrips(vehicleId: string): Observable<Trip[]> {
-    const httpParams = buildHttpParams({ vehicleId, limit: '1000', sortOrder: 'DESC' });
+  getVehicleTrips(vehicleId: string , pending : boolean= false): Observable<Trip[]> {
+    const httpParams = pending ? buildHttpParams({ vehicleId, limit: '1000', sortOrder: 'DESC', pendingOnly: pending }) : buildHttpParams({ vehicleId, limit: '1000', sortOrder: 'DESC' });
     return this.http.get<PaginatedResponse<Trip>>(this.API_URL, {
       params: httpParams
     }).pipe(

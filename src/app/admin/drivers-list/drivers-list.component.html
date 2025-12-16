@@ -373,7 +373,7 @@
                                 (ngModelChange)="maxOwed.set($event)" style="direction: ltr;">
                         </div>
 
-                        <button class="btn btn-primary-custom w-100 mt-4" (click)="toggleMobileFilters()">
+                        <button class="btn btn-primary-custom w-100 mt-4" (click)="applyFiltersAndToggleMobile()">
                             عرض النتائج
                         </button>
 
@@ -426,7 +426,7 @@
                                     <div class="d-flex align-items-center gap-3 mb-4">
                                         <img class="rounded-circle object-fit-cover flex-shrink-0"
                                             style="width: 56px; height: 56px;" [alt]="driver.imageAlt"
-                                            [src]="driver.imageUrl" />
+                                            [src]="driver.imageUrl !== '/assets/default-avatar.png'? driver.imageUrl : 'person-placeholder.jpg'" />
                                         <div class="flex-grow-1">
                                             <p class="h6 fw-bold m-0 text-dark">{{ driver.arabicName }}</p>
                                             <div class="d-flex align-items-center gap-2 mt-1">
@@ -470,7 +470,7 @@
                                         <button
                                             class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
                                             (click)="reduceBalance(driver, reductionAmounts[driver.id])"
-                                            [disabled]="!reductionAmounts[driver.id] || reductionAmounts[driver.id] <= 0">
+                                            [disabled]="!reductionAmounts[driver.id]">
                                             {{ driver.amountOwed > 0 ? 'تخفيض الرصيد المحدد' : 'دفع مسبق' }}
                                         </button>
 

@@ -50,13 +50,6 @@ export class ParamedicsListComponent implements OnInit {
         });
     }
 
-    queryFilterValue = signal<string | null>(null);
-
-    searchTermValue: string = '';
-    filterStatusValue: FilterStatus = 'all';
-    minOwedValue: number | null = null;
-    maxOwedValue: number | null = null;
-
     showFiltersOnMobile = signal(false);
     searchTerm = signal('');
     filterStatus = signal<FilterStatus>('all');
@@ -363,9 +356,7 @@ export class ParamedicsListComponent implements OnInit {
     ngOnInit(): void {
         this.route.queryParams.subscribe(params => {
             if (params['filterValue']) {
-                this.queryFilterValue.set(params['filterValue']);
-                this.searchTermValue = this.queryFilterValue() || '';
-                this.searchTerm.set(this.searchTermValue);
+                this.searchTerm.set(params['filterValue']);
             }
         });
         this.loadData();
@@ -381,7 +372,7 @@ export class ParamedicsListComponent implements OnInit {
             return;
         }
 
-        // Show warnings (prepayment notification)
+        // Show warnings for overpayment scenarios
         if (validation.warnings && validation.warnings.length > 0) {
             validation.warnings.forEach(warning => {
                 this.toastService.warning(warning, 5000);  // 5 second display
@@ -391,10 +382,18 @@ export class ParamedicsListComponent implements OnInit {
         this.paramedicService.reduceBalance(paramedic.id, amount).subscribe({
             next: () => {
                 delete this.reductionAmounts[paramedic.id];
-                const message = amount > paramedic.amountOwed
-                    ? `تم الدفع المسبق للمسعف: ${paramedic.arabicName} (₪${amount})`
-                    : `تم خصم ₪${amount} من رصيد المسعف: ${paramedic.arabicName}`;
-                this.toastService.info(message, 3000);
+
+                let message: string;
+                if (amount > paramedic.amountOwed) {
+                    // Overpayment - creates debt (they owe company)
+                    const debtAmount = amount - paramedic.amountOwed;
+                    message = `تم الدفع وتسجيل دين للمسعف: ${paramedic.arabicName} (دين: ₪${debtAmount.toFixed(2)})`;
+                } else {
+                    // Normal reduction
+                    message = `تم خصم ₪${amount} من رصيد المسعف: ${paramedic.arabicName}`;
+                }
+
+                this.toastService.success(message, 3000);
                 this.loadData();
             },
             error: (error) => {
@@ -413,11 +412,6 @@ export class ParamedicsListComponent implements OnInit {
         this.filterStatus.set('all');
         this.minOwed.set(null);
         this.maxOwed.set(null);
-
-        this.searchTermValue = '';
-        this.filterStatusValue = 'all';
-        this.minOwedValue = null;
-        this.maxOwedValue = null;
 
         this.showFiltersOnMobile.set(false);
         this.toastService.info('تمت إعادة تعيين الفلاتر', 3000);

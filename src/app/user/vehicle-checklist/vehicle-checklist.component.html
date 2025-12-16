@@ -205,3 +205,10 @@
   }
 
 </div>
+
+<app-confirmation-modal 
+  [isOpen]="isCancelModalOpen()"
+  [config]="cancelModalConfig"
+  (confirmed)="handleCancelConfirmation(true)"
+  (cancelled)="handleCancelConfirmation(false)">
+</app-confirmation-modal>

@@ -520,7 +520,7 @@ export class TripsComponent implements OnInit {
         if (vehicle) {
             this.tripForm.vehicleId = vehicleId;
             this.tripForm.vehicleName = vehicle.vehicleName;
-
+            /*
             // Auto-populate start odometer from vehicle's current_odometer
             this.vehicleService.getCurrentOdometer(vehicleId).subscribe({
                 next: (response) => {
@@ -528,6 +528,7 @@ export class TripsComponent implements OnInit {
                 },
                 error: (error) => console.error('Failed to load current odometer:', error)
             });
+            */
         }
     }
 

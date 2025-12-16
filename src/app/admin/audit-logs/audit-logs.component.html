@@ -25,52 +25,35 @@
         </div>
 
         <!-- Entity Type -->
-        <div class="col-md-2">
-          <label class="form-label">نوع الكيان</label>
-          <select
-            class="form-select"
-            [(ngModel)]="filters.entityType"
-            (change)="applyFilters()">
-            <option value="">الكل</option>
-            <option value="driver">سائق</option>
-            <option value="vehicle">مركبة</option>
-            <option value="trip">رحلة</option>
-            <option value="paramedic">مسعف</option>
-          </select>
-        </div>
+       <div class="col-md-2">
+  <label class="form-label">نوع الكيان</label>
+  <select
+    class="form-select"
+    [(ngModel)]="filters.entityType"
+    (change)="applyFilters()"
+  >
+    <option value="">الكل</option>
+    <option *ngFor="let key of entityTypeKeys" [value]="key">
+      {{ entityTypeLabels[key] }}
+    </option>
+  </select>
+</div>
 
         <!-- Action Type -->
         <div class="col-md-2">
-          <label class="form-label">نوع العملية</label>
-          <select
-            class="form-select"
-            [(ngModel)]="filters.actionType"
-            (change)="applyFilters()">
-            <option value="">الكل</option>
-            <option value="driver_login">تسجيل دخول</option>
-            <option value="driver_logout">تسجيل خروج</option>
-            <option value="status_change">تغيير حالة</option>
-            <option value="create">إنشاء</option>
-            <option value="update">تعديل</option>
-            <option value="delete">حذف</option>
-          </select>
-        </div>
+  <label class="form-label">نوع العملية</label>
+  <select
+    class="form-select"
+    [(ngModel)]="filters.actionType"
+    (change)="applyFilters()"
+  >
+    <option value="">الكل</option>
+    <option *ngFor="let key of actionTypeKeys" [value]="key">
+      {{ actionTypeLabels[key] }}
+    </option>
+  </select>
+</div>
 
-        <!-- Financial Filter -->
-        <div class="col-md-2">
-          <label class="form-label">تغييرات مالية فقط</label>
-          <div class="form-check form-switch mt-2">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              id="financialFilter"
-              [checked]="filters.isFinancialChange === true"
-              (change)="filters.isFinancialChange = filters.isFinancialChange ? undefined : true; applyFilters()">
-            <label class="form-check-label" for="financialFilter">
-              تفعيل
-            </label>
-          </div>
-        </div>
       </div>
 
       <div class="row mt-3">
@@ -116,18 +99,17 @@
               <th>العملية</th>
               <th>الكيان</th>
               <th>الحقول المتغيرة</th>
-              <th>تأثير مالي</th>
               <th>تفاصيل</th>
             </tr>
           </thead>
           <tbody>
             <ng-container *ngFor="let log of logs()">
               <!-- Main Row -->
-              <tr [class.table-warning]="log.isFinancialChange">
+              <tr>
                 <td class="text-nowrap">{{ formatDate(log.createdAt) }}</td>
                 <td>
                   <div>{{ log.userName || 'نظام' }}</div>
-                  <small class="text-muted">{{ log.userRole }}</small>
+
                 </td>
                 <td>
                   <span class="badge"
@@ -135,7 +117,14 @@
                     [class.bg-danger]="log.actionType === 'driver_logout'"
                     [class.bg-info]="log.actionType === 'status_change'"
                     [class.bg-primary]="log.actionType === 'create'"
-                    [class.bg-warning]="log.actionType === 'update'">
+                    [class.bg-warning]="log.actionType === 'update'"
+                    [class.TA-bg]="log.actionType === 'trip_accepted'"
+                    [class.bg-sever]="log.actionType === 'logout_without_checklist'"
+                    [class.TC-bg]="log.actionType === 'trip_closed'"
+                    [class.cl-bg]="log.actionType === 'checklist_completed'"
+                    [class.UT-bg]="log.actionType === 'update-trip'"
+                    [class.MA-bg]="log.actionType === 'createM'"
+                    >
                     {{ getActionTypeLabel(log.actionType) }}
                   </span>
                 </td>
@@ -147,12 +136,6 @@
                   <span *ngFor="let field of log.changedFields" class="badge bg-secondary me-1">
                     {{ field }}
                   </span>
-                </td>
-                <td>
-                  <span *ngIf="log.isFinancialChange" class="text-danger fw-bold">
-                    <i class="fas fa-coins"></i> {{ log.financialImpact | number:'1.2-2' }}
-                  </span>
-                  <span *ngIf="!log.isFinancialChange" class="text-muted">-</span>
                 </td>
                 <td>
                   <button
@@ -170,18 +153,18 @@
                     <div class="row">
                       <!-- Old Values -->
                       <div class="col-md-5">
-                        <h6 class="text-danger"><i class="fas fa-arrow-left"></i> القيم القديمة</h6>
+                        <h6 class="text-danger">القيم القديمة</h6>
                         <pre class="bg-white p-2 border rounded">{{ getValueDisplay(log.oldValues) }}</pre>
                       </div>
 
                       <!-- Arrow -->
                       <div class="col-md-2 text-center d-flex align-items-center justify-content-center">
-                        <i class="fas fa-arrow-right fa-2x text-primary"></i>
+                        <i class="fas fa-arrow-left fa-2x text-primary"></i>
                       </div>
 
                       <!-- New Values -->
                       <div class="col-md-5">
-                        <h6 class="text-success"><i class="fas fa-arrow-right"></i> القيم الجديدة</h6>
+                        <h6 class="text-success">القيم الجديدة</h6>
                         <pre class="bg-white p-2 border rounded">{{ getValueDisplay(log.newValues) }}</pre>
                       </div>
                     </div>

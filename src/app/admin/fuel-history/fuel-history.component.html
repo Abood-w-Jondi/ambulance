@@ -471,3 +471,10 @@
         <i class="fa-solid fa-plus fa-lg"></i>
     </button>
 </div>
+
+<app-confirmation-modal
+    [isOpen]="isDeleteFuelRecordModalOpen()"
+    [config]="deleteFuelRecordModalConfig()"
+    (confirmed)="handleDeleteFuelRecordConfirmation(true)"
+    (cancelled)="handleDeleteFuelRecordConfirmation(false)">
+</app-confirmation-modal>

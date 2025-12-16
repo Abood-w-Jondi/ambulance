@@ -42,7 +42,9 @@ export class AuditLogsComponent implements OnInit {
     'vehicle': 'مركبة',
     'trip': 'رحلة',
     'paramedic': 'مسعف',
-    'user': 'مستخدم'
+    'user': 'مستخدم',
+    'fuel_record': 'وقود',
+    'maintenance_record' : 'صيانة'
   };
 
   actionTypeLabels: Record<string, string> = {
@@ -51,8 +53,18 @@ export class AuditLogsComponent implements OnInit {
     'status_change': 'تغيير الحالة',
     'create': 'إنشاء',
     'update': 'تعديل',
-    'delete': 'حذف'
+    'delete': 'حذف',
+    'logout_without_checklist' : 'تسجيل خروج من دون التشكلست',
+    'trip_accepted': 'قبول رحلة',
+    'trip_closed': 'إنهاء رحلة',
+    'checklist_completed': 'ادخال تشكلست',
+    'trip_unclosed' : 'اعادة فتح رحلة من المدير',
+    'update-trip' : 'تعديل على رحلة',
+    'createM' : 'اضافة صيانة'
   };
+
+  entityTypeKeys: string[] = Object.keys(this.entityTypeLabels);
+actionTypeKeys: string[] = Object.keys(this.actionTypeLabels);
 
   constructor(
     private auditLogService: AuditLogService,

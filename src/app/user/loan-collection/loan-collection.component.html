@@ -141,23 +141,33 @@
             </div>
 
             <div class="row g-2 mb-3">
-              <div class="col-6">
+              <div class="col-4">
                 <small class="text-muted d-block">تاريخ الرحلة</small>
                 <span>{{ formatDate(loan.tripDate) }}</span>
               </div>
-              <div class="col-6">
+              <div class="col-4">
                 <small class="text-muted d-block">المدة</small>
                 <span [class]="getAgingClass(loan.daysSinceLoan)">
                   {{ getAgingLabel(loan.daysSinceLoan) }}
                 </span>
               </div>
-              <div class="col-6">
-                <small class="text-muted d-block">السعر الإجمالي</small>
+              <div class="col-4">
+                <small class="text-muted d-block">الرقم</small>
+                <span [class]="getAgingClass(loan.daysSinceLoan)">
+                  {{ loan.patientContact }}
+                </span>
+              </div>
+              <div class="col-4">
+                <small class="text-muted d-block">السعر الرحلة الإجمالي</small>
                 <span>{{ loan.totalPrice | number:'1.0-2' }} ₪</span>
               </div>
-              <div class="col-6">
+              <div class="col-4">
                 <small class="text-muted d-block">المدفوع</small>
                 <span>{{ loan.payedPrice | number:'1.0-2' }} ₪</span>
+              </div>
+              <div class="col-4">
+                <small class="text-muted d-block">المبلغ الاصلي</small>
+                <span>{{ loan.totalPrice - loan.payedPrice }} ₪</span>
               </div>
             </div>
 

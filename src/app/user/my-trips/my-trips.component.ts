@@ -110,6 +110,8 @@ export class MyTripsComponent implements OnInit, OnDestroy {
       return;
     }
 
+
+
     // Get driver record ID from current user
     this.driverService.getCurrentDriver().subscribe({
       next: (driver) => {
@@ -124,6 +126,7 @@ export class MyTripsComponent implements OnInit, OnDestroy {
     });
   }
 
+
   ngOnDestroy(): void {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
@@ -131,7 +134,7 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   }
 
   loadData(): void {
-    this.loadAvailableTrips();
+    this.loadAvailableTrips(true);
     this.loadMyTrips();
   }
 
@@ -160,9 +163,13 @@ export class MyTripsComponent implements OnInit, OnDestroy {
     this.loadMyTrips();
   }
 
-  loadAvailableTrips(): void {
+  loadAvailableTrips(init :boolean = false): void {
     this.isLoadingAvailable = true;
-    this.tripService.getAvailableTrips(this.vehicleId).subscribe({
+    let pending =  init ? true : false;
+    if(this.selectedTab === 'available'){
+      pending = true;
+    }
+    this.tripService.getVehicleTrips(this.vehicleId, pending).subscribe({
       next: (trips) => {
         this.availableTrips = trips;
         this.isLoadingAvailable = false;

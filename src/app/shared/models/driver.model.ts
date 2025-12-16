@@ -34,6 +34,7 @@ export interface Driver {
     educationLevel?: EducationLevel;      // المستوى التعليمي
     phoneNumber?: string;                 // رقم الهاتف (Palestinian format)
     profileImageUrl?: string;             // Base64 encoded profile image
+    profile_image_url ?: string;
 }
 
 export type DriverStatus = 'متاح' | 'في رحلة' | 'غير متصل';

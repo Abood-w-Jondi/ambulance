@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Driver, DriverStatus } from '../models';
 import { buildHttpParams } from '../utils/http-params.util';
+import { GlobalVarsService } from '../../global-vars.service';
+import { tap } from 'rxjs';
 
 /**
  * Pagination response wrapper
@@ -35,7 +37,7 @@ export interface DriverQueryParams {
 })
 export class DriverService {
   private readonly API_URL = `${environment.apiEndpoint}/drivers`;
-
+  injectedVars = inject(GlobalVarsService);
   constructor(private http: HttpClient) {}
 
   /**
@@ -135,8 +137,15 @@ export class DriverService {
    * Get current logged-in driver's record
    */
   getCurrentDriver(): Observable<Driver> {
-    return this.http.get<Driver>(`${this.API_URL}/me`);
-  }
+  return this.http.get<Driver>(`${this.API_URL}/me`).pipe(
+    tap((response) => {
+      response.profileImageUrl = response.profileImageUrl !== undefined 
+    ? response.profileImageUrl 
+    : response.profile_image_url;
+      this.injectedVars.setCurrentIMG(response.profileImageUrl || '/assets/default-avatar.png');
+    })
+  );
+}
 
   /**
    * Get all drivers (for dropdowns/selects)

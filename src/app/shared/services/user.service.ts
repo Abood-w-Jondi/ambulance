@@ -1,10 +1,12 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-
+import { GlobalVarsService } from '../../global-vars.service';
+import { tap } from 'rxjs/operators';
 export interface UpdateProfileRequest {
+  id? : string;
   arabicName?: string;
   fullName?: string;
   username?: string;
@@ -35,6 +37,7 @@ export interface UserProfile {
   amountOwed?: number;
   driverStatus?: string;
   isAccountCleared?: boolean;
+  profile_image_url ?: string;
 }
 
 @Injectable({
@@ -42,7 +45,7 @@ export interface UserProfile {
 })
 export class UserService {
   private readonly API_URL = environment.apiEndpoint;
-
+  injectedVars = inject(GlobalVarsService);
   constructor(
     private http: HttpClient
   ) { }
@@ -53,6 +56,12 @@ export class UserService {
    */
   getCurrentUserProfile(): Observable<UserProfile> {
     return this.http.get<UserProfile>(`${this.API_URL}/auth/me`).pipe(
+      tap((response) => {
+              response.profileImageUrl = response.profileImageUrl !== undefined 
+    ? response.profileImageUrl 
+    : response.profile_image_url;
+        this.injectedVars.setCurrentIMG(response.profileImageUrl || '/assets/default-avatar.png');
+      }),
       catchError(this.handleError)
     );
   }

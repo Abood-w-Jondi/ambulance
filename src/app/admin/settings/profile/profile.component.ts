@@ -30,7 +30,27 @@ export class ProfileComponent implements OnInit {
     ];
 
     // User profile
-    userProfile = signal<UserProfile | null>(null);
+    userProfile = signal<UserProfile | null>({
+  "id": '',
+  "username": '',
+  "email": '',
+  "fullName": '',
+  "arabicName": '',
+  "phoneNumber": '',
+  "jobTitle": '',
+  "educationLevel": null,
+  "role": 'driver',
+  "isActive": true,
+  "isEmailVerified": false,
+  "profileImageUrl": null,
+  "createdAt": '',
+  "updatedAt": '',
+  // Role-specific read-only fields for drivers
+  "driverId": '',
+  "amountOwed": 0,
+  "driverStatus": '',
+  "isAccountCleared": false
+});
 
     // Form for editing
     profileForm: {
@@ -79,6 +99,8 @@ export class ProfileComponent implements OnInit {
         this.userService.getCurrentUserProfile().subscribe({
             next: (profile) => {
                 this.userProfile.set(profile);
+                console.log('Loaded profile:', profile);
+                console.log('Profile Signal:', this.userProfile());
                 this.loadProfileToForm();
                 this.isLoading.set(false);
             },
@@ -118,6 +140,7 @@ export class ProfileComponent implements OnInit {
     }
 
     saveProfile(): void {
+        
         if (!this.validateProfile()) return;
 
         this.isLoading.set(true);
@@ -244,7 +267,10 @@ export class ProfileComponent implements OnInit {
                 const imageData = e.target.result;
 
                 const updateData: UpdateProfileRequest = {
-                    profileImageUrl: imageData
+                    profileImageUrl: imageData,
+                    arabicName: this.profileForm.arabicName,
+                    fullName: this.profileForm.fullName,
+                    username: this.profileForm.username,
                 };
 
                 this.userService.updateProfile(updateData).subscribe({

@@ -246,3 +246,9 @@
   </div>
 </div>
 <div class="modal-backdrop fade" [class.show]="showViewModal" *ngIf="showViewModal"></div>
+<app-confirmation-modal 
+  [isOpen]="isUnlockModalOpen()"
+  [config]="unlockModalConfig()"
+  (confirmed)="handleUnlockConfirmation(true)"
+  (cancelled)="handleUnlockConfirmation(false)">
+</app-confirmation-modal>

@@ -7,10 +7,11 @@ import { ToastService } from '../../shared/services/toast.service';
 import { VehicleCookieService } from '../../shared/services/vehicle-cookie.service';
 import { ChecklistItem, CHECKLIST_ITEMS, VehicleChecklist } from '../../shared/models/checklist.model';
 import { GlobalVarsService } from '../../global-vars.service';
+import { ConfirmationModalComponent , ConfirmationModalConfig} from '../../shared/confirmation-modal/confirmation-modal.component';
 @Component({
   selector: 'app-vehicle-checklist',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConfirmationModalComponent],
   templateUrl: './vehicle-checklist.component.html',
   styleUrl: './vehicle-checklist.component.css'
 })
@@ -25,6 +26,19 @@ export class VehicleChecklistComponent implements OnInit {
   // Track which category is expanded in accordion
   expandedCategory = signal<string | null>(null);
 
+  //conformation modal
+
+  isCancelModalOpen = signal(false);
+  cancelModalConfig: ConfirmationModalConfig = {
+    type: 'delete',
+    title: 'تأكيد الإلغاء',
+    message: 'هل أنت متأكد من إلغاء الفحص؟ سيتم إلغاء جميع التغييرات وستظهر قائمة الفحص مرة أخرى كتذكير.',
+    confirmButtonText: 'نعم، إلغاء',
+    cancelButtonText: 'إبقاء الشاشة',
+    highlightedText: 'إلغاء جميع التغييرات' // Optional highlight
+  };
+
+  
   // Group items by category
   categories = computed(() => {
     const items = this.items();
@@ -69,6 +83,7 @@ export class VehicleChecklistComponent implements OnInit {
     private router: Router,
     private vehicleCookieService: VehicleCookieService,
     public globalVars: GlobalVarsService
+
 
   ) {
     this.globalVars.setGlobalHeader(' قائمة فحص المركبة ');
@@ -221,8 +236,17 @@ export class VehicleChecklistComponent implements OnInit {
   }
 
   cancel(): void {
-    if (confirm('هل أنت متأكد من إلغاء الفحص؟ سيظهر التذكير مرة أخرى.')) {
+    // Open the confirmation modal instead of using window.confirm
+    this.isCancelModalOpen.set(true);
+  }
+  handleCancelConfirmation(confirmed: boolean): void {
+    this.isCancelModalOpen.set(false); // Close the modal
+
+    if (confirmed) {
+      // Logic for confirmed cancellation
+      this.toastService.info('تم إلغاء الفحص');
       this.router.navigate(['/user/driver-dashboard']);
     }
+    // If not confirmed, do nothing (keep the user on the checklist page)
   }
 }

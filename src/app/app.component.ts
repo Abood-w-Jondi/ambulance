@@ -30,7 +30,7 @@ export class AppComponent implements OnInit {
     private toastService: ToastService,
     private vehicleCookieService: VehicleCookieService
   ) {}
-
+dontshowsidebar : boolean = false;
   ngOnInit() {
     this.router.events.pipe(
       // Filter for the NavigationEnd event, which fires after navigation is complete
@@ -42,6 +42,7 @@ export class AppComponent implements OnInit {
 
       // Set the visibility. Show the sidebar ONLY if the URL starts with '/admin'.
       this.showSideBar = url.startsWith('/admin');
+      this.dontshowsidebar = url.endsWith('login')
 
       // Show bottom bar only for user routes AND when vehicle is selected
       const isUserRoute = url.startsWith('/user');

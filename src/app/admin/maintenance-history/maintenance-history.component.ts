@@ -15,10 +15,11 @@ import { VehicleService } from '../../shared/services/vehicle.service';
 import { Vehicle } from '../../shared/models/vehicle.model';
 import { DriverService } from '../../shared/services/driver.service';
 import { Driver } from '../../shared/models';
+import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 @Component({
     selector: 'app-maintenance-history',
     standalone: true,
-    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, MaintenanceTypeSearchComponent],
+    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, MaintenanceTypeSearchComponent, ConfirmationModalComponent],
     templateUrl: './maintenance-history.component.html',
     styleUrl: './maintenance-history.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -556,8 +557,41 @@ formatDate(date: Date | string | null | undefined): string {
         this.isEditRecordModalOpen.set(false);
     }
 
-    deleteRecord(recordId: string): void {
-        if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
+    isDeleteRecordModalOpen = signal(false);
+    recordIdToDelete = signal<string | null>(null);
+    deleteRecordModalConfig = signal<ConfirmationModalConfig>({
+        type: 'delete',
+        title: 'تأكيد حذف سجل الصيانة',
+        message: 'هل أنت متأكد من حذف سجل الصيانة هذا بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء.',
+        confirmButtonText: 'نعم، احذف السجل',
+        cancelButtonText: 'إلغاء'
+    });
+
+
+    deleteRecord(recordId: string):void {
+        this.recordIdToDelete.set(recordId);
+        
+        // تخصيص الرسالة إذا لزم الأمر
+        const config: ConfirmationModalConfig = {
+            type: 'delete',
+            title: 'تأكيد حذف سجل الصيانة',
+            // يمكنك تخصيص الرسالة هنا لتضمين أي تفاصيل عن السجل إن وجدت
+            message: `هل أنت متأكد من حذف سجل الصيانة هذا بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء.`,
+            confirmButtonText: 'نعم، احذف السجل',
+            cancelButtonText: 'إلغاء'
+        };
+        this.deleteRecordModalConfig.set(config);
+        this.isDeleteRecordModalOpen.set(true);
+    }
+    
+    // --- الدالة الجديدة لمعالجة استجابة نافذة التأكيد ---
+    handleDeleteRecordConfirmation(confirmed: boolean): void {
+        const recordId = this.recordIdToDelete();
+        this.isDeleteRecordModalOpen.set(false); // إغلاق النافذة
+        this.recordIdToDelete.set(null); // مسح معرّف السجل المخزن
+
+        if (confirmed && recordId) {
+            // تنفيذ عملية الحذف الفعلية
             this.maintenanceService.deleteMaintenanceRecord(recordId).subscribe({
                 next: () => {
                     this.closeViewRecordModal();
@@ -569,8 +603,7 @@ formatDate(date: Date | string | null | undefined): string {
                     this.toastService.error('فشلت عملية حذف سجل الصيانة');
                 }
             });
-        }
-    }
+        }}
 
 
     /**

@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MedicalFormService } from '../../shared/services/medical-form.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { MedicalForm, MedicalFormFilters } from '../../shared/models/medical-form.model';
+import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 
 interface FilterConfig {
   key: keyof MedicalFormFilters;
@@ -27,7 +28,7 @@ interface ColumnConfig {
 @Component({
   selector: 'app-medical-forms',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConfirmationModalComponent],
   templateUrl: './medical-forms.component.html',
   styleUrl: './medical-forms.component.css'
 })
@@ -159,7 +160,7 @@ export class MedicalFormsComponent implements OnInit {
     private medicalFormService: MedicalFormService,
     private toastService: ToastService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadMedicalForms();
@@ -231,21 +232,59 @@ export class MedicalFormsComponent implements OnInit {
     this.router.navigate(['/user/medical-form', form.tripId]);
   }
 
-  unlockForm(form: MedicalForm): void {
-    if (!confirm(`هل أنت متأكد من رغبتك في فتح النموذج الطبي للرحلة ${form.tripId}؟`)) {
-      return;
-    }
+  // --- NEW: Unlock Modal State & Config ---
+  isUnlockModalOpen = signal(false);
+  formToUnlock = signal<MedicalForm | null>(null);
+  unlockModalConfig = signal<ConfirmationModalConfig>({
+    type: 'warning', // نستخدم 'warning' لأن فتح القفل قد يغير البيانات
+    title: 'تأكيد فتح النموذج',
+    message: 'هل أنت متأكد من رغبتك في فتح هذا النموذج الطبي؟ هذا سيسمح بإجراء تعديلات جديدة.',
+    confirmButtonText: 'نعم، افتح النموذج',
+    cancelButtonText: 'إلغاء'
+  });
 
-    this.medicalFormService.unlockMedicalForm(form.tripId).subscribe({
-      next: () => {
-        this.toastService.success('تم فتح النموذج بنجاح');
-        this.loadMedicalForms();
-      },
-      error: (error) => {
-        console.error('Failed to unlock form:', error);
-        this.toastService.error('فشل فتح النموذج');
-      }
-    });
+  unlockForm(form: MedicalForm): void {
+    // 1. Store the form to be unlocked
+    this.formToUnlock.set(form);
+
+    // 2. Configure the modal message with tripId
+    const config: ConfirmationModalConfig = {
+      type: 'warning',
+      title: 'تأكيد فتح النموذج',
+      message: `هل أنت متأكد من رغبتك في فتح النموذج الطبي للرحلة ${form.tripId}؟ هذا سيسمح بإجراء تعديلات جديدة.`,
+      highlightedText: `${form.tripId}`,
+      confirmButtonText: 'نعم، افتح النموذج',
+      cancelButtonText: 'إلغاء'
+    };
+    this.unlockModalConfig.set(config);
+
+    // 3. Open the modal
+    this.isUnlockModalOpen.set(true);
+  }
+
+  // -----------------------------------------------------------------
+  // --- NEW handleUnlockConfirmation (Handles Response) ---
+  // -----------------------------------------------------------------
+  handleUnlockConfirmation(confirmed: boolean): void {
+    const form = this.formToUnlock();
+
+    // 1. Close the modal and reset state
+    this.isUnlockModalOpen.set(false);
+    this.formToUnlock.set(null);
+
+    if (confirmed && form) {
+      // 2. Execute the actual unlock request
+      this.medicalFormService.unlockMedicalForm(form.tripId).subscribe({
+        next: () => {
+          this.toastService.success('تم فتح النموذج بنجاح');
+          this.loadMedicalForms();
+        },
+        error: (error) => {
+          console.error('Failed to unlock form:', error);
+          this.toastService.error('فشل فتح النموذج');
+        }
+      });
+    }
   }
 
   getCompletionColor(percentage: number): string {

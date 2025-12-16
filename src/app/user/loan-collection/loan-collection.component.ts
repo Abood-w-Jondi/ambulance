@@ -8,6 +8,14 @@ import { ToastService } from '../../shared/services/toast.service';
 import { AuthService } from '../../shared/services/auth.service';
 import { PatientLoan } from '../../shared/models/patient-loan.model';
 
+interface LoanStats {
+  totalLoans: number;
+  uncollectedCount: number;
+  collectedCount: number;
+  totalUncollectedAmount: number;
+  totalCollectedAmount: number;
+}
+
 type FilterStatus = 'all' | 'uncollected' | 'collected';
 type SortBy = 'date' | 'amount' | 'patient';
 type SortOrder = 'asc' | 'desc';
@@ -26,7 +34,7 @@ export class LoanCollectionComponent implements OnInit {
   driverId = signal<string | null>(null);
 
   // Filters
-  filterStatus = signal<FilterStatus>('uncollected');
+  filterStatus = signal<FilterStatus>('all');
   sortBy = signal<SortBy>('date');
   sortOrder = signal<SortOrder>('desc');
 
@@ -41,19 +49,27 @@ export class LoanCollectionComponent implements OnInit {
   collectNotes = '';
 
   // Computed statistics
-  stats = computed(() => {
+  stats = signal<LoanStats>({
+    totalLoans: 0,
+    uncollectedCount: 0,
+    collectedCount: 0,
+    totalUncollectedAmount: 0,
+    totalCollectedAmount: 0,
+  });
+
+  private updateStats(): void {
     const allLoans = this.loans();
     const uncollected = allLoans.filter(l => !l.isCollected);
     const collected = allLoans.filter(l => l.isCollected);
     
-    return {
+    this.stats.set({
       totalLoans: allLoans.length,
       uncollectedCount: uncollected.length,
       collectedCount: collected.length,
-      totalUncollectedAmount: uncollected.reduce((sum, l) => sum + l.loanAmount, 0),
-      totalCollectedAmount: collected.reduce((sum, l) => sum + l.loanAmount, 0)
-    };
-  });
+      totalUncollectedAmount: uncollected.reduce((sum, l) => sum + l.totalPrice - l.payedPrice, 0),
+      totalCollectedAmount: collected.reduce((sum, l) => sum + l.totalPrice - l.payedPrice, 0)
+    });
+  }
 
   // Quick filters
   quickFilters = [
@@ -78,17 +94,17 @@ export class LoanCollectionComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadDriverAndLoans();
+    this.loadDriverAndLoans(true);
   }
 
-  loadDriverAndLoans(): void {
+  loadDriverAndLoans(init: boolean = false): void {
     this.isLoading.set(true);
     
     // Get current driver
     this.driverService.getCurrentDriver().subscribe({
       next: (driver) => {
         this.driverId.set(driver.id);
-        this.loadLoans();
+        this.loadLoans(init);
       },
       error: (error) => {
         console.error('Error loading driver:', error);
@@ -98,7 +114,7 @@ export class LoanCollectionComponent implements OnInit {
     });
   }
 
-  loadLoans(): void {
+  loadLoans(init: boolean = false): void {
     const driverId = this.driverId();
     if (!driverId) return;
 
@@ -112,6 +128,9 @@ export class LoanCollectionComponent implements OnInit {
       next: (loans) => {
         this.loans.set(loans);
         this.isLoading.set(false);
+        if (init) {
+          this.updateStats();
+        }
       },
       error: (error) => {
         console.error('Error loading loans:', error);

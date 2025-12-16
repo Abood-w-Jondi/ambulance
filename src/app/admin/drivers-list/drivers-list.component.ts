@@ -397,35 +397,27 @@ reduceBalance(driver: Driver, amount: number) {
         return;
     }
 
-    // Show warnings for prepayment scenarios
+    // Show warnings for overpayment scenarios
     if (validation.warnings && validation.warnings.length > 0) {
         validation.warnings.forEach(warning => {
             this.toastService.warning(warning, 5000);  // 5 second display
         });
     }
 
-    // Additional warning for prepayment when balance is already 0
-    if (driver.amountOwed === 0) {
-        this.toastService.warning(`تنبيه: سيتم الدفع المسبق للسائق ${driver.arabicName} بمبلغ ₪${amount}`, 5000);
-    }
-
     this.driverService.reduceBalance(driver.id, amount).subscribe({
         next: () => {
             delete this.reductionAmounts[driver.id];
-            
+
             let message: string;
-            if (driver.amountOwed === 0) {
-                // Pure prepayment
-                message = `تم الدفع المسبق للسائق: ${driver.arabicName} (₪${amount})`;
-            } else if (amount > driver.amountOwed) {
-                // Partial payment + prepayment
-                const prepayAmount = amount - driver.amountOwed;
-                message = `تم تصفية الحساب والدفع المسبق للسائق: ${driver.arabicName} (دفع مسبق: ₪${prepayAmount.toFixed(2)})`;
+            if (amount > driver.amountOwed) {
+                // Overpayment - creates debt (they owe company)
+                const debtAmount = amount - driver.amountOwed;
+                message = `تم الدفع وتسجيل دين للسائق: ${driver.arabicName} (دين: ₪${debtAmount.toFixed(2)})`;
             } else {
                 // Normal reduction
                 message = `تم خصم ₪${amount} من رصيد السائق: ${driver.arabicName}`;
             }
-            
+
             this.toastService.success(message, 3000);
             this.loadData();
         },
@@ -455,6 +447,11 @@ reduceBalance(driver: Driver, amount: number) {
     applyFiltersOnSearch() {
         this.currentPage = 1;
         this.loadData();
+    }
+
+    applyFiltersAndToggleMobile() {
+        this.applyFiltersOnSearch();
+        this.toggleMobileFilters();
     }
 
     getStatusOptions(): Array<'متاح' | 'في رحلة' | 'غير متصل'> {

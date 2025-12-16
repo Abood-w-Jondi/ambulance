@@ -15,7 +15,7 @@ import { Driver } from '../../shared/models';
 import { Subscription } from 'rxjs';
 import { ConfirmationModalComponent , ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 import * as L from 'leaflet';
-
+import { UserService } from '../../shared/services/user.service';
 @Component({
   selector: 'app-driver-dashboard',
   standalone: true,
@@ -79,7 +79,8 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     private authService: AuthService,
     private locationTrackingService: LocationTrackingService,
     private vehicleCookieService: VehicleCookieService,
-    private checklistService: ChecklistService
+    private checklistService: ChecklistService,
+    private userService : UserService
   ) {}
 
   ngOnInit(): void {
@@ -179,6 +180,12 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
       this.driverName.set('مسؤول النظام');
       this.driverStatus.set('مسؤول');
       this.isLocationLoading.set(false);
+      this.userService.getCurrentUserProfile().subscribe({
+            next: ( ) => {
+            },
+            error: () => {
+            }
+        });
       
       // Still try to load vehicle for admin if they selected one
       const selectedVehicle = this.vehicleCookieService.getSelectedVehicleId();
@@ -405,6 +412,7 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
         },
         error: (err) => {
           console.error('Failed to dismiss reminder:', err);
+          this.toastService.warning('حصل خطأ عند محاولة إغلاق التذكير');
         }
       });
     }

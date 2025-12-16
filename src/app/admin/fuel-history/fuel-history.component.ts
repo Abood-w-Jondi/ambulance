@@ -10,11 +10,12 @@ import { VehicleService } from '../../shared/services/vehicle.service';
 import { DriverService } from '../../shared/services/driver.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { FuelRecord, Vehicle } from '../../shared/models';
+import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 
 @Component({
     selector: 'app-fuel-history',
     standalone: true,
-    imports: [CommonModule, FormsModule, PaginationComponent],
+    imports: [CommonModule, FormsModule, PaginationComponent, ConfirmationModalComponent],
     templateUrl: './fuel-history.component.html',
     styleUrl: './fuel-history.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -429,18 +430,72 @@ formatDate(date: Date | string | null | undefined): string {
     closeEditRecordModal(): void {
         this.isEditRecordModalOpen.set(false);
     }
+    // --- Modal State ---
+ isDeleteFuelRecordModalOpen = signal(false);
+    recordIdToDelete = signal<string | null>(null);
+    deletedRecordDetails = signal<{ ambulanceNumber: string, driverName: string } | null>(null);
+
+    deleteFuelRecordModalConfig = signal<ConfirmationModalConfig>({
+        type: 'delete',
+        title: 'تأكيد حذف سجل تعبئة الوقود',
+        message: 'هل أنت متأكد من حذف هذا السجل بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء.',
+        confirmButtonText: 'نعم، احذف السجل',
+        cancelButtonText: 'إلغاء'
+    });
 
     deleteRecord(recordId: string): void {
-        if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
-            const deleted = this.records().find(r => r.id === recordId);
+        const record = this.records().find(r => r.id === recordId);
+        
+        if (!record) {
+            this.toastService.error('فشل في العثور على السجل للحذف.');
+            return;
+        }
+
+        // 1. Store the ID and details of the record to be deleted
+        this.recordIdToDelete.set(recordId);
+        this.deletedRecordDetails.set({
+            ambulanceNumber: record.ambulanceNumber,
+            driverName: record.driverName
+        });
+        
+        // 2. Configure the modal message
+        const config: ConfirmationModalConfig = {
+            type: 'delete',
+            title: 'تأكيد حذف سجل تعبئة الوقود',
+            message: `هل أنت متأكد من حذف سجل الوقود للمركبة رقم: ${record.ambulanceNumber} والسائق: ${record.driverName}؟ لا يمكن التراجع عن هذا الإجراء.`,
+            highlightedText: `${record.ambulanceNumber}`,
+            confirmButtonText: 'نعم، احذف السجل',
+            cancelButtonText: 'إلغاء'
+        };
+        this.deleteFuelRecordModalConfig.set(config);
+        
+        // 3. Open the modal
+        this.isDeleteFuelRecordModalOpen.set(true);
+    }
+
+    handleDeleteFuelRecordConfirmation(confirmed: boolean): void {
+        const recordId = this.recordIdToDelete();
+        const deletedDetails = this.deletedRecordDetails();
+        
+        // 1. Close the modal and reset states
+        this.isDeleteFuelRecordModalOpen.set(false);
+        this.recordIdToDelete.set(null);
+        this.deletedRecordDetails.set(null);
+
+        if (confirmed && recordId) {
+            // 2. Execute the actual deletion request
             this.fuelService.deleteFuelRecord(recordId).subscribe({
                 next: () => {
                     this.closeViewRecordModal();
-                    if (deleted) {
-                        this.toastService.success(`تم حذف سجل الوقود (${deleted.ambulanceNumber}) للسائق ${deleted.driverName}`, 3000);
+                    
+                    // Display success toast using stored details
+                    if (deletedDetails) {
+                        this.toastService.success(`تم حذف سجل الوقود (${deletedDetails.ambulanceNumber}) للسائق ${deletedDetails.driverName}`, 3000);
                     } else {
-                        this.toastService.success('تم حذف سجل وقود', 3000);
+                        this.toastService.success('تم حذف سجل وقود بنجاح', 3000);
                     }
+                    
+                    // Reload data to update the list
                     this.loadData();
                 },
                 error: (error) => {
@@ -450,7 +505,6 @@ formatDate(date: Date | string | null | undefined): string {
             });
         }
     }
-
 
     /**
      * Navigate to fleet page filtered by vehicle

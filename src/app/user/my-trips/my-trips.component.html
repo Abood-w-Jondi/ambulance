@@ -130,26 +130,6 @@
             </div>
             <div class="col-12 col-lg-6">
                 <div class="d-flex gap-2 justify-content-end flex-wrap">
-                    <div class="btn-group view-toggle-group" role="group">
-                      <button
-                          type="button"
-                          class="btn btn-sm"
-                          [class.btn-primary]="historyView === 'driver'"
-                          [class.btn-outline-primary]="historyView !== 'driver'"
-                          (click)="historyView = 'driver'; loadMyTrips()">
-                          <i class="fas fa-user"></i>
-                          <span class="ms-2">رحلاتي</span>
-                      </button>
-                        <button
-                            type="button"
-                            class="btn btn-sm"
-                            [class.btn-primary]="historyView === 'vehicle'"
-                            [class.btn-outline-primary]="historyView !== 'vehicle'"
-                            (click)="historyView = 'vehicle'; loadMyTrips()">
-                            <i class="fas fa-car"></i>
-                            <span class="ms-2">المركبة</span>
-                        </button>
-                    </div>
                     <button
                         class="btn btn-sm btn-outline-secondary filter-toggle-btn"
                         (click)="toggleHistoryFilters()">

@@ -340,12 +340,12 @@
                         <div class="mb-3">
                             <label for="searchTerm" class="form-label small fw-medium">البحث</label>
                             <input id="searchTerm" type="text" class="form-control" placeholder="الاسم، البريد الإلكتروني، أو اسم المستخدم"
-                                [(ngModel)]="searchTermValue" (ngModelChange)="searchTerm.set($event)">
+                                [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
                         </div>
 
                         <div class="mb-3">
                             <label for="filterStatus" class="form-label small fw-medium">حالة المسعف</label>
-                            <select id="filterStatus" class="form-select" [(ngModel)]="filterStatusValue"
+                            <select id="filterStatus" class="form-select" [ngModel]="filterStatus()"
                                 (ngModelChange)="filterStatus.set($event)">
                                 <option value="all">الكل</option>
                                 <option value="متاح">متاح</option>
@@ -357,17 +357,17 @@
 
                         <div class="mb-3">
                             <label for="minOwed" class="form-label small fw-medium">الحد الأدنى للمبلغ المستحق</label>
-                            <input id="minOwed" type="number" class="form-control text-end" [(ngModel)]="minOwedValue"
+                            <input id="minOwed" type="number" class="form-control text-end" [ngModel]="minOwed()"
                                 (ngModelChange)="minOwed.set($event)" style="direction: ltr;">
                         </div>
 
                         <div class="mb-3">
                             <label for="maxOwed" class="form-label small fw-medium">الحد الأقصى للمبلغ المستحق</label>
-                            <input id="maxOwed" type="number" class="form-control text-end" [(ngModel)]="maxOwedValue"
+                            <input id="maxOwed" type="number" class="form-control text-end" [ngModel]="maxOwed()"
                                 (ngModelChange)="maxOwed.set($event)" style="direction: ltr;">
                         </div>
 
-                        <button class="btn btn-primary-custom w-100 mt-4" (click)="toggleMobileFilters()">
+                        <button class="btn btn-primary-custom w-100 mt-4" (click)="applyFiltersOnSearch()">
                             عرض النتائج
                         </button>
 
@@ -423,16 +423,9 @@
                                     <div class="d-flex align-items-center gap-3 mb-4">
                                         <img class="rounded-circle object-fit-cover flex-shrink-0"
                                             style="width: 56px; height: 56px;" [alt]="paramedic.imageAlt"
-                                            [src]="paramedic.imageUrl" />
+                                            [src]="paramedic.imageUrl !== '/assets/default-avatar.png' ? paramedic.imageUrl : 'person-placeholder.jpg'" />
                                         <div class="flex-grow-1">
                                             <p class="h6 fw-bold m-0 text-dark">{{ paramedic.arabicName }}</p>
-                                            <div class="d-flex align-items-center gap-2 mt-1">
-                                                <app-status-badge
-                                                    [status]="paramedic.arabicStatus"
-                                                    [type]="'paramedic'"
-                                                    [size]="'small'">
-                                                </app-status-badge>
-                                            </div>
                                             @if (paramedic.email || paramedic.username) {
                                             <p class="small text-muted m-0 mt-1">
                                                 @if (paramedic.username) {
@@ -457,48 +450,35 @@
                                         </div>
                                     </div>
 
-                                    @if (paramedic.amountOwed > 0) {
                                     <div class="mt-auto pt-3">
                                         <div class="input-group mb-2 mt-3">
-                                            <input type="number" class="form-control text-end"
-                                                placeholder="مبلغ التخفيض" min="0.01" [max]="paramedic.amountOwed"
-                                                [ngModel]="reductionAmounts[paramedic.id] || null"
+                                            <input type="number" class="form-control text-end" placeholder="مبلغ الدفع"
+                                                min="0.01" [ngModel]="reductionAmounts[paramedic.id] || null"
                                                 (ngModelChange)="reductionAmounts[paramedic.id] = $event"
                                                 style="direction: ltr;">
                                             <span class="input-group-text">₪</span>
                                         </div>
 
-                                        <button class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
-                                            [disabled]="!reductionAmounts[paramedic.id] || reductionAmounts[paramedic.id] <= 0 || reductionAmounts[paramedic.id] > paramedic.amountOwed"
-                                            (click)="reduceBalance(paramedic, reductionAmounts[paramedic.id])">
-                                            تخفيض الرصيد المحدد
+                                        <button
+                                            class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
+                                            (click)="reduceBalance(paramedic, reductionAmounts[paramedic.id])"
+                                            [disabled]="!reductionAmounts[paramedic.id]">
+                                            {{ paramedic.amountOwed > 0 ? 'تخفيض الرصيد المحدد' : 'دفع مسبق' }}
                                         </button>
 
-                                        <button class="btn btn-success fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small"
+                                        @if (paramedic.amountOwed > 0) {
+                                        <button
+                                            class="btn btn-success fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small"
                                             (click)="clearIndividualBalance(paramedic)">
                                             تصفية الحساب بالكامل
                                         </button>
-                                    </div>
-                                    } @else {
-                                    <div class="mt-auto pt-3">
-                                        <div class="input-group mb-2 mt-3">
-                                            <input type="number" class="form-control text-end"
-                                                placeholder="مبلغ التخفيض" min="0.01" [max]="paramedic.amountOwed"
-                                                [ngModel]="reductionAmounts[paramedic.id] || null"
-                                                (ngModelChange)="reductionAmounts[paramedic.id] = $event"
-                                                style="direction: ltr;" disabled>
-                                            <span class="input-group-text">₪</span>
+                                        } @else {
+                                        <div class="alert alert-success mt-3 mb-0 text-center py-2" role="alert">
+                                            <i class="fa-solid fa-circle-check me-1"></i>
+                                            الحساب مصفى بالكامل
                                         </div>
-                                        <button class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
-                                            disabled>
-                                            تخفيض الرصيد المحدد
-                                        </button>
-                                        <button class="btn btn-secondary fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small"
-                                            disabled>
-                                            تم تصفية الحساب
-                                        </button>
+                                        }
                                     </div>
-                                    }
                                 </div>
                             </div>
                         </div>
