@@ -8,7 +8,7 @@ import {
   EQTransactionFilters,
   EQSummary
 } from '../models/eq-balance.model';
-import { PaginatedResponse } from '../models/paginated-response.model';
+import { PaginatedResponse } from '../models';
 
 /**
  * EQ Balance Service
@@ -18,7 +18,7 @@ import { PaginatedResponse } from '../models/paginated-response.model';
   providedIn: 'root'
 })
 export class EqBalanceService {
-  private apiUrl = `${environment.apiUrl}/eq-balance`;
+  private apiUrl = `${environment.apiEndpoint}/eq-balance`;
 
   constructor(private http: HttpClient) {}
 
