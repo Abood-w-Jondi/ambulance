@@ -64,6 +64,12 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
   showChecklistReminder = signal(false);
   currentSessionId = signal<string | null>(null);
   currentVehicleName = signal<string>('');
+  
+  // Reminder check interval constant (in milliseconds)
+  // For production: 600000ms (10 minutes)
+  // For testing: 30000ms (30 seconds) or 60000ms (1 minute)
+  private readonly REMINDER_CHECK_INTERVAL = 610000; // 10 minutes - change to 30000 for testing
+  private reminderCheckTimer: any = null;
 
   // Subscriptions
   private subscriptions: Subscription[] = [];
@@ -87,6 +93,7 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     this.loadDriverData();
     this.subscribeToLocation();
     this.checkReminderStatus();
+    this.startPeriodicReminderCheck();
   }
 
   ngAfterViewInit(): void {
@@ -100,6 +107,10 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     this.subscriptions.forEach(sub => sub.unsubscribe());
     if (this.map) {
       this.map.remove();
+    }
+    // Clear the reminder check timer
+    if (this.reminderCheckTimer) {
+      clearInterval(this.reminderCheckTimer);
     }
   }
 
@@ -365,6 +376,23 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   // Checklist reminder methods
+  
+  /**
+   * Start periodic checking for checklist reminders
+   * This will check every REMINDER_CHECK_INTERVAL (default: 10 minutes)
+   */
+  private startPeriodicReminderCheck(): void {
+    // Skip for admins
+    if (this.authService.isAdmin()) {
+      return;
+    }
+
+    this.reminderCheckTimer = setInterval(() => {
+      console.log('Periodic reminder check triggered');
+      this.checkReminderStatus();
+    }, this.REMINDER_CHECK_INTERVAL);
+  }
+
   checkReminderStatus(): void {
     // Skip checklist reminder for admins (they don't have driver records)
     if (this.authService.isAdmin()) {
@@ -387,7 +415,10 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
           this.currentVehicleName.set(response.vehicleName);
 
           if (response.canShowReminder && !response.checklistCompleted) {
+            console.log('Showing checklist reminder');
             this.showChecklistReminder.set(true);
+          } else {
+            console.log('Not showing reminder - canShowReminder:', response.canShowReminder, 'checklistCompleted:', response.checklistCompleted);
           }
         }
       },
@@ -408,7 +439,9 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
       this.checklistService.dismissReminder(sessionId).subscribe({
         next: () => {
           this.showChecklistReminder.set(false);
-          this.toastService.info('سيظهر التذكير مرة أخرى بعد 10 دقائق');
+          const minutes = this.REMINDER_CHECK_INTERVAL / 60000;
+          this.toastService.info(`سيظهر التذكير مرة أخرى بعد ${minutes} دقائق`);
+          console.log(`Reminder dismissed, will check again in ${minutes} minutes`);
         },
         error: (err) => {
           console.error('Failed to dismiss reminder:', err);

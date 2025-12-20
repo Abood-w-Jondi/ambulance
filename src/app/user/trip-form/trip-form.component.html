@@ -173,7 +173,7 @@
 
             <div class="row">
               <div class="col-md-6">
-                <div class="mb-3">
+                <div class="mb-3" *ngIf="mode !== 'create'">
                   <label class="form-label">حالة النقل</label>
                   <select 
                     class="form-control" 
@@ -232,7 +232,7 @@
                     class="form-control" 
                     [(ngModel)]="tripForm.driverId"
                     name="driverId"
-                    [disabled]="isViewMode">
+                    disabled>
                     <option value="">اختر السائق</option>
                     <option *ngFor="let driver of drivers" [value]="driver.id">
                       {{ driver.arabicName }}
@@ -262,7 +262,7 @@
                     class="form-control"
                     [(ngModel)]="tripForm.vehicleId"
                     name="vehicleId"
-                    [disabled]="isViewMode"
+                    disabled
                     (change)="onVehicleChange()"
                     required>
                     <option value="">اختر المركبة</option>

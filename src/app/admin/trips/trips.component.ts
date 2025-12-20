@@ -945,21 +945,34 @@ export class TripsComponent implements OnInit {
                     { header: 'مغلقة؟', key: 'isClosedText', width: 10 }
                 ];
 
-                // Format data for export
-                const exportData = trips.map(trip => ({
-                    ...trip,
-                    formattedDate: this.exportService.formatDate(trip.day, trip.month, trip.year),
-                    diesel: trip.diesel || 0,
-                    otherExpenses: trip.otherExpenses || 0,
-                    companyShare: trip.companyShare || 0,
-                    ownerShare: trip.ownerShare || 0,
-                    tripNotes: trip.tripNotes || '',
-                    acceptedAt: trip.acceptedAt ? new Date(trip.acceptedAt).toLocaleString('ar-EG') : '',
-                    closedAt: trip.closedAt ? new Date(trip.closedAt).toLocaleString('ar-EG') : '',
-                    isClosedText: this.exportService.formatBoolean(trip.isClosed)
-                }));
+                // Format data for export and calculate actual company/owner shares
+                const exportData = trips.map(trip => {
+                    // Calculate shares using the same logic as backend (trips.php:1150-1156)
+                    const paramedicShare = trip.paramedicShare || 0;
+                    const otherExpenses = trip.otherExpenses || 0;
+                    const fuelCost = (trip.diesel || 0) * 1.0; // 1 NIS per km
 
-                // Calculate totals
+                    const afterParamedic = trip.totalPrice - paramedicShare - otherExpenses;
+                    const afterFuel = afterParamedic - fuelCost;
+                    const eqShareTotal = (afterFuel / 3) * 2;
+                    const companyShare = (eqShareTotal / 2) + fuelCost;
+                    const ownerShare = eqShareTotal / 2;
+
+                    return {
+                        ...trip,
+                        formattedDate: this.exportService.formatDate(trip.day, trip.month, trip.year),
+                        diesel: trip.diesel || 0,
+                        otherExpenses: otherExpenses,
+                        companyShare: companyShare,
+                        ownerShare: ownerShare,
+                        tripNotes: trip.tripNotes || '',
+                        acceptedAt: trip.acceptedAt ? new Date(trip.acceptedAt).toLocaleString('ar-EG') : '',
+                        closedAt: trip.closedAt ? new Date(trip.closedAt).toLocaleString('ar-EG') : '',
+                        isClosedText: this.exportService.formatBoolean(trip.isClosed)
+                    };
+                });
+
+                // Calculate totals from the exportData (which has calculated shares)
                 const totals = {
                     formattedDate: 'الإجمالي',
                     patientName: '',
@@ -972,14 +985,14 @@ export class TripsComponent implements OnInit {
                     tripType: '',
                     transferStatus: '',
                     transportationTypeName: '',
-                    totalPrice: Number(trips.reduce((sum, t) => sum + (Number(t.totalPrice) || 0), 0)).toFixed(2),
-                    payedPrice: Number(trips.reduce((sum, t) => sum + (Number(t.payedPrice) || 0), 0)).toFixed(2),
-                    diesel: Number(trips.reduce((sum, t) => sum + (Number(t.diesel) || 0), 0)).toFixed(2),
-                    paramedicShare: Number(trips.reduce((sum, t) => sum + (Number(t.paramedicShare) || 0), 0)).toFixed(2),
-                    driverShare: Number(trips.reduce((sum, t) => sum + (Number(t.driverShare) || 0), 0)).toFixed(2),
-                    companyShare: Number(trips.reduce((sum, t) => sum + (Number(t.companyShare) || 0), 0)).toFixed(2),
-                    ownerShare: Number(trips.reduce((sum, t) => sum + (Number(t.ownerShare) || 0), 0)).toFixed(2),
-                    otherExpenses: Number(trips.reduce((sum, t) => sum + (Number(t.otherExpenses) || 0), 0)).toFixed(2),
+                    totalPrice: Number(exportData.reduce((sum, t) => sum + (Number(t.totalPrice) || 0), 0)).toFixed(2),
+                    payedPrice: Number(exportData.reduce((sum, t) => sum + (Number(t.payedPrice) || 0), 0)).toFixed(2),
+                    diesel: Number(exportData.reduce((sum, t) => sum + (Number(t.diesel) || 0), 0)).toFixed(2),
+                    paramedicShare: Number(exportData.reduce((sum, t) => sum + (Number(t.paramedicShare) || 0), 0)).toFixed(2),
+                    driverShare: Number(exportData.reduce((sum, t) => sum + (Number(t.driverShare) || 0), 0)).toFixed(2),
+                    companyShare: Number(exportData.reduce((sum, t) => sum + (Number(t.companyShare) || 0), 0)).toFixed(2),
+                    ownerShare: Number(exportData.reduce((sum, t) => sum + (Number(t.ownerShare) || 0), 0)).toFixed(2),
+                    otherExpenses: Number(exportData.reduce((sum, t) => sum + (Number(t.otherExpenses) || 0), 0)).toFixed(2),
                     tripNotes: '',
                     acceptedAt: '',
                     closedAt: '',
