@@ -95,7 +95,6 @@
                 <th>المبلغ</th>
                 <th>الرصيد قبل</th>
                 <th>الرصيد بعد</th>
-                <th>إجراءات</th>
               </tr>
             </thead>
             <tbody>
@@ -137,16 +136,6 @@
                     <span class="fw-bold {{ getAmountClass(transaction.balanceAfter) }}">
                       {{ transaction.balanceAfter.toFixed(2) }} ₪
                     </span>
-                  </td>
-                  <td>
-                    @if (transaction.tripId) {
-                      <button
-                        class="btn btn-sm btn-outline-primary"
-                        (click)="viewTrip(transaction.tripId!)"
-                        title="عرض تفاصيل الرحلة">
-                        <i class="fas fa-eye"></i>
-                      </button>
-                    }
                   </td>
                 </tr>
               }

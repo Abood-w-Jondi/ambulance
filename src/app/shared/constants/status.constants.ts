@@ -50,7 +50,7 @@ export const VEHICLE_STATUS_COLORS: Record<string, string> = {
 
 // Driver Status Constants
 export const DRIVER_STATUS = {
-  AVAILABLE: 'متاحة',
+  AVAILABLE: 'متاح',
   ON_TRIP: 'في رحلة',
   OFFLINE: 'غير متصل'
 } as const;

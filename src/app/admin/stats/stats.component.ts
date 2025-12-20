@@ -71,6 +71,13 @@ export class StatsComponent implements OnInit {
   exportPeriodType = signal<'yearly' | 'custom'>('yearly');
   vehicles = signal<any[]>([]);
 
+  // --- Helper Methods ---
+
+  // Helper to format currency (e.g., 1532 -> "1,532₪")
+  private formatCurrency(value: number): string {
+    return `${Math.round(value).toLocaleString('en-US')}₪`;
+  }
+
   // Load statistics from API
   loadStats(): void {
     this.isLoading.set(true);
@@ -117,31 +124,35 @@ export class StatsComponent implements OnInit {
       ];
     }
 
-    const totalCosts = (data.fuel.totalCost || 0) + (data.maintenance.totalCost || 0);
-    const netProfit = (data.revenue.totalPayed || 0) - totalCosts;
+    const totalCosts = (data.fuel.totalCost || 0) +
+                       (data.maintenance.totalCost || 0) +
+                       (data.revenue.totalDriverShare || 0) +
+                       (data.revenue.totalParamedicShare || 0) +
+                       (data.revenue.totalOtherExpenses || 0);
+    const netProfit = (data.revenue.totalRevenue || 0) - totalCosts;
 
     return [
       {
         title: 'إجمالي الرحلات',
-        value: (data.trips.total || 0).toString(),
+        value: (data.trips.total || 0).toLocaleString('en-US'), // Just commas, no currency symbol
         trend: 'N/A',
         trendClass: 'text-secondary'
       },
       {
         title: 'إجمالي الإيرادات',
-        value: `₪${((data.revenue.totalRevenue || 0) / 1000).toFixed(1)}K`,
+        value: this.formatCurrency(data.revenue.totalRevenue || 0),
         trend: 'N/A',
         trendClass: 'text-secondary'
       },
       {
         title: 'إجمالي التكاليف',
-        value: `₪${(totalCosts / 1000).toFixed(1)}K`,
+        value: this.formatCurrency(totalCosts),
         trend: 'N/A',
         trendClass: 'text-secondary'
       },
       {
         title: 'صافي الأرباح',
-        value: `₪${(netProfit / 1000).toFixed(1)}K`,
+        value: this.formatCurrency(netProfit),
         trend: 'N/A',
         trendClass: netProfit >= 0 ? 'text-success-up' : 'text-danger-down'
       },
@@ -159,35 +170,42 @@ export class StatsComponent implements OnInit {
 
     const fuelCost = data.fuel.totalCost || 0;
     const maintenanceCost = data.maintenance.totalCost || 0;
-    const salaryCost = (data.revenue.totalDriverShare || 0) + (data.revenue.totalParamedicShare || 0);
-    const otherCost = 0; // Could include other expenses from trips
+    const driverShare = data.revenue.totalDriverShare || 0;
+    const paramedicShare = data.revenue.totalParamedicShare || 0;
+    const otherExpenses = data.revenue.totalOtherExpenses || 0;
 
-    const total = fuelCost + maintenanceCost + salaryCost + otherCost;
+    const total = fuelCost + maintenanceCost + driverShare + paramedicShare + otherExpenses;
     if (total === 0) return [];
 
     return [
       {
         label: 'الوقود',
-        value: `₪${(fuelCost / 1000).toFixed(1)}K`,
+        value: this.formatCurrency(fuelCost),
         percentage: Math.round((fuelCost / total) * 100),
         color: 'info'
       },
       {
         label: 'الصيانة',
-        value: `₪${(maintenanceCost / 1000).toFixed(1)}K`,
+        value: this.formatCurrency(maintenanceCost),
         percentage: Math.round((maintenanceCost / total) * 100),
         color: 'success'
       },
       {
-        label: 'الرواتب',
-        value: `₪${(salaryCost / 1000).toFixed(1)}K`,
-        percentage: Math.round((salaryCost / total) * 100),
+        label: 'حصة السائقين',
+        value: this.formatCurrency(driverShare),
+        percentage: Math.round((driverShare / total) * 100),
         color: 'warning'
       },
       {
-        label: 'أخرى',
-        value: `₪${(otherCost / 1000).toFixed(1)}K`,
-        percentage: Math.round((otherCost / total) * 100),
+        label: 'حصة المسعفين',
+        value: this.formatCurrency(paramedicShare),
+        percentage: Math.round((paramedicShare / total) * 100),
+        color: 'danger'
+      },
+      {
+        label: 'مصاريف أخرى',
+        value: this.formatCurrency(otherExpenses),
+        percentage: Math.round((otherExpenses / total) * 100),
         color: 'secondary'
       }
     ].filter(item => item.percentage > 0);
@@ -205,11 +223,11 @@ export class StatsComponent implements OnInit {
         return 'الرحلات حسب اليوم';
     }
   });
-  
+
   // قيمة إجمالي التكاليف لعرضها في منتصف الرسم البياني الدائري
   totalCostValue = computed(() => {
       const costs = this.stats().find(s => s.title === 'إجمالي التكاليف');
-      return costs ? costs.value : '₪0K';
+      return costs ? costs.value : '0₪';
   });
 
   // --- Methods ---
@@ -349,7 +367,6 @@ export class StatsComponent implements OnInit {
       { header: 'السنة', key: 'year', width: 10 },
       { header: 'عدد الرحلات', key: 'totalTrips', width: 12 },
       { header: 'الإيرادات (₪)', key: 'totalRevenue', width: 15 },
-      { header: 'المبلغ المدفوع (₪)', key: 'totalPaid', width: 15 },
       { header: 'الوقود (لتر)', key: 'fuelLiters', width: 12 },
       { header: 'تكلفة الوقود (₪)', key: 'fuelCost', width: 15 },
       { header: 'الصيانة (₪)', key: 'maintenanceCost', width: 15 },
@@ -373,7 +390,6 @@ export class StatsComponent implements OnInit {
       year: month.year,
       totalTrips: month.trips.total,
       totalRevenue: month.revenue.totalRevenue.toFixed(2),
-      totalPaid: month.revenue.totalPaid.toFixed(2),
       fuelLiters: month.fuel.totalLiters.toFixed(2),
       fuelCost: month.fuel.totalCost.toFixed(2),
       maintenanceCost: month.maintenance.totalCost.toFixed(2),
@@ -394,7 +410,6 @@ export class StatsComponent implements OnInit {
       year: '',
       totalTrips: data.totals.trips.total,
       totalRevenue: data.totals.revenue.totalRevenue.toFixed(2),
-      totalPaid: data.totals.revenue.totalPaid.toFixed(2),
       fuelLiters: data.totals.fuel.totalLiters.toFixed(2),
       fuelCost: data.totals.fuel.totalCost.toFixed(2),
       maintenanceCost: data.totals.maintenance.totalCost.toFixed(2),

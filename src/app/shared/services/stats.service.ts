@@ -24,10 +24,11 @@ export interface StatisticsResponse {
   };
   revenue: {
     totalRevenue: number;
-    totalPayed: number;
     totalDriverShare: number;
     totalParamedicShare: number;
     totalCompanyShare: number;
+    totalOwnerShare: number;
+    totalOtherExpenses: number;
     loanCount: number;
     totalLoanAmount: number;
   };
@@ -83,11 +84,11 @@ export interface MonthlyBreakdown {
   };
   revenue: {
     totalRevenue: number;
-    totalPaid: number;
     totalParamedicShare: number;
     totalDriverShare: number;
     totalCompanyShare: number;
     totalOwnerShare: number;
+    totalOtherExpenses: number;
     loanAmount: number;
   };
   odometer?: {
@@ -113,11 +114,11 @@ export interface MonthlyBreakdownResponse {
     };
     revenue: {
       totalRevenue: number;
-      totalPaid: number;
       totalParamedicShare: number;
       totalDriverShare: number;
       totalCompanyShare: number;
       totalOwnerShare: number;
+      totalOtherExpenses: number;
       loanAmount: number;
     };
   };
