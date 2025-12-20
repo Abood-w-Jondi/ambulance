@@ -15,8 +15,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-xl shadow-lg border-0">
                 <div class="modal-header bg-primary-custom rounded-top-xl border-0 justify-content-between text-white">
-                    <h5 class="modal-title fw-bold text-dark">إضافة مركبة جديدة</h5>
-                    <button type="button" style="background-color: transparent; border: none;" data-bs-dismiss="modal" aria-label="Close"
+                    <h5 class="modal-title fw-bold ">إضافة مركبة جديدة</h5>
+                    <button type="button" style="background-color: transparent; color: white; border: none;" data-bs-dismiss="modal" aria-label="Close"
                         (click)="isAddVehicleModalOpen.set(false)"><i class="fa fa-times"></i></button>
                 </div>
                 <div class="modal-body p-4 text-end">
@@ -31,26 +31,6 @@
                                 <label for="vehicleName" class="form-label small fw-medium">اسم المركبة</label>
                                 <input id="vehicleName" type="text" class="form-control" placeholder="مثال: إسعاف النجوم"
                                     [(ngModel)]="vehicleForm.vehicleName" name="vehicleName" required>
-                            </div>
-                            <div class="col-12">
-                                <label for="type" class="form-label small fw-medium">النوع</label>
-                                <select id="type" class="form-select" [(ngModel)]="vehicleForm.type" name="type" required>
-                                    <option value="">اختر النوع</option>
-                                    @for (type of vehicleTypes; track type) {
-                                    <option [value]="type">{{ type }}</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label for="currentDriver" class="form-label small fw-medium">السائق الحالي</label>
-                                <input type="text" class="form-control mb-2" placeholder="بحث عن سائق..." 
-                                    [(ngModel)]="driverSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="currentDriver" class="form-select" [(ngModel)]="vehicleForm.currentDriver" name="currentDriver">
-                                    <option value="">بدون سائق</option>
-                                    @for (driver of filteredDriversList(); track driver.id) {
-                                    <option [value]="driver.name">{{ driver.name }}</option>
-                                    }
-                                </select>
                             </div>
                             <div class="col-12">
                                 <label for="notes" class="form-label small fw-medium">ملاحظات</label>
@@ -103,25 +83,6 @@
                                     [(ngModel)]="vehicleForm.vehicleName" name="vehicleName" required>
                             </div>
                             <div class="col-12">
-                                <label for="editType" class="form-label small fw-medium">النوع</label>
-                                <select id="editType" class="form-select" [(ngModel)]="vehicleForm.type" name="type" required>
-                                    @for (type of vehicleTypes; track type) {
-                                    <option [value]="type">{{ type }}</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label for="editCurrentDriver" class="form-label small fw-medium">السائق الحالي</label>
-                                <input type="text" class="form-control mb-2" placeholder="بحث عن سائق..." 
-                                    [(ngModel)]="driverSearchTerm" [ngModelOptions]="{standalone: true}">
-                                <select id="editCurrentDriver" class="form-select" [(ngModel)]="vehicleForm.currentDriver" name="currentDriver">
-                                    <option value="">بدون سائق</option>
-                                    @for (driver of filteredDriversList(); track driver.id) {
-                                    <option [value]="driver.name">{{ driver.name }}</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-12">
                                 <label for="editNotes" class="form-label small fw-medium">ملاحظات</label>
                                 <textarea id="editNotes" class="form-control" rows="3" placeholder="ملاحظات إضافية..."
                                     [(ngModel)]="vehicleForm.notes" name="notes"></textarea>
@@ -168,14 +129,6 @@
                         <div class="col-12">
                             <p class="text-muted small mb-1">اسم المركبة</p>
                             <p class="h5 fw-bold">{{ vehicle.vehicleName }}</p>
-                        </div>
-                        <div class="col-12">
-                            <p class="text-muted small mb-1">النوع</p>
-                            <p class="fw-bold">{{ vehicle.type }}</p>
-                        </div>
-                        <div class="col-12">
-                            <p class="text-muted small mb-1">السائق الحالي</p>
-                            <p class="fw-bold">{{ vehicle.currentDriver || 'غير مخصص' }}</p>
                         </div>
                         @if (vehicle.notes) {
                         <div class="col-12">
@@ -224,9 +177,10 @@
                         <span class="input-group-text bg-white border-end-0">
                             <i class="fa-solid fa-search text-muted"></i>
                         </span>
-                        <input type="text" class="form-control border-start-0" 
+                        <input type="text" class="form-control border-start-0"
                             placeholder="البحث برقم المركبة أو السائق..."
-                            [(ngModel)]="searchTerm">
+                            [(ngModel)]="searchTerm"
+                            (ngModelChange)="onSearchChange()">
                     </div>
                 </div>
                 <div class="col-12 col-md-4 d-flex justify-content-end">
@@ -269,15 +223,10 @@
                                         <h5 class="fw-bold m-0">{{ vehicle.vehicleId }}</h5>
                                         <p class="text-muted small m-0">{{ vehicle.vehicleName }}</p>
                                     </div>
-                                    <span class="badge rounded-pill fw-bold" [ngClass]="getStatusBadgeClass(vehicle.status)">
+                                    <span class="badge rounded-pill fw-bold" [ngStyle]="{'background-color': getStatusBadgeClass(vehicle.status)}">
                                         <i class="fa-solid me-1" [ngClass]="getStatusIcon(vehicle.status)"></i>
                                         {{ vehicle.status }}
                                     </span>
-                                </div>
-
-                                <div class="mb-3">
-                                    <p class="text-muted small mb-1">النوع</p>
-                                    <p class="fw-medium m-0">{{ vehicle.type }}</p>
                                 </div>
 
                                 @if (vehicle.notes) {
@@ -287,18 +236,6 @@
                                 </div>
                                 }
 
-                                <div class="pt-2 border-top">
-                                    <p class="text-muted small mb-1">السائق الحالي</p>
-                                    <p class="fw-medium m-0">
-                                        @if (vehicle.currentDriver) {
-                                            <i class="fa-solid fa-user-check text-success me-1"></i>
-                                            {{ vehicle.currentDriver }}
-                                        } @else {
-                                            <i class="fa-solid fa-user-slash text-muted me-1"></i>
-                                            غير مخصص
-                                        }
-                                    </p>
-                                </div>
                             </div>
                         </div>
                     </div>

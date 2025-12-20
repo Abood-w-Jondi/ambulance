@@ -1,22 +1,12 @@
 import { Component, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { GlobalVarsService } from '../../../global-vars.service';
 import { ToastService } from '../../../shared/services/toast.service';
+import { UserService, UserProfile, UpdateProfileRequest } from '../../../shared/services/user.service';
 
-interface UserProfile {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    role: 'admin' | 'driver' | 'officer';
-    nationalId: string;
-    dateOfBirth: Date;
-    address: string;
-    city: string;
-    profileImage?: string;
-}
+type EducationLevel = 'EMI' | 'B' | 'I' | 'P';
 
 @Component({
     selector: 'app-profile',
@@ -29,127 +19,118 @@ interface UserProfile {
 export class ProfileComponent implements OnInit {
     // State
     isChangePasswordModalOpen = signal(false);
-    isAdminView = signal(false); // True when admin is viewing/editing another user's profile
-    currentUserId = signal<string | null>(null);
+    isLoading = signal(false);
 
-    // Mock database of all users (would come from backend in real app)
-    private allUsers = signal<UserProfile[]>([
-        {
-            id: '1',
-            name: 'أحمد محمد العلي',
-            email: 'admin@ambulance.sa',
-            phone: '0501234567',
-            role: 'admin',
-            nationalId: '1234567890',
-            dateOfBirth: new Date('1990-01-01'),
-            address: 'حي النخيل، طريق الملك فهد',
-            city: 'الرياض',
-            profileImage: undefined
-        }
-    ]);
+    // Education level options for dropdown
+    educationLevelOptions: { value: EducationLevel; label: string }[] = [
+        { value: 'EMI', label: 'EMI - طوارئ طبية متوسطة' },
+        { value: 'B', label: 'B - أساسي' },
+        { value: 'I', label: 'I - متوسط' },
+        { value: 'P', label: 'P - مسعف' }
+    ];
 
-    // User profile (would come from auth service in real app)
-    userProfile = signal<UserProfile>({
-        id: '1',
-        name: 'أحمد محمد العلي',
-        email: 'admin@ambulance.sa',
-        phone: '0501234567',
-        role: 'admin',
-        nationalId: '1234567890',
-        dateOfBirth: new Date('1990-01-01'),
-        address: 'حي النخيل، طريق الملك فهد',
-        city: 'الرياض',
-        profileImage: undefined
-    });
+    // User profile
+    userProfile = signal<UserProfile | null>({
+  "id": '',
+  "username": '',
+  "email": '',
+  "fullName": '',
+  "arabicName": '',
+  "phoneNumber": '',
+  "jobTitle": '',
+  "educationLevel": null,
+  "role": 'driver',
+  "isActive": true,
+  "isEmailVerified": false,
+  "profileImageUrl": null,
+  "createdAt": '',
+  "updatedAt": '',
+  // Role-specific read-only fields for drivers
+  "driverId": '',
+  "amountOwed": 0,
+  "driverStatus": '',
+  "isAccountCleared": false
+});
 
     // Form for editing
-    profileForm = {
-        name: '',
+    profileForm: {
+        arabicName: string;
+        fullName: string;
+        username: string;
+        email: string;
+        phoneNumber: string;
+        jobTitle: string;
+        educationLevel: EducationLevel | '';
+    } = {
+        arabicName: '',
+        fullName: '',
+        username: '',
         email: '',
-        phone: '',
-        nationalId: '',
-        dateOfBirth: '',
-        address: '',
-        city: ''
+        phoneNumber: '',
+        jobTitle: '',
+        educationLevel: ''
     };
 
-    // Password change form - Admin doesn't need current password
+    // Password change form - User must provide current password
     passwordForm = {
+        currentPassword: '',
         newPassword: '',
         confirmPassword: ''
     };
 
     constructor(
+        private userService: UserService,
         private globalVars: GlobalVarsService,
         private router: Router,
-        private route: ActivatedRoute,
         private toastService: ToastService
     ) {
         this.globalVars.setGlobalHeader('معلومات الحساب');
     }
 
     ngOnInit(): void {
-        // Check if there's a userId in the route
-        this.route.params.subscribe(params => {
-            const userId = params['userId'];
-            if (userId) {
-                this.currentUserId.set(userId);
-                this.isAdminView.set(true);
-                this.loadUserById(userId);
-            } else {
-                // Load current logged-in user's profile
-                this.loadProfileToForm();
-            }
-        });
+        this.loadCurrentUserProfile();
     }
 
-    loadUserById(userId: string): void {
-        // In a real app, this would fetch from backend
-        // For now, we'll check if it's a known user or create a mock profile
-        const user = this.allUsers().find(u => u.id === userId);
-
-        if (user) {
-            this.userProfile.set(user);
-        } else {
-            // Create a mock user for demonstration (in real app, fetch from backend)
-            const mockUser: UserProfile = {
-                id: userId,
-                name: 'مستخدم تجريبي',
-                email: `user${userId}@ambulance.sa`,
-                phone: '05012345678',
-                role: 'driver',
-                nationalId: '9876543210',
-                dateOfBirth: new Date('1995-01-01'),
-                address: 'عنوان تجريبي',
-                city: 'الرياض',
-                profileImage: undefined
-            };
-            this.userProfile.set(mockUser);
-        }
-
-        this.loadProfileToForm();
-        this.globalVars.setGlobalHeader(`معلومات المستخدم: ${this.userProfile().name}`);
+    /**
+     * Load current logged-in user's profile from API
+     */
+    loadCurrentUserProfile(): void {
+        this.isLoading.set(true);
+        this.userService.getCurrentUserProfile().subscribe({
+            next: (profile) => {
+                this.userProfile.set(profile);
+                console.log('Loaded profile:', profile);
+                console.log('Profile Signal:', this.userProfile());
+                this.loadProfileToForm();
+                this.isLoading.set(false);
+            },
+            error: (error) => {
+                this.toastService.error(error.message);
+                this.isLoading.set(false);
+            }
+        });
     }
 
     getRoleLabel(role: string): string {
         const roleMap: { [key: string]: string } = {
             'admin': 'مدير النظام',
-            'driver': 'سائق',
-            'officer': 'ضابط'
+            'driver': 'سائق'
         };
         return roleMap[role] || role;
     }
 
     loadProfileToForm(): void {
         const profile = this.userProfile();
+        if (!profile) return;
+
         this.profileForm = {
-            name: profile.name,
-            email: profile.email,
-            phone: profile.phone,
-            nationalId: profile.nationalId,
-            dateOfBirth: profile.dateOfBirth.toISOString().split('T')[0],
-            address: profile.address,
-            city: profile.city
+            arabicName: profile.arabicName || '',
+            fullName: profile.fullName || '',
+            username: profile.username || '',
+            email: profile.email || '',
+            phoneNumber: profile.phoneNumber || '',
+            jobTitle: profile.jobTitle || '',
+            educationLevel: profile.educationLevel || ''
         };
     }
 
@@ -159,46 +140,42 @@ export class ProfileComponent implements OnInit {
     }
 
     saveProfile(): void {
+        
         if (!this.validateProfile()) return;
 
-        this.userProfile.update(profile => ({
-            ...profile,
-            name: this.profileForm.name,
+        this.isLoading.set(true);
+
+        const updateData: UpdateProfileRequest = {
+            arabicName: this.profileForm.arabicName,
+            fullName: this.profileForm.fullName,
+            username: this.profileForm.username,
             email: this.profileForm.email,
-            phone: this.profileForm.phone,
-            nationalId: this.profileForm.nationalId,
-            dateOfBirth: new Date(this.profileForm.dateOfBirth),
-            address: this.profileForm.address,
-            city: this.profileForm.city
-        }));
+            phoneNumber: this.profileForm.phoneNumber,
+            jobTitle: this.profileForm.jobTitle,
+            educationLevel: this.profileForm.educationLevel as EducationLevel || undefined
+        };
 
-        // In real app, save to backend here
-        // TODO: Implement backend API call
-
-        this.toastService.success('تم تحديث المعلومات بنجاح');
+        this.userService.updateProfile(updateData).subscribe({
+            next: (updatedProfile) => {
+                this.userProfile.set(updatedProfile);
+                this.loadProfileToForm();
+                this.toastService.success('تم تحديث المعلومات بنجاح');
+                this.isLoading.set(false);
+            },
+            error: (error) => {
+                this.toastService.error(error.message);
+                this.isLoading.set(false);
+            }
+        });
     }
 
     validateProfile(): boolean {
-        if (!this.profileForm.name.trim()) {
-            this.toastService.error('الرجاء إدخال الاسم');
+        if (!this.profileForm.arabicName.trim()) {
+            this.toastService.error('الرجاء إدخال الاسم بالعربي');
             return false;
         }
-        if (!this.profileForm.email.trim()) {
-            this.toastService.error('الرجاء إدخال البريد الإلكتروني');
-            return false;
-        }
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailPattern.test(this.profileForm.email)) {
-            this.toastService.error('البريد الإلكتروني غير صحيح');
-            return false;
-        }
-        if (!this.profileForm.phone.trim()) {
-            this.toastService.error('الرجاء إدخال رقم الهاتف');
-            return false;
-        }
-        const phonePattern = /^[0-9]{10}$/;
-        if (!phonePattern.test(this.profileForm.phone.replace(/\s/g, ''))) {
-            this.toastService.error('رقم الهاتف يجب أن يكون 10 أرقام');
+        if (!this.profileForm.username.trim()) {
+            this.toastService.error('الرجاء إدخال اسم المستخدم');
             return false;
         }
         return true;
@@ -218,14 +195,29 @@ export class ProfileComponent implements OnInit {
     changePassword(): void {
         if (!this.validatePassword()) return;
 
-        // Admin can change password without knowing the current one
-        // In real app, call backend API to change password
-        // TODO: Implement backend API call
-        this.toastService.success(`تم تغيير كلمة المرور بنجاح للمستخدم: ${this.userProfile().name}`);
-        this.closeChangePasswordModal();
+        this.isLoading.set(true);
+
+        this.userService.changePassword(
+            this.passwordForm.currentPassword,
+            this.passwordForm.newPassword
+        ).subscribe({
+            next: () => {
+                this.toastService.success('تم تغيير كلمة المرور بنجاح');
+                this.closeChangePasswordModal();
+                this.isLoading.set(false);
+            },
+            error: (error) => {
+                this.toastService.error(error.message);
+                this.isLoading.set(false);
+            }
+        });
     }
 
     validatePassword(): boolean {
+        if (!this.passwordForm.currentPassword) {
+            this.toastService.error('الرجاء إدخال كلمة المرور الحالية');
+            return false;
+        }
         if (!this.passwordForm.newPassword) {
             this.toastService.error('الرجاء إدخال كلمة المرور الجديدة');
             return false;
@@ -238,11 +230,16 @@ export class ProfileComponent implements OnInit {
             this.toastService.error('كلمة المرور الجديدة غير متطابقة');
             return false;
         }
+        if (this.passwordForm.currentPassword === this.passwordForm.newPassword) {
+            this.toastService.error('كلمة المرور الجديدة يجب أن تكون مختلفة عن الحالية');
+            return false;
+        }
         return true;
     }
 
     resetPasswordForm(): void {
         this.passwordForm = {
+            currentPassword: '',
             newPassword: '',
             confirmPassword: ''
         };
@@ -257,16 +254,59 @@ export class ProfileComponent implements OnInit {
                 return;
             }
 
+            // Validate file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                this.toastService.error('حجم الصورة يجب أن لا يتجاوز 2 ميجابايت');
+                return;
+            }
+
+            this.isLoading.set(true);
+
             const reader = new FileReader();
             reader.onload = (e: any) => {
-                this.userProfile.update(profile => ({
-                    ...profile,
-                    profileImage: e.target.result
-                }));
-                this.toastService.success('تم تحديث الصورة الشخصية');
+                const imageData = e.target.result;
+
+                const updateData: UpdateProfileRequest = {
+                    profileImageUrl: imageData,
+                    arabicName: this.profileForm.arabicName,
+                    fullName: this.profileForm.fullName,
+                    username: this.profileForm.username,
+                };
+
+                this.userService.updateProfile(updateData).subscribe({
+                    next: (updatedProfile) => {
+                        this.userProfile.set(updatedProfile);
+                        this.toastService.success('تم تحديث الصورة الشخصية');
+                        this.isLoading.set(false);
+                    },
+                    error: (error) => {
+                        this.toastService.error(error.message);
+                        this.isLoading.set(false);
+                    }
+                });
             };
             reader.readAsDataURL(file);
         }
+    }
+
+    removeProfileImage(): void {
+        this.isLoading.set(true);
+
+        const updateData: UpdateProfileRequest = {
+            profileImageUrl: null
+        };
+
+        this.userService.updateProfile(updateData).subscribe({
+            next: (updatedProfile) => {
+                this.userProfile.set(updatedProfile);
+                this.toastService.info('تم إزالة الصورة الشخصية');
+                this.isLoading.set(false);
+            },
+            error: (error) => {
+                this.toastService.error(error.message);
+                this.isLoading.set(false);
+            }
+        });
     }
 
     goBack(): void {

@@ -27,6 +27,11 @@ export interface User {
     // Profile
     profileImageUrl?: string;
 
+    // NEW Profile Fields (Simplified for Admins and Drivers)
+    jobTitle?: string;                          // الوظيفة - Job title
+    educationLevel?: 'EMI' | 'B' | 'I' | 'P';   // Education level
+    palestinianNumber?: string;                 // Palestinian phone number (05XX-XXX-XXX)
+
     // Timestamps
     lastLoginAt?: Date;
     createdAt: Date;

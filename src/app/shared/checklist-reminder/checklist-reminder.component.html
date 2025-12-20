@@ -1,0 +1,33 @@
+@if (isOpen()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            تذكير: فحص المركبة مطلوب
+          </h5>
+        </div>
+        <div class="modal-body">
+          <p class="mb-3">
+            يجب عليك إكمال قائمة فحص المعدات للمركبة <strong>{{ vehicleName() }}</strong> قبل بدء العمل.
+          </p>
+          <p class="text-muted small mb-0">
+            يمكنك تأجيل هذا التذكير، وسيظهر مرة أخرى بعد 10 دقائق حتى يتم إكمال الفحص.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="onDismiss()">
+            <i class="bi bi-clock me-1"></i>
+            تأجيل (10 دقائق)
+          </button>
+          <button type="button" class="btn btn-warning" (click)="onOpenChecklist()">
+            <i class="bi bi-clipboard-check me-1"></i>
+            بدء الفحص الآن
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

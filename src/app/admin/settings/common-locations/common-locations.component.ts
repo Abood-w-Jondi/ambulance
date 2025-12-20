@@ -1,20 +1,22 @@
-import { Component, signal, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { GlobalVarsService } from '../../../global-vars.service';
 import { ToastService } from '../../../shared/services/toast.service';
-import { CommonLocation, LocationType } from '../../../shared/models';
+import { LocationService } from '../../../shared/services/location.service';
+import { CommonLocation, LocationType, Location, LocationReference } from '../../../shared/models';
+import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 
 @Component({
     selector: 'app-common-locations',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PaginationComponent],
     templateUrl: './common-locations.component.html',
     styleUrl: './common-locations.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CommonLocationsComponent {
+export class CommonLocationsComponent implements OnInit {
     // State
     searchTerm = signal('');
     filterType = signal<string>('الكل');
@@ -42,95 +44,100 @@ export class CommonLocationsComponent {
     filterTypes = ['الكل', 'مستشفى', 'عيادة', 'طوارئ', 'أخرى'];
 
     // Data
-    commonLocations = signal<CommonLocation[]>([
-        {
-            id: '1',
-            name: 'مستشفى الملك فيصل التخصصي',
-            address: 'طريق الملك فهد',
-            city: 'الرياض',
-            type: 'hospital',
-            phoneNumber: '0114647272',
-            isActive: true,
-            createdAt: new Date('2024-01-15')
-        },
-        {
-            id: '2',
-            name: 'مستشفى الملك خالد الجامعي',
-            address: 'حي النخيل',
-            city: 'الرياض',
-            type: 'hospital',
-            phoneNumber: '0114672222',
-            isActive: true,
-            createdAt: new Date('2024-01-15')
-        },
-        {
-            id: '3',
-            name: 'مركز الطوارئ المركزي',
-            address: 'حي العليا',
-            city: 'الرياض',
-            type: 'emergency',
-            phoneNumber: '0114563000',
-            isActive: true,
-            createdAt: new Date('2024-01-20')
-        },
-        {
-            id: '4',
-            name: 'عيادات الرعاية الأولية',
-            address: 'حي الملز',
-            city: 'الرياض',
-            type: 'clinic',
-            phoneNumber: '0114456789',
-            isActive: true,
-            createdAt: new Date('2024-02-01')
-        },
-        {
-            id: '5',
-            name: 'مستشفى الحرس الوطني',
-            address: 'طريق الملك عبدالعزيز',
-            city: 'الرياض',
-            type: 'hospital',
-            phoneNumber: '0118011111',
-            isActive: true,
-            createdAt: new Date('2024-02-05')
-        }
-    ]);
+    commonLocations = signal<CommonLocation[]>([]);
+    customLocations = signal<LocationReference[]>([]);
+    selectedCustomLocationId: string = '';
+    isLoading = signal(false);
 
-    // Computed
-    filteredLocations = computed(() => {
-        let locations = this.commonLocations();
-
-        // Filter by type
-        const type = this.filterType();
-        if (type !== 'الكل') {
-            const typeMap: { [key: string]: LocationType } = {
-                'مستشفى': 'hospital',
-                'عيادة': 'clinic',
-                'طوارئ': 'emergency',
-                'أخرى': 'other'
-            };
-            locations = locations.filter(loc => loc.type === typeMap[type]);
-        }
-
-        // Filter by search term
-        const term = this.searchTerm().toLowerCase().trim();
-        if (term) {
-            locations = locations.filter(loc =>
-                loc.name.toLowerCase().includes(term) ||
-                loc.address.toLowerCase().includes(term) ||
-                loc.city.toLowerCase().includes(term) ||
-                loc.phoneNumber.includes(term)
-            );
-        }
-
-        return locations;
-    });
+    // Pagination
+    currentPage = 1;
+    itemsPerPage = 12; // 3 rows x 4 cards
+    totalRecords = 0;
 
     constructor(
         private globalVars: GlobalVarsService,
         private router: Router,
-        private toastService: ToastService
+        private toastService: ToastService,
+        private locationService: LocationService
     ) {
         this.globalVars.setGlobalHeader('إدارة المواقع الشائعة');
+    }
+
+    ngOnInit(): void {
+        this.loadLocations();
+        this.loadCustomLocations();
+    }
+
+    loadLocations(): void {
+        this.isLoading.set(true);
+
+        // Map filter type from Arabic to English
+        const typeFilter = this.filterType() !== 'الكل' ? this.mapFilterTypeToEnum(this.filterType()) : undefined;
+
+        this.locationService.getLocations({
+            locationType: 'common',
+            page: this.currentPage,
+            limit: this.itemsPerPage,
+            type: typeFilter,
+            searchTerm: this.searchTerm() || undefined
+        }).subscribe({
+            next: (response) => {
+                this.commonLocations.set(response.data.map((loc: Location) => ({
+                    id: loc.id,
+                    name: loc.name,
+                    address: loc.address || '',
+                    city: loc.city || '',
+                    type: loc.type || 'other',
+                    phoneNumber: loc.phoneNumber || '',
+                    isActive: loc.isActive ?? true,
+                    createdAt: loc.createdAt || new Date()
+                })));
+                this.totalRecords = response.total;
+                this.isLoading.set(false);
+            },
+            error: (error) => {
+                console.error('Error loading locations:', error);
+                this.toastService.error('فشل تحميل المواقع');
+                this.isLoading.set(false);
+            }
+        });
+    }
+
+    mapFilterTypeToEnum(arabicType: string): LocationType {
+        const typeMap: { [key: string]: LocationType } = {
+            'مستشفى': 'hospital',
+            'عيادة': 'clinic',
+            'طوارئ': 'emergency',
+            'أخرى': 'other'
+        };
+        return typeMap[arabicType] || 'other';
+    }
+
+    onPageChange(page: number): void {
+        this.currentPage = page;
+        this.loadLocations();
+    }
+
+    onItemsPerPageChange(itemsPerPage: number): void {
+        this.itemsPerPage = itemsPerPage;
+        this.currentPage = 1;
+        this.loadLocations();
+    }
+
+    onFilterChange(): void {
+        this.currentPage = 1;
+        this.loadLocations();
+    }
+
+    loadCustomLocations(): void {
+        this.locationService.getCustomLocations().subscribe({
+            next: (locations) => {
+                this.customLocations.set(locations);
+            },
+            error: (error) => {
+                console.error('Error loading custom locations:', error);
+            }
+        });
     }
 
     // Helper methods
@@ -147,12 +154,28 @@ export class CommonLocationsComponent {
     // Modal methods
     openAddModal(): void {
         this.resetForm();
+        this.selectedCustomLocationId = '';
         this.isAddModalOpen.set(true);
     }
 
     closeAddModal(): void {
         this.isAddModalOpen.set(false);
         this.resetForm();
+        this.selectedCustomLocationId = '';
+    }
+
+    onCustomLocationSelected(locationId: string): void {
+        if (!locationId) {
+            this.resetForm();
+            return;
+        }
+
+        // Find the selected custom location
+        const customLoc = this.customLocations().find(loc => loc.id === locationId);
+        if (customLoc) {
+            this.locationForm.name = customLoc.name;
+            // Other fields will be filled manually by the user
+        }
     }
 
     openEditModal(location: CommonLocation): void {
@@ -178,20 +201,79 @@ export class CommonLocationsComponent {
     addLocation(): void {
         if (!this.validateForm()) return;
 
-        const newLocation: CommonLocation = {
-            id: Date.now().toString(),
+        // If user selected a custom location from dropdown, convert it
+        if (this.selectedCustomLocationId) {
+            this.convertToCommonLocation(this.selectedCustomLocationId);
+            return;
+        }
+
+        // Otherwise, search to see if this name exists as custom location
+        this.locationService.searchLocations(this.locationForm.name).subscribe({
+            next: (locations) => {
+                const existingCustom = locations.find(loc =>
+                    loc.name.toLowerCase() === this.locationForm.name.toLowerCase() &&
+                    loc.locationType === 'custom'
+                );
+
+                if (existingCustom) {
+                    // Convert custom location to common
+                    this.convertToCommonLocation(existingCustom.id);
+                } else {
+                    // Create new common location
+                    this.createCommonLocation();
+                }
+            },
+            error: (error) => {
+                console.error('Error searching locations:', error);
+                // If search fails, just create new location
+                this.createCommonLocation();
+            }
+        });
+    }
+
+    private convertToCommonLocation(locationId: string): void {
+        this.locationService.updateLocation(locationId, {
             name: this.locationForm.name,
+            locationType: 'common',
             address: this.locationForm.address,
             city: this.locationForm.city,
             type: this.locationForm.type,
             phoneNumber: this.locationForm.phoneNumber,
-            isActive: this.locationForm.isActive,
-            createdAt: new Date()
-        };
+            isActive: this.locationForm.isActive
+        }).subscribe({
+            next: () => {
+                this.toastService.success('تم تحويل الموقع إلى موقع شائع بنجاح');
+                this.closeAddModal();
+                this.loadLocations();
+                this.loadCustomLocations(); // Reload custom locations
+            },
+            error: (error) => {
+                console.error('Error converting location:', error);
+                this.toastService.error('فشل تحويل الموقع');
+            }
+        });
+    }
 
-        this.commonLocations.update(locations => [...locations, newLocation]);
-        this.toastService.success('تم إضافة الموقع بنجاح');
-        this.closeAddModal();
+    private createCommonLocation(): void {
+        this.locationService.createLocation({
+            name: this.locationForm.name,
+            locationType: 'common',
+            address: this.locationForm.address,
+            city: this.locationForm.city,
+            type: this.locationForm.type,
+            phoneNumber: this.locationForm.phoneNumber
+        }).subscribe({
+            next: () => {
+                this.toastService.success('تم إضافة الموقع بنجاح');
+                this.closeAddModal();
+                this.loadLocations();
+                this.loadCustomLocations(); // Reload in case name matched
+            },
+            error: (error) => {
+                console.error('Error creating location:', error);
+                this.toastService.error('فشل إضافة الموقع');
+            }
+        });
     }
 
     updateLocation(): void {
@@ -200,45 +282,54 @@ export class CommonLocationsComponent {
         const selected = this.selectedLocation();
         if (!selected) return;
 
-        this.commonLocations.update(locations =>
-            locations.map(location =>
-                location.id === selected.id
-                    ? {
-                        ...location,
-                        name: this.locationForm.name,
-                        address: this.locationForm.address,
-                        city: this.locationForm.city,
-                        type: this.locationForm.type,
-                        phoneNumber: this.locationForm.phoneNumber,
-                        isActive: this.locationForm.isActive
-                    }
-                    : location
-            )
-        );
-
-        this.toastService.success('تم تحديث الموقع بنجاح');
-        this.closeEditModal();
+        this.locationService.updateLocation(selected.id, {
+            name: this.locationForm.name,
+            locationType: 'common',
+            address: this.locationForm.address,
+            city: this.locationForm.city,
+            type: this.locationForm.type,
+            phoneNumber: this.locationForm.phoneNumber,
+            isActive: this.locationForm.isActive
+        }).subscribe({
+            next: () => {
+                this.toastService.success('تم تحديث الموقع بنجاح');
+                this.closeEditModal();
+                this.loadLocations();
+            },
+            error: (error) => {
+                console.error('Error updating location:', error);
+                this.toastService.error('فشل تحديث الموقع');
+            }
+        });
     }
 
     deleteLocation(location: CommonLocation): void {
         if (confirm(`هل أنت متأكد من حذف "${location.name}"؟`)) {
-            this.commonLocations.update(locations =>
-                locations.filter(l => l.id !== location.id)
-            );
-            this.toastService.success('تم حذف الموقع بنجاح');
+            this.locationService.deleteLocation(location.id).subscribe({
+                next: () => {
+                    this.toastService.success('تم حذف الموقع بنجاح');
+                    this.loadLocations();
+                },
+                error: (error) => {
+                    console.error('Error deleting location:', error);
+                    this.toastService.error('فشل حذف الموقع');
+                }
+            });
         }
     }
 
     toggleStatus(location: CommonLocation): void {
-        this.commonLocations.update(locations =>
-            locations.map(l =>
-                l.id === location.id
-                    ? { ...l, isActive: !l.isActive }
-                    : l
-            )
-        );
-        const status = !location.isActive ? 'تم تفعيل' : 'تم تعطيل';
-        this.toastService.success(`${status} الموقع`);
+        this.locationService.toggleLocationStatus(location.id).subscribe({
+            next: () => {
+                const status = !location.isActive ? 'تم تفعيل' : 'تم تعطيل';
+                this.toastService.success(`${status} الموقع`);
+                this.loadLocations();
+            },
+            error: (error) => {
+                console.error('Error toggling location status:', error);
+                this.toastService.error('فشل تغيير حالة الموقع');
+            }
+        });
     }
 
     // Validation
@@ -247,24 +338,16 @@ export class CommonLocationsComponent {
             this.toastService.error('الرجاء إدخال اسم الموقع');
             return false;
         }
-        if (!this.locationForm.address.trim()) {
-            this.toastService.error('الرجاء إدخال العنوان');
-            return false;
+
+        const phone = (this.locationForm.phoneNumber || '').replace(/\s/g, '');
+        if (phone) {
+            const phonePattern = /^[0-9]{10}$/;
+            if (!phonePattern.test(phone)) {
+                this.toastService.error('رقم الهاتف يجب أن يكون 10 أرقام');
+                return false;
+            }
         }
-        if (!this.locationForm.city.trim()) {
-            this.toastService.error('الرجاء إدخال المدينة');
-            return false;
-        }
-        if (!this.locationForm.phoneNumber.trim()) {
-            this.toastService.error('الرجاء إدخال رقم الهاتف');
-            return false;
-        }
-        // Basic phone validation
-        const phonePattern = /^[0-9]{10}$/;
-        if (!phonePattern.test(this.locationForm.phoneNumber.replace(/\s/g, ''))) {
-            this.toastService.error('رقم الهاتف يجب أن يكون 10 أرقام');
-            return false;
-        }
+
         return true;
     }
 

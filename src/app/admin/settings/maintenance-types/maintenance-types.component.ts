@@ -1,25 +1,28 @@
-import { Component, signal, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { GlobalVarsService } from '../../../global-vars.service';
 import { ToastService } from '../../../shared/services/toast.service';
+import { MaintenanceTypeService } from '../../../shared/services/maintenance-type.service';
+import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { MaintenanceTypeConfig } from '../../../shared/models';
 
 @Component({
     selector: 'app-maintenance-types',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PaginationComponent],
     templateUrl: './maintenance-types.component.html',
     styleUrl: './maintenance-types.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MaintenanceTypesComponent {
+export class MaintenanceTypesComponent implements OnInit {
     // State
     searchTerm = signal('');
     isAddModalOpen = signal(false);
     isEditModalOpen = signal(false);
     selectedType = signal<MaintenanceTypeConfig | null>(null);
+    isLoading = signal(false);
 
     // Form
     typeForm = {
@@ -31,80 +34,57 @@ export class MaintenanceTypesComponent {
     };
 
     // Data
-    maintenanceTypes = signal<MaintenanceTypeConfig[]>([
-        {
-            id: '1',
-            name: 'صيانة دورية',
-            description: 'الفحص والصيانة الدورية للمركبة',
-            estimatedCost: 500,
-            estimatedDuration: 4,
-            isActive: true,
-            createdAt: new Date('2024-01-15')
-        },
-        {
-            id: '2',
-            name: 'تغيير زيت',
-            description: 'تغيير زيت المحرك والفلاتر',
-            estimatedCost: 200,
-            estimatedDuration: 1,
-            isActive: true,
-            createdAt: new Date('2024-01-15')
-        },
-        {
-            id: '3',
-            name: 'فحص الفرامل',
-            description: 'فحص وصيانة نظام الفرامل',
-            estimatedCost: 300,
-            estimatedDuration: 2,
-            isActive: true,
-            createdAt: new Date('2024-01-20')
-        },
-        {
-            id: '4',
-            name: 'تبديل إطارات',
-            description: 'تبديل إطارات المركبة',
-            estimatedCost: 800,
-            estimatedDuration: 2,
-            isActive: true,
-            createdAt: new Date('2024-02-01')
-        },
-        {
-            id: '5',
-            name: 'فحص كهرباء',
-            description: 'فحص النظام الكهربائي للمركبة',
-            estimatedCost: 250,
-            estimatedDuration: 3,
-            isActive: true,
-            createdAt: new Date('2024-02-05')
-        },
-        {
-            id: '6',
-            name: 'صيانة مكيف',
-            description: 'فحص وصيانة نظام التكييف',
-            estimatedCost: 350,
-            estimatedDuration: 2,
-            isActive: true,
-            createdAt: new Date('2024-02-10')
-        }
-    ]);
+    maintenanceTypes = signal<MaintenanceTypeConfig[]>([]);
 
-    // Computed
-    filteredTypes = computed(() => {
-        const term = this.searchTerm().toLowerCase().trim();
-        if (!term) return this.maintenanceTypes();
-
-        return this.maintenanceTypes().filter(type =>
-            type.name.toLowerCase().includes(term) ||
-            type.description.toLowerCase().includes(term)
-        );
-    });
+    // Pagination
+    currentPage = 1;
+    itemsPerPage = 12; // 3 rows × 4 cards
+    totalRecords = 0;
 
     constructor(
         private globalVars: GlobalVarsService,
         private router: Router,
-        private toastService: ToastService
+        private toastService: ToastService,
+        private maintenanceTypeService: MaintenanceTypeService
     ) {
         this.globalVars.setGlobalHeader('إدارة أنواع الصيانة');
+    }
+
+    ngOnInit(): void {
+        this.loadData();
+    }
+
+    loadData(): void {
+        this.isLoading.set(true);
+
+        const params: any = {
+            page: this.currentPage,
+            limit: this.itemsPerPage
+        };
+
+        this.maintenanceTypeService.getMaintenanceTypes(params).subscribe({
+            next: (response) => {
+                this.maintenanceTypes.set(response.data);
+                this.totalRecords = response.total;
+                this.isLoading.set(false);
+            },
+            error: (error) => {
+                console.error('Error loading maintenance types:', error);
+                this.toastService.error('فشل تحميل أنواع الصيانة');
+                this.isLoading.set(false);
+            }
+        });
+    }
+
+    onPageChange(page: number): void {
+        this.currentPage = page;
+        this.loadData();
+    }
+
+    onItemsPerPageChange(itemsPerPage: number): void {
+        this.itemsPerPage = itemsPerPage;
+        this.currentPage = 1;
+        this.loadData();
     }
 
     // Modal methods
@@ -140,19 +120,25 @@ export class MaintenanceTypesComponent {
     addType(): void {
         if (!this.validateForm()) return;
 
-        const newType: MaintenanceTypeConfig = {
-            id: Date.now().toString(),
+        const newType = {
             name: this.typeForm.name,
             description: this.typeForm.description,
             estimatedCost: this.typeForm.estimatedCost,
             estimatedDuration: this.typeForm.estimatedDuration,
-            isActive: this.typeForm.isActive,
-            createdAt: new Date()
+            isActive: this.typeForm.isActive
         };
 
-        this.maintenanceTypes.update(types => [...types, newType]);
-        this.toastService.success('تم إضافة نوع الصيانة بنجاح');
-        this.closeAddModal();
+        this.maintenanceTypeService.createMaintenanceType(newType).subscribe({
+            next: () => {
+                this.toastService.success('تم إضافة نوع الصيانة بنجاح');
+                this.closeAddModal();
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error creating maintenance type:', error);
+                this.toastService.error('فشلت عملية إضافة نوع الصيانة');
+            }
+        });
     }
 
     updateType(): void {
@@ -161,54 +147,64 @@ export class MaintenanceTypesComponent {
         const selected = this.selectedType();
         if (!selected) return;
 
-        this.maintenanceTypes.update(types =>
-            types.map(type =>
-                type.id === selected.id
-                    ? {
-                        ...type,
-                        name: this.typeForm.name,
-                        description: this.typeForm.description,
-                        estimatedCost: this.typeForm.estimatedCost,
-                        estimatedDuration: this.typeForm.estimatedDuration,
-                        isActive: this.typeForm.isActive
-                    }
-                    : type
-            )
-        );
+        const updateData = {
+            name: this.typeForm.name,
+            description: this.typeForm.description,
+            estimatedCost: this.typeForm.estimatedCost,
+            estimatedDuration: this.typeForm.estimatedDuration,
+            isActive: this.typeForm.isActive
+        };
 
-        this.toastService.success('تم تحديث نوع الصيانة بنجاح');
-        this.closeEditModal();
+        this.maintenanceTypeService.updateMaintenanceType(selected.id, updateData).subscribe({
+            next: () => {
+                this.toastService.success('تم تحديث نوع الصيانة بنجاح');
+                this.closeEditModal();
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error updating maintenance type:', error);
+                this.toastService.error('فشلت عملية تحديث نوع الصيانة');
+            }
+        });
     }
 
     deleteType(type: MaintenanceTypeConfig): void {
         if (confirm(`هل أنت متأكد من حذف "${type.name}"؟`)) {
-            this.maintenanceTypes.update(types =>
-                types.filter(t => t.id !== type.id)
-            );
-            this.toastService.success('تم حذف نوع الصيانة بنجاح');
+            this.maintenanceTypeService.deleteMaintenanceType(type.id).subscribe({
+                next: () => {
+                    this.toastService.success('تم حذف نوع الصيانة بنجاح');
+                    this.loadData();
+                },
+                error: (error) => {
+                    console.error('Error deleting maintenance type:', error);
+                    this.toastService.error('فشلت عملية حذف نوع الصيانة');
+                }
+            });
         }
     }
 
     toggleStatus(type: MaintenanceTypeConfig): void {
-        this.maintenanceTypes.update(types =>
-            types.map(t =>
-                t.id === type.id
-                    ? { ...t, isActive: !t.isActive }
-                    : t
-            )
-        );
-        const status = !type.isActive ? 'تم تفعيل' : 'تم تعطيل';
-        this.toastService.success(`${status} نوع الصيانة`);
+        const updateData = {
+            isActive: !type.isActive
+        };
+
+        this.maintenanceTypeService.updateMaintenanceType(type.id, updateData).subscribe({
+            next: () => {
+                const status = !type.isActive ? 'تم تفعيل' : 'تم تعطيل';
+                this.toastService.success(`${status} نوع الصيانة`);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error toggling status:', error);
+                this.toastService.error('فشلت عملية تحديث الحالة');
+            }
+        });
     }
 
     // Validation
     validateForm(): boolean {
         if (!this.typeForm.name.trim()) {
             this.toastService.error('الرجاء إدخال اسم نوع الصيانة');
-            return false;
-        }
-        if (!this.typeForm.description.trim()) {
-            this.toastService.error('الرجاء إدخال وصف نوع الصيانة');
             return false;
         }
         if (this.typeForm.estimatedCost < 0) {

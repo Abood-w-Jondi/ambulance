@@ -12,10 +12,14 @@ export interface PendingTrip {
     diagnosis: string;
 
     // Locations
-    pickupLocation: string;
+    pickupLocation: string;         // Location name
+    pickupLocationId?: string;      // Reference to Location
+    pickupLocationTag?: string;     // 'common' or 'custom'
     pickupLatitude?: number;
     pickupLongitude?: number;
-    dropoffLocation: string;
+    dropoffLocation: string;        // Location name
+    dropoffLocationId?: string;     // Reference to Location
+    dropoffLocationTag?: string;    // 'common' or 'custom'
     dropoffLatitude?: number;
     dropoffLongitude?: number;
 
@@ -32,13 +36,13 @@ export interface PendingTrip {
     priority: TripPriority;
     status: PendingTripStatus;
 
-    // Assignment (when accepted)
-    assignedDriverId?: string;
-    assignedDriverName?: string;
-    assignedParamedicId?: string;
-    assignedParamedicName?: string;
-    assignedVehicleId?: string;
-    assignedVehicleName?: string;
+    // Assignment (vehicle assigned by admin, driver accepts via vehicle cookie)
+    assignedVehicleId?: string;       // Assigned by admin
+    assignedVehicleName?: string;     // Assigned by admin
+    assignedDriverId?: string;        // Auto-populated when driver accepts (from vehicle)
+    assignedDriverName?: string;      // Auto-populated when driver accepts (from vehicle)
+    assignedParamedicId?: string;     // Chosen by driver after accepting
+    assignedParamedicName?: string;   // Chosen by driver after accepting
     acceptedAt?: Date;
     rejectedAt?: Date;
     rejectionReason?: string;

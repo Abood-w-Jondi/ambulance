@@ -11,78 +11,65 @@
       </div>
       <div class="modal-body">
         <form (ngSubmit)="onSubmit()" #maintenanceForm="ngForm">
-          <!-- اختيار المركبة -->
+          <!-- التاريخ -->
           <div class="mb-3">
-            <label for="vehicle" class="form-label fw-bold">
-              <i class="fas fa-ambulance me-2 text-primary"></i>
-              المركبة
+            <label class="form-label fw-bold">
+              <i class="fas fa-calendar me-2 text-primary"></i>
+              التاريخ
             </label>
-            <select 
-              class="form-select" 
-              id="vehicle"
-              [(ngModel)]="selectedVehicle"
-              name="vehicle"
-              (change)="onVehicleChange()"
+            <input type="date" class="form-control" [(ngModel)]="recordForm.date" name="date" required max="9999-12-31">
+          </div>
+
+          <!-- الحالة -->
+          <div class="mb-3">
+            <label for="status" class="form-label fw-bold">
+              <i class="fas fa-info-circle me-2 text-primary"></i>
+              الحالة
+            </label>
+            <select
+              class="form-select"
+              id="status"
+              [(ngModel)]="recordForm.status"
+              name="status"
               required>
-              <option value="">اختر المركبة</option>
-              <option *ngFor="let ambulance of ambulances" [value]="ambulance.id">
-                {{ ambulance.name }} - {{ ambulance.number }}
+              <option *ngFor="let status of maintenanceStatuses" [value]="status">
+                {{ status }}
               </option>
             </select>
           </div>
 
-          <div class="row">
-            <!-- التاريخ -->
-            <div class="col-md-6 mb-3">
-              <label for="date" class="form-label fw-bold">
-                <i class="fas fa-calendar me-2 text-primary"></i>
-                التاريخ
-              </label>
-              <input 
-                type="date" 
-                class="form-control" 
-                id="date"
-                [(ngModel)]="maintenanceRecord.date"
-                name="date"
-                required>
-            </div>
-
-            <!-- الحالة -->
-            <div class="col-md-6 mb-3">
-              <label for="status" class="form-label fw-bold">
-                <i class="fas fa-info-circle me-2 text-primary"></i>
-                الحالة
-              </label>
-              <select 
-                class="form-select" 
-                id="status"
-                [(ngModel)]="maintenanceRecord.status"
-                name="status"
-                required>
-                <option *ngFor="let status of maintenanceStatuses" [value]="status">
-                  {{ status }}
-                </option>
-              </select>
-            </div>
+          <!-- السائق (Read-only) -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">
+              <i class="fas fa-user me-2 text-primary"></i>
+              السائق
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              [value]="isLoadingDriver ? 'جاري التحميل...' : currentDriverName"
+              readonly
+              disabled
+            />
+            <small class="text-muted d-block mt-1">سيتم تسجيل الصيانة باسمك</small>
           </div>
 
           <!-- نوع الصيانة -->
           <div class="mb-3">
-            <label for="type" class="form-label fw-bold">
+            <label class="form-label fw-bold">
               <i class="fas fa-tools me-2 text-primary"></i>
               نوع الصيانة
             </label>
-            <select 
-              class="form-select" 
-              id="type"
-              [(ngModel)]="maintenanceRecord.type"
-              name="type"
-              required>
-              <option value="">اختر نوع الصيانة</option>
-              <option *ngFor="let type of maintenanceTypes" [value]="type">
-                {{ type }}
-              </option>
-            </select>
+            <app-maintenance-type-search
+              [selectedTypeName]="recordForm.type"
+              (typeSelected)="onMaintenanceTypeSelected($event)">
+            </app-maintenance-type-search>
+
+            <!-- Display KM Since Last Maintenance -->
+            <div *ngIf="kmSinceLast !== null" class="alert alert-info mt-2">
+              <i class="fas fa-road me-2"></i>
+              <strong>{{ kmSinceLast | number }}</strong> كم منذ آخر صيانة من هذا النوع
+            </div>
           </div>
 
           <!-- موقع الخدمة -->
@@ -91,11 +78,11 @@
               <i class="fas fa-map-marker-alt me-2 text-primary"></i>
               موقع الخدمة
             </label>
-            <input 
-              type="text" 
-              class="form-control" 
+            <input
+              type="text"
+              class="form-control"
               id="serviceLocation"
-              [(ngModel)]="maintenanceRecord.serviceLocation"
+              [(ngModel)]="recordForm.serviceLocation"
               name="serviceLocation"
               placeholder="اسم الورشة أو المركز"
               required>
@@ -108,11 +95,11 @@
                 <i class="fas fa-tachometer-alt me-2 text-primary"></i>
                 العداد قبل (كم)
               </label>
-              <input 
-                type="number" 
-                class="form-control" 
+              <input
+                type="number"
+                class="form-control"
                 id="odometerBefore"
-                [(ngModel)]="maintenanceRecord.odometerBefore"
+                [(ngModel)]="recordForm.odometerBefore"
                 name="odometerBefore"
                 min="0"
                 required>
@@ -122,11 +109,11 @@
                 <i class="fas fa-tachometer-alt me-2 text-primary"></i>
                 العداد بعد (كم)
               </label>
-              <input 
-                type="number" 
-                class="form-control" 
+              <input
+                type="number"
+                class="form-control"
                 id="odometerAfter"
-                [(ngModel)]="maintenanceRecord.odometerAfter"
+                [(ngModel)]="recordForm.odometerAfter"
                 name="odometerAfter"
                 min="0"
                 required>
@@ -143,13 +130,13 @@
           <div class="mb-3">
             <label for="cost" class="form-label fw-bold">
               <i class="fas fa-dollar-sign me-2 text-primary"></i>
-              التكلفة ($)
+              التكلفة (₪)
             </label>
-            <input 
-              type="number" 
-              class="form-control" 
+            <input
+              type="number"
+              class="form-control"
               id="cost"
-              [(ngModel)]="maintenanceRecord.cost"
+              [(ngModel)]="recordForm.cost"
               name="cost"
               step="0.01"
               min="0"
@@ -162,10 +149,10 @@
               <i class="fas fa-sticky-note me-2 text-primary"></i>
               ملاحظات
             </label>
-            <textarea 
-              class="form-control" 
+            <textarea
+              class="form-control"
               id="notes"
-              [(ngModel)]="maintenanceRecord.notes"
+              [(ngModel)]="recordForm.notes"
               name="notes"
               rows="4"
               placeholder="تفاصيل الصيانة والملاحظات..."></textarea>

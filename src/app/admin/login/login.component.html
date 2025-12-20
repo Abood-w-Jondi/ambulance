@@ -65,25 +65,26 @@
             </div>
           </div>
 
-          <!-- Login Button -->
-          <button 
-            type="submit" 
-            class="btn btn-primary w-100 py-3 fw-bold"
-            [disabled]="!loginForm.valid"
-          >
-            تسجيل الدخول
-          </button>
-
-          <!-- Forgot Password -->
-          <div class="text-center mt-3">
-            <a href="#" class="text-decoration-none">هل نسيت كلمة المرور؟</a>
+          <!-- Error Message -->
+          <div *ngIf="errorMessage" class="alert alert-danger text-end mb-3" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            {{ errorMessage }}
           </div>
+
+          <!-- Login Button -->
+          <button
+            type="submit"
+            class="btn btn-primary w-100 py-3 fw-bold"
+            [disabled]="!loginForm.valid || isLoading"
+          >
+            <span *ngIf="!isLoading">تسجيل الدخول</span>
+            <span *ngIf="isLoading">
+              <i class="fas fa-spinner fa-spin me-2"></i>
+              جاري تسجيل الدخول...
+            </span>
+          </button>
         </form>
 
-        <!-- Footer -->
-        <div class="text-center mt-4">
-          <small class="text-muted">v0.8</small>
-        </div>
       </div>
     </div>
   </div>

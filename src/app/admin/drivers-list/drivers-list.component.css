@@ -143,3 +143,41 @@ input[type="password"] {
 .reducedZIndex{
     z-index: 1049; /* Reduced z-index to be below other modals */
 }
+
+.fab {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem; /* Standard for RTL layouts */
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #1193d4;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.fab:hover {
+    background-color: #0d7ab8;
+    transform: scale(1.1);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .fab {
+        bottom: 1.5rem;
+        left: 1.5rem;
+        width: 48px;
+        height: 48px;
+    }
+}

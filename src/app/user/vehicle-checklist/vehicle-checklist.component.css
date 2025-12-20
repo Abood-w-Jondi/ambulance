@@ -1,0 +1,190 @@
+/* --- Modern Variables (From Design 2) --- */
+:root {
+  --primary-color: #0d6efd;
+  --primary-soft: #e0edff;
+  --secondary-color: #64748b;
+  --secondary-bg: #f5f5f5;
+  --bg-page: #f8fafc;
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.07);
+  --shadow-md: 0 5px 15px -3px rgba(0, 0, 0, 0.1), 0 3px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 20px -5px rgba(13, 110, 253, 0.25);
+  --radius-lg: 1rem;
+  
+  /* Custom Toggle Colors */
+  --success-border: #34d399;
+  --success-text: #00d592;
+  --success-bg-checked: #10b981;
+
+
+  --danger-border: #f87171;
+  --danger-text: #dc2626;
+  --danger-bg-checked: #ef4444;
+}
+
+/* Global Reset */
+body {
+  background-color: var(--bg-page);
+  color: #334155;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  direction: rtl;
+}
+
+/* **New** Soft Colors using Font Awesome Icons */
+.bg-success-soft { background-color: #dcfce7 !important; color: #15803d !important; }
+.text-success { color: #16a34a !important; }
+.bg-danger-soft { background-color: #fee2e2 !important; color: #b91c1c !important; }
+.text-danger { color: #dc2626 !important; }
+.bg-warning-soft { background-color: #fef3c7 !important; color: #b45309 !important; }
+.text-warning-emphasis { color: #d97706 !important; }
+.bg-light-subtle { background-color: #f1f5f9 !important; border-color: #e2e8f0 !important; }
+
+
+.modern-form-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Modern Card Styling --- */
+.card-modern {
+  background-color: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+/* --- Header Elements (No change needed) --- */
+.form-title { font-weight: 900; color: #1e293b; font-size: 2rem; }
+.icon-circle { display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; background-color: var(--primary-soft); color: var(--primary-color); font-size: 1.4rem; }
+.trip-id-text { color: #94a3b8; font-size: 0.95rem; margin-right: 58px; }
+
+/* --- Status & Progress (No change needed) --- */
+.status-section { border-color: #e2e8f0 !important; background-color: var(--bg-page); }
+.custom-progress { height: 14px; border-radius: 10px; background-color: #e2e8f0; overflow: hidden; }
+
+/* --- Accordion Customization (No structural change needed for independent functionality) --- */
+.custom-accordion .accordion-item { border: none; background: transparent; box-shadow: var(--shadow-sm); border-radius: var(--radius-lg); }
+.custom-accordion .accordion-button { background-color: #fff; padding: 1.25rem 1.5rem; border: none; box-shadow: none; color: #334155; border-radius: var(--radius-lg) !important; transition: all 0.3s ease; }
+.custom-accordion .accordion-button:not(.collapsed) { background-color: var(--primary-soft); color: var(--primary-color); border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important; }
+.section-icon-wrapper { width: 38px; height: 38px; background: #f1f5f9; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--secondary-color); transition: all 0.2s; font-size: 1.1rem; }
+.accordion-button:not(.collapsed) .section-icon-wrapper { background: #ffffff; color: var(--primary-color); box-shadow: var(--shadow-sm); }
+.accordion-body { padding: 1.75rem; background-color: #fff; border-bottom-left-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-lg); border-top: 1px solid #e2e8f0; }
+
+/* --- Item Styling (New Modern Look) --- */
+.modern-item-card {
+  transition: all 0.3s ease;
+  border-width: 2px !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* ** NEW CUSTOM TOGGLE BUTTON GROUP STYLING ** */
+/* ------------------------------------------------------------------ */
+.custom-toggle-group {
+  display: inline-flex;
+  border-radius: 50px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.toggle-check {
+  /* Hide the default radio input */
+  position: absolute;
+  clip: rect(0, 0, 0, 0);
+  pointer-events: none;
+}
+
+.toggle-label {
+  cursor: pointer;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  min-width: 100px; /* Ensure a minimum width */
+  text-align: center;
+}
+
+/* Success/Available Button */
+.toggle-success {
+  color: var(--success-text);
+  background-color: #fff;
+  border: 2px solid var(--success-border);
+  border-left: none;
+  border-top-right-radius: 50px;
+  border-bottom-right-radius: 50px;
+}
+
+/* Danger/Unavailable Button */
+.toggle-danger {
+  color: var(--danger-text);
+  background-color: #fff;
+  border: 2px solid var(--danger-border);
+  border-right: none;
+  border-top-left-radius: 50px;
+  border-bottom-left-radius: 50px;
+}
+
+/* Hover Effects */
+.toggle-success:hover {
+  background-color: var(--success-border);
+  color: #fff;
+}
+.toggle-danger:hover {
+  background-color: var(--danger-border);
+  color: #fff;
+}
+
+/* Checked State */
+.toggle-check:checked + .toggle-success {
+  background-color: #03a56f;
+  border-color: #03a56f;
+  color: #fff;
+}
+
+.toggle-check:checked + .toggle-danger {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+/* Fix border overlap on unselected side when selected */
+.toggle-check:checked + .toggle-label {
+    z-index: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* ** TEXTAREA CUSTOMIZATION ** */
+/* ------------------------------------------------------------------ */
+.custom-textarea {
+  /* Allow vertical resizing but not horizontal */
+  resize: vertical;
+}
+
+@media (max-width: 576px) {
+ .custom-toggle-group{
+    margin-top: 20px;
+ }
+}
+
+/* Form Controls (No change needed) */
+.form-label { font-weight: 600; color: #475569; }
+.form-control { border-radius: 0.5rem; border: 1px solid #e2e8f0; }
+.form-control:focus { box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2); border-color: var(--primary-color); }
+
+/* Buttons (No change needed) */
+.btn-light-secondary { background: #fff; border: 1px solid #e2e8f0; color: var(--secondary-color); border-radius: 50px; padding: 0.75rem 1.5rem; font-weight: 700; transition: all 0.2s; }
+.btn-light-secondary:hover { background: #f1f5f9; color: #334155; }
+.btn-primary { border-radius: 50px; font-weight: 700; }
+
+/* Custom Alert Styling (No change needed) */
+.alert-custom { background-color: #fee2e2 !important; color: #dc2626 !important; padding: 1rem 1.5rem; }

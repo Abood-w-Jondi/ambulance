@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
+  warnings?: string[];
 }
 
 @Injectable({
@@ -30,7 +31,7 @@ export class ValidationService {
   }
 
   // Phone number validation (Saudi format: 05XXXXXXXX)
-  isValidSaudiPhone(phone: string): boolean {
+  isValidPhone(phone: string): boolean {
     if (!phone) return false;
     const phoneRegex = /^05\d{8}$/;
     return phoneRegex.test(phone);
@@ -39,14 +40,14 @@ export class ValidationService {
   // Arabic name validation (Arabic characters and spaces)
   isValidArabicName(name: string): boolean {
     if (!name) return false;
-    const arabicRegex = /^[\u0600-\u06FF\s]+$/;
+    const arabicRegex = /^[\u0600-\u06FF\s0-9]+$/;
     return arabicRegex.test(name.trim()) && name.trim().length >= 2;
   }
 
   // English name validation (English characters and spaces)
   isValidEnglishName(name: string): boolean {
-    if (!name) return false;
-    const englishRegex = /^[a-zA-Z\s]+$/;
+    if (!name) return true;
+    const englishRegex = /^[a-zA-Z\s0-9]+$/;
     return englishRegex.test(name.trim()) && name.trim().length >= 2;
   }
 
@@ -82,14 +83,6 @@ export class ValidationService {
     return false;
   }
 
-  // Vehicle plate number validation (Saudi format)
-  isValidPlateNumber(plate: string): boolean {
-    if (!plate) return false;
-    // Saudi plate format: 3-4 Arabic letters + space + 1-4 digits
-    const plateRegex = /^[\u0600-\u06FF]{3,4}\s?\d{1,4}$/;
-    return plateRegex.test(plate.trim());
-  }
-
   // Validate driver form
   validateDriver(driver: any): ValidationResult {
     const errors: string[] = [];
@@ -100,9 +93,7 @@ export class ValidationService {
       errors.push('الاسم بالعربي يجب أن يحتوي على أحرف عربية فقط');
     }
 
-    if (!this.isRequired(driver.name)) {
-      errors.push('الاسم بالإنجليزي مطلوب');
-    } else if (!this.isValidEnglishName(driver.name)) {
+    if (!this.isValidEnglishName(driver.name)) {
       errors.push('الاسم بالإنجليزي يجب أن يحتوي على أحرف إنجليزية فقط');
     }
 
@@ -122,12 +113,8 @@ export class ValidationService {
       errors.push('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
     }
 
-    if (driver.phoneNumber && !this.isValidSaudiPhone(driver.phoneNumber)) {
+    if (driver.phoneNumber && !this.isValidPhone(driver.phoneNumber)) {
       errors.push('رقم الهاتف غير صالح (يجب أن يبدأ بـ 05)');
-    }
-
-    if (driver.amountOwed !== undefined && !this.isNonNegativeNumber(driver.amountOwed)) {
-      errors.push('المبلغ المستحق يجب أن يكون رقم موجب أو صفر');
     }
 
     if (driver.tripsToday !== undefined && !this.isNonNegativeNumber(driver.tripsToday)) {
@@ -140,35 +127,6 @@ export class ValidationService {
     };
   }
 
-  // Validate vehicle form
-  validateVehicle(vehicle: any): ValidationResult {
-    const errors: string[] = [];
-
-    if (!this.isRequired(vehicle.plateNumber)) {
-      errors.push('رقم اللوحة مطلوب');
-    }
-
-    if (!this.isRequired(vehicle.model)) {
-      errors.push('موديل السيارة مطلوب');
-    }
-
-    if (vehicle.year && !this.isInRange(vehicle.year, 1990, new Date().getFullYear() + 1)) {
-      errors.push(`سنة الصنع يجب أن تكون بين 1990 و ${new Date().getFullYear() + 1}`);
-    }
-
-    if (vehicle.capacity && !this.isPositiveNumber(vehicle.capacity)) {
-      errors.push('السعة يجب أن تكون رقم موجب');
-    }
-
-    if (vehicle.mileage !== undefined && !this.isNonNegativeNumber(vehicle.mileage)) {
-      errors.push('عدد الكيلومترات يجب أن يكون رقم موجب أو صفر');
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors
-    };
-  }
 
   // Validate trip form
   validateTrip(trip: any): ValidationResult {
@@ -220,9 +178,6 @@ export class ValidationService {
       errors.push('التكلفة يجب أن تكون رقم موجب');
     }
 
-    if (!this.isRequired(fuel.date)) {
-      errors.push('التاريخ مطلوب');
-    }
 
     if (fuel.mileage !== undefined && !this.isNonNegativeNumber(fuel.mileage)) {
       errors.push('عداد الكيلومترات يجب أن يكون رقم موجب أو صفر');
@@ -246,17 +201,13 @@ export class ValidationService {
       errors.push('نوع الصيانة مطلوب');
     }
 
-    if (!this.isRequired(maintenance.description)) {
-      errors.push('وصف الصيانة مطلوب');
-    } else if (!this.isValidLength(maintenance.description, 5, 500)) {
-      errors.push('وصف الصيانة يجب أن يكون بين 5 و 500 حرف');
-    }
 
     if (!this.isPositiveNumber(maintenance.cost)) {
       errors.push('التكلفة يجب أن تكون رقم موجب');
     }
 
     if (!this.isRequired(maintenance.date)) {
+      console.log(maintenance.date , '<<');
       errors.push('التاريخ مطلوب');
     }
 
@@ -285,16 +236,21 @@ export class ValidationService {
   // Validate balance reduction
   validateBalanceReduction(amount: number, amountOwed: number): ValidationResult {
     const errors: string[] = [];
+    const warnings: string[] = [];
+    if (amount > amountOwed) {
+      if(amountOwed <= 0) {
 
-    if (!this.isPositiveNumber(amount)) {
-      errors.push('المبلغ يجب أن يكون رقم موجب');
-    } else if (amount > amountOwed) {
-      errors.push('المبلغ المطلوب أكبر من المبلغ المستحق');
+      }
+      else{
+        const debtAmount = amount - amountOwed;
+        warnings.push(`تحذير: هذا الدفع (${amount} ₪) يتجاوز المبلغ المستحق (${amountOwed} ₪). سيتم تسجيل دين بمبلغ ${debtAmount} ₪`);
+      }
     }
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
+      warnings
     };
   }
 }

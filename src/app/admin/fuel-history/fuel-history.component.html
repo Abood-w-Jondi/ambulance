@@ -14,62 +14,44 @@
                 <div class="modal-body p-4 text-end" style="max-height: 70vh; overflow-y: auto;">
                     <form (ngSubmit)="addRecord()">
                         <div class="row g-3">
-                            <!-- Date Fields -->
+                            <!-- Date Field -->
                             <div class="col-12">
                                 <label class="form-label small fw-medium">التاريخ</label>
-                                <div class="row g-2">
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.day" name="day" required>
-                                            @for (day of getDaysInMonth(recordForm.month, recordForm.year); track day) {
-                                            <option [value]="day">{{ day }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.month" name="month" required>
-                                            @for (month of getMonths(); track month) {
-                                            <option [value]="month">{{ month }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.year" name="year" required>
-                                            @for (year of getYears(); track year) {
-                                            <option [value]="year">{{ year }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </div>
+                                <input type="date" class="form-control" [(ngModel)]="recordForm.date" name="fuelDate" required max="9999-12-31">
                             </div>
                             
                             <div class="col-12">
-                                <label for="ambulanceName" class="form-label small fw-medium">اسم الإسعاف</label>
-                                <select id="ambulanceName" class="form-select" [(ngModel)]="recordForm.ambulanceName" name="ambulanceName" required>
-                                    <option value="">اختر الإسعاف</option>
-                                    @for (ambulance of ambulanceList; track ambulance) {
-                                        @if (ambulance !== 'جميع المركبات') {
-                                        <option [value]="ambulance">{{ ambulance }}</option>
-                                        }
+                                <label for="vehicleSearch" class="form-label small fw-medium">المركبة</label>
+                                <input type="text" id="vehicleSearch" class="form-control mb-2"
+                                    placeholder="بحث عن مركبة..."
+                                    [(ngModel)]="vehicleSearchTerm"
+                                    [ngModelOptions]="{standalone: true}">
+                                <select id="ambulanceName" class="form-select" [(ngModel)]="recordForm.ambulanceId" (change)="onVehicleSelect($event)" name="ambulanceName" required>
+                                    <option value="">اختر المركبة</option>
+                                    @for (vehicle of filteredVehicles(); track vehicle.id) {
+                                        <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                                     }
                                 </select>
+                                <small class="text-muted d-block mt-1">
+                                    عرض {{ filteredVehicles().length }} من {{ vehiclesList.length }} مركبة
+                                </small>
                             </div>
                             
                             <div class="col-12">
-                                <label for="ambulanceNumber" class="form-label small fw-medium">رقم الإسعاف</label>
-                                <input id="ambulanceNumber" type="text" class="form-control" placeholder="AMB-XXX"
-                                    [(ngModel)]="recordForm.ambulanceNumber" name="ambulanceNumber" required>
-                            </div>
-                            
-                            <div class="col-6">
-                                <label for="driverId" class="form-label small fw-medium">معرف السائق</label>
-                                <input id="driverId" type="text" class="form-control" placeholder="D-XXX"
-                                    [(ngModel)]="recordForm.driverId" name="driverId" required>
-                            </div>
-                            
-                            <div class="col-6">
-                                <label for="driverName" class="form-label small fw-medium">اسم السائق</label>
-                                <input id="driverName" type="text" class="form-control" placeholder="اسم السائق"
-                                    [(ngModel)]="recordForm.driverName" name="driverName" required>
+                                <label for="driverSearch" class="form-label small fw-medium">السائق</label>
+                                <input type="text" id="driverSearch" class="form-control mb-2"
+                                    placeholder="بحث عن سائق..."
+                                    [(ngModel)]="driverSearchTerm"
+                                    [ngModelOptions]="{standalone: true}">
+                                <select id="driverId" class="form-select" [(ngModel)]="recordForm.driverInternalId" (change)="onDriverSelect($event)" name="driverId" required>
+                                    <option value="">اختر السائق</option>
+                                    @for (driver of filteredDrivers(); track driver.id) {
+                                        <option [value]="driver.id">{{ driver.arabicName }}</option>
+                                    }
+                                </select>
+                                <small class="text-muted d-block mt-1">
+                                    عرض {{ filteredDrivers().length }} من {{ driversList.length }} سائق
+                                </small>
                             </div>
                             
                             <div class="col-6">
@@ -128,61 +110,44 @@
                 <div class="modal-body p-4 text-end" style="max-height: 70vh; overflow-y: auto;">
                     <form (ngSubmit)="saveEditRecord()">
                         <div class="row g-3">
-                            <!-- Date Fields -->
+                            <!-- Date Field -->
                             <div class="col-12">
                                 <label class="form-label small fw-medium">التاريخ</label>
-                                <div class="row g-2">
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.day" name="day" required>
-                                            @for (day of getDaysInMonth(recordForm.month, recordForm.year); track day) {
-                                            <option [value]="day">{{ day }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.month" name="month" required>
-                                            @for (month of getMonths(); track month) {
-                                            <option [value]="month">{{ month }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.year" name="year" required>
-                                            @for (year of getYears(); track year) {
-                                            <option [value]="year">{{ year }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </div>
+                                <input type="date" class="form-control" [(ngModel)]="recordForm.date" name="fuelDate" required max="9999-12-31">
                             </div>
                             
                             <div class="col-12">
-                                <label for="editAmbulanceName" class="form-label small fw-medium">اسم الإسعاف</label>
-                                <select id="editAmbulanceName" class="form-select" [(ngModel)]="recordForm.ambulanceName" name="ambulanceName" required>
-                                    @for (ambulance of ambulanceList; track ambulance) {
-                                        @if (ambulance !== 'جميع المركبات') {
-                                        <option [value]="ambulance">{{ ambulance }}</option>
-                                        }
+                                <label for="editVehicleSearch" class="form-label small fw-medium">المركبة</label>
+                                <input type="text" id="editVehicleSearch" class="form-control mb-2"
+                                    placeholder="بحث عن مركبة..."
+                                    [(ngModel)]="vehicleSearchTerm"
+                                    [ngModelOptions]="{standalone: true}">
+                                <select id="editAmbulanceName" class="form-select" [(ngModel)]="recordForm.ambulanceId" (change)="onVehicleSelect($event)" name="ambulanceName" required>
+                                    <option value="">اختر المركبة</option>
+                                    @for (vehicle of filteredVehicles(); track vehicle.id) {
+                                        <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                                     }
                                 </select>
+                                <small class="text-muted d-block mt-1">
+                                    عرض {{ filteredVehicles().length }} من {{ vehiclesList.length }} مركبة
+                                </small>
                             </div>
                             
                             <div class="col-12">
-                                <label for="editAmbulanceNumber" class="form-label small fw-medium">رقم الإسعاف</label>
-                                <input id="editAmbulanceNumber" type="text" class="form-control" placeholder="AMB-XXX"
-                                    [(ngModel)]="recordForm.ambulanceNumber" name="ambulanceNumber" required>
-                            </div>
-                            
-                            <div class="col-6">
-                                <label for="editDriverId" class="form-label small fw-medium">معرف السائق</label>
-                                <input id="editDriverId" type="text" class="form-control" placeholder="D-XXX"
-                                    [(ngModel)]="recordForm.driverId" name="driverId" required>
-                            </div>
-                            
-                            <div class="col-6">
-                                <label for="editDriverName" class="form-label small fw-medium">اسم السائق</label>
-                                <input id="editDriverName" type="text" class="form-control" placeholder="اسم السائق"
-                                    [(ngModel)]="recordForm.driverName" name="driverName" required>
+                                <label for="editDriverSearch" class="form-label small fw-medium">السائق</label>
+                                <input type="text" id="editDriverSearch" class="form-control mb-2"
+                                    placeholder="بحث عن سائق..."
+                                    [(ngModel)]="driverSearchTerm"
+                                    [ngModelOptions]="{standalone: true}">
+                                <select id="editDriverId" class="form-select" [(ngModel)]="recordForm.driverInternalId" (change)="onDriverSelect($event)" name="driverId" required>
+                                    <option value="">اختر السائق</option>
+                                    @for (driver of filteredDrivers(); track driver.id) {
+                                        <option [value]="driver.id">{{ driver.arabicName }}</option>
+                                    }
+                                </select>
+                                <small class="text-muted d-block mt-1">
+                                    عرض {{ filteredDrivers().length }} من {{ driversList.length }} سائق
+                                </small>
                             </div>
                             
                             <div class="col-6">
@@ -262,10 +227,6 @@
                             <p class="fw-bold">{{ record.ambulanceNumber }}</p>
                         </div>
                         <div class="col-6">
-                            <p class="text-muted small mb-1">معرف السائق</p>
-                            <p class="fw-bold">{{ record.driverId }}</p>
-                        </div>
-                        <div class="col-6">
                             <p class="text-muted small mb-1">اسم السائق</p>
                             <p class="fw-bold">{{ record.driverName }}</p>
                         </div>
@@ -320,43 +281,31 @@
     <main class="flex-grow-1 p-3 p-lg-4" dir="rtl">
         <div class="container-fluid" style="max-width: 1200px;">
             
-            <!-- Search Bar -->
-            <div class="mb-4">
-                <div class="input-group shadow-sm">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="fa-solid fa-search text-muted"></i>
-                    </span>
-                    <input type="text" class="form-control border-start-0" 
-                        placeholder="البحث في اسم الإسعاف، الرقم، السائق، أو الملاحظات..."
-                        [(ngModel)]="searchTerm">
-                </div>
-            </div>
-            
             <!-- Filter Section -->
             <div class="card shadow-sm rounded-xl p-4 mb-4">
                 <h5 class="fw-bold mb-3 text-end">تصفية السجلات</h5>
-                
+
                 <div class="row g-3 text-end">
-                    <!-- Date Filter -->
+                    <!-- Start Date -->
                     <div class="col-md-6">
-                        <label class="form-label small fw-medium">التاريخ</label>
+                        <label class="form-label small fw-medium">تاريخ البداية</label>
                         <div class="row g-2">
                             <div class="col-4">
-                                <select class="form-select" [(ngModel)]="filterDay">
-                                    @for (day of getDaysInMonth(filterMonth, filterYear); track day) {
+                                <select class="form-select" [(ngModel)]="startDay">
+                                    @for (day of getDaysInMonth(startMonth, startYear); track day) {
                                     <option [value]="day">{{ day }}</option>
                                     }
                                 </select>
                             </div>
                             <div class="col-4">
-                                <select class="form-select" [(ngModel)]="filterMonth">
+                                <select class="form-select" [(ngModel)]="startMonth">
                                     @for (month of getMonths(); track month) {
                                     <option [value]="month">{{ month }}</option>
                                     }
                                 </select>
                             </div>
                             <div class="col-4">
-                                <select class="form-select" [(ngModel)]="filterYear">
+                                <select class="form-select" [(ngModel)]="startYear">
                                     @for (year of getYears(); track year) {
                                     <option [value]="year">{{ year }}</option>
                                     }
@@ -364,18 +313,47 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Ambulance Filter -->
+
+                    <!-- End Date -->
                     <div class="col-md-6">
-                        <label for="ambulanceFilter" class="form-label small fw-medium">الإسعاف</label>
-                        <select id="ambulanceFilter" class="form-select" [(ngModel)]="selectedAmbulance">
-                            @for (ambulance of ambulanceList; track ambulance) {
-                            <option [value]="ambulance">{{ ambulance }}</option>
+                        <label class="form-label small fw-medium">تاريخ النهاية</label>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <select class="form-select" [(ngModel)]="endDay">
+                                    @for (day of getDaysInMonth(endMonth, endYear); track day) {
+                                    <option [value]="day">{{ day }}</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <select class="form-select" [(ngModel)]="endMonth">
+                                    @for (month of getMonths(); track month) {
+                                    <option [value]="month">{{ month }}</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <select class="form-select" [(ngModel)]="endYear">
+                                    @for (year of getYears(); track year) {
+                                    <option [value]="year">{{ year }}</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vehicle Filter -->
+                    <div class="col-md-6">
+                        <label for="vehicleFilter" class="form-label small fw-medium">المركبة</label>
+                        <select id="vehicleFilter" class="form-select" [(ngModel)]="selectedVehicle">
+                            <option value="جميع المركبات">جميع المركبات</option>
+                            @for (vehicle of vehiclesList; track vehicle.id) {
+                            <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                             }
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="d-flex gap-2 mt-4">
                     <button class="btn btn-primary-custom fw-bold px-4" (click)="applyFilters()">
                         <i class="fa-solid fa-filter me-2"></i>
@@ -397,10 +375,9 @@
                         <div class="card-header bg-white border-bottom p-3">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="text-end">
-                                    <h5 class="fw-bold mb-1 cursor-pointer-cu text-primary"
-                                        (click)="$event.stopPropagation(); navigateToFleet('name', record.ambulanceName)">
-                                        <i class="fa-solid fa-truck-medical me-2"></i>
-                                        {{ record.ambulanceName }}
+                                    <h5 class="fw-bold mb-1">
+                                        <span class="cursor-pointer text-primary-hover" (click)="navigateToFleet(record.ambulanceId); $event.stopPropagation()" title="عرض تفاصيل المركبة">{{ record.ambulanceName }}</span>
+                                        <i class="fa-solid fa-filter ms-2 text-muted cursor-pointer" style="font-size: 0.8rem;" (click)="filterByVehicle(record.ambulanceId, $event)" title="فلترة حسب هذه المركبة"></i>
                                     </h5>
                                     <p class="text-muted small mb-0">{{ formatDate(record.date) }}</p>
                                 </div>
@@ -414,26 +391,15 @@
                             <div class="row g-3 text-end">
                                 <div class="col-6">
                                     <p class="text-muted small mb-1">رقم الإسعاف</p>
-                                    <p class="fw-semibold mb-0 cursor-pointer-cu text-primary"
-                                        (click)="$event.stopPropagation(); navigateToFleet('number', record.ambulanceNumber)">
-                                        <i class="fa-solid fa-hashtag"></i>
+                                    <p class="fw-semibold mb-0">
                                         {{ record.ambulanceNumber }}
                                     </p>
                                 </div>
                                 <div class="col-6">
-                                    <p class="text-muted small mb-1">معرف السائق</p>
-                                    <p class="fw-semibold mb-0 cursor-pointer-cu text-primary"
-                                        (click)="$event.stopPropagation(); navigateToFleet('driverId', record.driverId)">
-                                        <i class="fa-solid fa-id-badge"></i>
-                                        {{ record.driverId }}
-                                    </p>
-                                </div>
-                                <div class="col-6">
                                     <p class="text-muted small mb-1">اسم السائق</p>
-                                    <p class="fw-semibold mb-0 cursor-pointer-cu text-primary"
-                                        (click)="$event.stopPropagation(); navigateToDriver(record.driverName)">
-                                        <i class="fa-solid fa-user"></i>
-                                        {{ record.driverName }}
+                                    <p class="fw-semibold mb-0">
+                                        <span class="cursor-pointer text-primary-hover" (click)="filterByDriver(record.driverName, $event)" title="البحث عن هذا السائق">{{ record.driverName }}</span>
+                                        <i class="fa-solid fa-filter ms-1 text-muted cursor-pointer" style="font-size: 0.7rem;" (click)="filterByDriver(record.driverName, $event)" title="البحث عن هذا السائق"></i>
                                     </p>
                                 </div>
                                 <div class="col-6">
@@ -472,14 +438,18 @@
                 }
             </div>
 
-            <!-- Pagination Component -->
-            <app-pagination
-                [totalItems]="filteredRecords().length"
-                [currentPage]="currentPage"
-                [itemsPerPage]="itemsPerPage"
-                (pageChange)="onPageChange($event)"
-                (itemsPerPageChange)="onItemsPerPageChange($event)">
-            </app-pagination>
+            <!-- Pagination -->
+            @if (totalRecords > 0) {
+            <div class="mt-4">
+                <app-pagination
+                    [currentPage]="currentPage"
+                    [totalItems]="totalRecords"
+                    [itemsPerPage]="itemsPerPage"
+                    (pageChange)="onPageChange($event)"
+                    (itemsPerPageChange)="onItemsPerPageChange($event)">
+                </app-pagination>
+            </div>
+            }
         </div>
     </main>
 
@@ -488,3 +458,10 @@
         <i class="fa-solid fa-plus fa-lg"></i>
     </button>
 </div>
+
+<app-confirmation-modal
+    [isOpen]="isDeleteFuelRecordModalOpen()"
+    [config]="deleteFuelRecordModalConfig()"
+    (confirmed)="handleDeleteFuelRecordConfirmation(true)"
+    (cancelled)="handleDeleteFuelRecordConfirmation(false)">
+</app-confirmation-modal>

@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User, LoginCredentials, LoginResponse, UserRole, TokenPayload } from '../models';
@@ -14,11 +14,7 @@ export class AuthService {
   private readonly TOKEN_KEY = environment.jwt.tokenKey;
   private readonly REFRESH_TOKEN_KEY = environment.jwt.refreshTokenKey;
 
-  // Current user state
-  private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
-  public currentUser$ = this.currentUserSubject.asObservable();
-
-  // Signals for reactive state
+  // Signals for reactive state (single source of truth)
   currentUser = signal<User | null>(this.getUserFromStorage());
   isAuthenticated = computed(() => this.currentUser() !== null);
   userRole = computed(() => this.currentUser()?.role || null);
@@ -41,7 +37,6 @@ export class AuthService {
     const user = this.getUserFromStorage();
     if (user) {
       this.currentUser.set(user);
-      this.currentUserSubject.next(user);
     }
   }
 
@@ -61,18 +56,38 @@ export class AuthService {
    * Logout current user
    */
   logout(): Observable<void> {
-    return this.http.post<void>(`${this.API_URL}/auth/logout`, {}).pipe(
-      tap(() => {
-        this.clearAuthData();
-        this.router.navigate(['/login']);
-      }),
-      catchError(() => {
-        // Even if server logout fails, clear local data
-        this.clearAuthData();
-        this.router.navigate(['/login']);
-        return throwError(() => new Error('Logout failed'));
-      })
-    );
+    const token = this.getAccessToken();
+
+    // If we have a valid token, notify the server BEFORE clearing local data
+    if (token) {
+      return this.http.post<void>(`${this.API_URL}/auth/logout`, {}).pipe(
+        tap(() => {
+          this.clearAuthData();
+          this.router.navigate(['/login']);
+        }),
+        catchError(() => {
+          // Even if server logout fails, clear local data and navigate
+          this.clearAuthData();
+          this.router.navigate(['/login']);
+          return throwError(() => new Error('Logout failed'));
+        })
+      );
+    } else {
+      // No token, just clear and navigate to login
+      this.clearAuthData();
+      this.router.navigate(['/login']);
+      return new Observable(observer => {
+        observer.next();
+        observer.complete();
+      });
+    }
+  }
+
+  /**
+   * Logout without calling API (for use in interceptor)
+   */
+  logoutLocal(): void {
+    this.clearAuthData();
   }
 
   /**
@@ -220,7 +235,6 @@ export class AuthService {
    */
   private setUser(user: User): void {
     this.currentUser.set(user);
-    this.currentUserSubject.next(user);
     localStorage.setItem('ambulance_user', JSON.stringify(user));
   }
 
@@ -242,27 +256,26 @@ export class AuthService {
   /**
    * Clear all authentication data
    */
-  private clearAuthData(): void {
+  public clearAuthData(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem('ambulance_user');
     this.currentUser.set(null);
-    this.currentUserSubject.next(null);
   }
 
   /**
    * Handle HTTP errors
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'حدث خطأ غير متوقع';
-
+    let errorMessage = error.message || 'حدث خطأ غير متوقع';
+    console.log(error, "handling error in AuthService");
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = `خطأ: ${error.error.message}`;
     } else {
       // Server-side error
       if (error.status === 401) {
-        errorMessage = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+        errorMessage = error.message || 'اسم المستخدم أو كلمة المرور غير صحيحة';
       } else if (error.status === 403) {
         errorMessage = 'ليس لديك صلاحية للوصول';
       } else if (error.status === 404) {

@@ -1,0 +1,160 @@
+<div class="container-fluid py-4" dir="rtl">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="fw-bold mb-0">
+            <i class="fas fa-file-invoice-dollar me-2 text-primary"></i>
+            سجل المعاملات
+          </h2>
+          <p class="text-muted mb-0">{{ userName }}</p>
+        </div>
+        <button class="btn btn-outline-secondary" (click)="goBack()">
+          <i class="fas fa-arrow-right me-2"></i>
+          العودة
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Type Filter -->
+        <div class="col-12 col-md-4">
+          <label for="filterType" class="form-label small fw-medium">نوع المعاملة</label>
+          <select id="filterType" class="form-select" [(ngModel)]="filterType">
+            <option value="">جميع الأنواع</option>
+            <option value="رحلة">رحلة</option>
+            <option value="دفع">دفع</option>
+            <option value="سحب">سحب</option>
+          </select>
+        </div>
+
+        <!-- Start Date Filter -->
+        <div class="col-12 col-md-4">
+          <label for="filterStartDate" class="form-label small fw-medium">من تاريخ</label>
+          <input id="filterStartDate" type="date" class="form-control" [(ngModel)]="filterStartDate">
+        </div>
+
+        <!-- End Date Filter -->
+        <div class="col-12 col-md-4">
+          <label for="filterEndDate" class="form-label small fw-medium">إلى تاريخ</label>
+          <input id="filterEndDate" type="date" class="form-control" [(ngModel)]="filterEndDate">
+        </div>
+
+        <!-- Filter Actions -->
+        <div class="col-12">
+          <div class="d-flex gap-2 justify-content-end">
+            <button class="btn btn-primary" (click)="applyFilters()">
+              <i class="fas fa-filter me-2"></i>
+              تطبيق الفلاتر
+            </button>
+            <button class="btn btn-outline-secondary" (click)="resetFilters()">
+              <i class="fas fa-redo me-2"></i>
+              إعادة تعيين
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transactions Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-bottom">
+      <h5 class="mb-0 fw-bold">
+        <i class="fas fa-list me-2 text-primary"></i>
+        المعاملات
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      @if (isLoading()) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">جاري التحميل...</span>
+          </div>
+          <p class="text-muted mt-3">جاري تحميل المعاملات...</p>
+        </div>
+      } @else if (transactions().length === 0) {
+        <div class="text-center py-5">
+          <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+          <p class="text-muted">لا توجد معاملات</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>التاريخ</th>
+                <th>النوع</th>
+                <th>الاتجاه</th>
+                <th>الوصف</th>
+                <th>المبلغ</th>
+                <th>الرصيد قبل</th>
+                <th>الرصيد بعد</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (transaction of transactions(); track transaction.id) {
+                <tr>
+                  <td class="small">{{ formatDate(transaction.createdAt) }}</td>
+                  <td>
+                    <span class="badge {{ getTransactionTypeClass(transaction.transactionType) }}">
+                      {{ transaction.transactionType }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (transaction.transactionDirection) {
+                      <span [class]="getDirectionBadgeClass(transaction.transactionDirection)">
+                        {{ getDirectionLabel(transaction.transactionDirection) }}
+                      </span>
+                    }
+                  </td>
+                  <td>
+                    @if (transaction.patientName) {
+                      <div>
+                        <strong>{{ transaction.patientName }}</strong>
+                        <br>
+                        <small class="text-muted">
+                          {{ transaction.transferFrom }} ← {{ transaction.transferTo }}
+                        </small>
+                      </div>
+                    } @else {
+                      <span>{{ transaction.description }}</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="fw-bold {{ getAmountClass(transaction.amount) }}">
+                      {{ transaction.amount >= 0 ? '+' : '' }}{{ transaction.amount.toFixed(2) }} ₪
+                    </span>
+                  </td>
+                  <td>{{ transaction.balanceBefore.toFixed(2) }} ₪</td>
+                  <td>
+                    <span class="fw-bold {{ getAmountClass(transaction.balanceAfter) }}">
+                      {{ transaction.balanceAfter.toFixed(2) }} ₪
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  @if (totalRecords > itemsPerPage) {
+    <div class="mt-4">
+      <app-pagination
+        [currentPage]="currentPage"
+        [totalItems]="totalRecords"
+        [itemsPerPage]="itemsPerPage"
+        (pageChange)="onPageChange($event)">
+      </app-pagination>
+    </div>
+  }
+</div>

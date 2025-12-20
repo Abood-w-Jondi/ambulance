@@ -1,0 +1,17 @@
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.table th {
+  font-weight: 600;
+  text-align: right;
+}
+
+.table td {
+  vertical-align: middle;
+  text-align: right;
+}

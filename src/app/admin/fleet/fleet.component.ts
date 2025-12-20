@@ -4,12 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { GlobalVarsService } from '../../global-vars.service';
 import { ToastService } from '../../shared/services/toast.service';
-import { ValidationService } from '../../shared/services/validation.service';
+import { VehicleService } from '../../shared/services/vehicle.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
-import { VEHICLE_STATUS } from '../../shared/constants/status.constants';
-import { Vehicle, VehicleStatus, VehicleFilterStatus, VehicleType, DriverReference } from '../../shared/models';
+import { Vehicle, VehicleStatus, VehicleFilterStatus } from '../../shared/models';
 
 type FilterStatus = VehicleFilterStatus;
 
@@ -52,39 +51,26 @@ export class FleetComponent implements OnInit {
     vehicleForm = {
         vehicleId: '',
         vehicleName: '',
-        type: '' as VehicleType | '',
-        currentDriver: '',
         notes: '',
         status: 'متاحة' as VehicleStatus
     };
 
-    // Search for driver assignment
-    driverSearchTerm = signal('');
-
     // Pagination
     currentPage = 1;
     itemsPerPage = 10;
+    totalRecords = 0;
+    isLoading = signal(false);
 
-    vehicleStatuses: VehicleStatus[] = ['متاحة', 'في الخدمة', 'صيانة'];
-    vehicleTypes: VehicleType[] = ['Type I Truck', 'Type II Van', 'Type III Cutaway'];
+    vehicleStatuses: VehicleStatus[] = ['متاحة', 'في الطريق للمريض', 'في الموقع', 'في الطريق للمستشفى', 'في الوجهة', 'خارج الخدمة', 'إنهاء الخدمة'];
     colors: string[] = ['White', 'Red', 'Yellow', 'Silver', 'Blue'];
-
-    // Computed filtered drivers list
-    filteredDriversList = computed(() => {
-        const term = this.driverSearchTerm().toLowerCase();
-        return this.driversList.filter(d => d.name.toLowerCase().includes(term));
-    });
-
-    driversList: DriverReference[] = [];
 
     constructor(
         private globalVars: GlobalVarsService,
         private route: ActivatedRoute,
         private toastService: ToastService,
-        private validationService: ValidationService
+        private vehicleService: VehicleService
     ) {
         this.globalVars.setGlobalHeader('أسطول المركبات');
-        this.driversList = this.globalVars.driversList;
     }
 
     ngOnInit(): void {
@@ -93,91 +79,57 @@ export class FleetComponent implements OnInit {
             if (params['filterType'] && params['filterValue']) {
                 this.queryFilterType.set(params['filterType']);
                 this.queryFilterValue.set(params['filterValue']);
-                
+
                 // Apply the filter based on the type
                 // For simplicity, we'll use the search term to filter
                 this.searchTerm.set(params['filterValue']);
             }
         });
+        this.loadData();
     }
-    
-    // Helper to generate IDs
-    private generateId(): string {
-        return Date.now().toString() + Math.random().toString(36).substring(2, 9);
+
+    vehicles = signal<Vehicle[]>([]);
+
+    loadData(): void {
+        this.isLoading.set(true);
+
+        this.vehicleService.getVehicles({
+            page: this.currentPage,
+            limit: this.itemsPerPage,
+            search: this.searchTerm() || undefined,
+            status: this.filterStatus() !== 'All' ? this.filterStatus() : undefined
+        }).subscribe({
+            next: (response) => {
+                this.vehicles.set(response.data);
+                this.totalRecords = response.total;
+                this.isLoading.set(false);
+            },
+            error: (error) => {
+                console.error('Error loading vehicles:', error);
+                this.toastService.error('فشل تحميل بيانات المركبات');
+                this.isLoading.set(false);
+            }
+        });
     }
-    
-    // Dummy Data
-    vehicles = signal<Vehicle[]>([
-        {
-            id: this.generateId(),
-            vehicleId: 'AMB-012',
-            vehicleName: 'إسعاف النجوم',
-            type: 'Type II Van',
-            currentDriver: null,
-            notes: 'مركبة جديدة، تم استلامها في يناير 2023',
-            status: 'متاحة'
-        },
-        {
-            id: this.generateId(),
-            vehicleId: 'AMB-025',
-            vehicleName: 'إسعاف الأمل',
-            type: 'Type III Cutaway',
-            currentDriver: 'Jane Smith',
-            notes: 'مجهزة بمعدات طبية متقدمة',
-            status: 'في الخدمة'
-        },
-        {
-            id: this.generateId(),
-            vehicleId: 'AMB-007',
-            vehicleName: 'إسعاف السلام',
-            type: 'Type I Truck',
-            currentDriver: 'David Chen',
-            notes: 'تحتاج إلى صيانة دورية',
-            status: 'صيانة'
-        },
-        {
-            id: this.generateId(),
-            vehicleId: 'AMB-031',
-            vehicleName: 'إسعاف النور',
-            type: 'Type II Van',
-            currentDriver: null,
-            notes: 'جاهزة للاستخدام الفوري',
-            status: 'متاحة'
-        }
-    ]);
 
     // --- Computed Property for Filtering ---
     filteredVehicles = computed(() => {
-        const status = this.filterStatus();
-        const search = this.searchTerm().toLowerCase().trim();
-
-        return this.vehicles().filter(vehicle => {
-            // Status Filter
-            const statusMatch = status === 'All' || vehicle.status === status;
-
-            // Search Filter - now includes all vehicle properties
-            const searchMatch = search === '' ||
-                vehicle.vehicleId.toLowerCase().includes(search) ||
-                vehicle.vehicleName.toLowerCase().includes(search) ||
-                (vehicle.currentDriver && vehicle.currentDriver.toLowerCase().includes(search));
-
-            return statusMatch && searchMatch;
-        });
+        return this.vehicles();
     });
 
     getPaginatedAmbulances() {
-        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-        const endIndex = startIndex + this.itemsPerPage;
-        return this.filteredVehicles().slice(startIndex, endIndex);
+        return this.vehicles();
     }
 
     onPageChange(page: number): void {
         this.currentPage = page;
+        this.loadData();
     }
 
     onItemsPerPageChange(itemsPerPage: number): void {
         this.itemsPerPage = itemsPerPage;
         this.currentPage = 1;
+        this.loadData();
     }
 
     // --- Component Methods ---
@@ -185,6 +137,13 @@ export class FleetComponent implements OnInit {
     selectStatus(status: FilterStatus): void {
         this.selectedStatus = status;
         this.filterStatus.set(status);
+        this.currentPage = 1;
+        this.loadData();
+    }
+
+    onSearchChange(): void {
+        this.currentPage = 1;
+        this.loadData();
     }
 
     getStatusClass(status: FilterStatus): string {
@@ -195,35 +154,36 @@ export class FleetComponent implements OnInit {
         switch (status) {
             case 'متاحة':
                 return '#28A745';
-            case 'في الخدمة':
+            case 'في الطريق للمريض':
                 return '#17A2B8';
-            case 'صيانة':
-                return '#FD7E14';
-            default:
+            case 'خارج الخدمة':
                 return '#6C757D';
+                default:
+                return '#FD7E14';
         }
     }
 
     getStatusBadgeClass(status: VehicleStatus): string {
-        switch (status) {
-            case 'متاحة':
-                return 'text-bg-success';
-            case 'في الخدمة':
-                return 'text-bg-info';
-            case 'صيانة':
-                return 'text-bg-warning';
-            default:
-                return 'text-bg-secondary';
-        }
-    }
+    const STATUS_COLORS: { [key in VehicleStatus]: string } = {
+    'متاحة': '#28a745',          
+    'في الطريق للمريض': '#e2af19ff', 
+    'في الموقع': '#17a2b8',        
+    'في الطريق للمستشفى': '#fd7e14', 
+    'في الوجهة': '#6f42c1',        
+    'خارج الخدمة': '#dc3545',      
+    'إنهاء الخدمة': '#6c757d',         
+  };
+  return STATUS_COLORS[status] || '#6C757D';
+
+}
 
     getStatusIcon(status: VehicleStatus): string {
         switch (status) {
             case 'متاحة':
                 return 'fa-circle-check';
-            case 'في الخدمة':
+            case 'في الطريق للمريض':
                 return 'fa-truck-medical';
-            case 'صيانة':
+            case 'خارج الخدمة':
                 return 'fa-wrench';
             default:
                 return 'fa-circle';
@@ -234,42 +194,32 @@ export class FleetComponent implements OnInit {
         this.vehicleForm = {
             vehicleId: '',
             vehicleName: '',
-            type: '',
-            currentDriver: '',
             notes: '',
             status: 'متاحة'
         };
-        this.driverSearchTerm.set('');
         this.isAddVehicleModalOpen.set(true);
     }
 
     addVehicle(): void {
-        // Validate the vehicle form
-        const validation = this.validationService.validateVehicle({
+
+        this.vehicleService.createVehicle({
             vehicleId: this.vehicleForm.vehicleId,
             vehicleName: this.vehicleForm.vehicleName,
-            type: this.vehicleForm.type,
-            status: this.vehicleForm.status
-        });
-
-        if (!validation.valid) {
-            this.toastService.error(validation.errors.join(', '));
-            return;
-        }
-
-        const vehicle: Vehicle = {
-            id: this.generateId(),
-            vehicleId: this.vehicleForm.vehicleId,
-            vehicleName: this.vehicleForm.vehicleName,
-            type: this.vehicleForm.type as VehicleType,
-            currentDriver: this.vehicleForm.currentDriver || null,
+            type: 'Type I Truck',
+            currentDriver: null,
             notes: this.vehicleForm.notes,
             status: this.vehicleForm.status
-        };
-
-        this.vehicles.update(vehicles => [...vehicles, vehicle]);
-        this.isAddVehicleModalOpen.set(false);
-        this.toastService.success('تم إضافة المركبة بنجاح');
+        }).subscribe({
+            next: () => {
+                this.isAddVehicleModalOpen.set(false);
+                this.toastService.success('تم إضافة المركبة بنجاح');
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error creating vehicle:', error);
+                this.toastService.error('فشلت عملية إضافة المركبة');
+            }
+        });
     }
 
     openEditVehicleModal(): void {
@@ -278,12 +228,9 @@ export class FleetComponent implements OnInit {
             this.vehicleForm = {
                 vehicleId: vehicle.vehicleId,
                 vehicleName: vehicle.vehicleName,
-                type: vehicle.type,
-                currentDriver: vehicle.currentDriver || '',
                 notes: vehicle.notes,
                 status: vehicle.status
             };
-            this.driverSearchTerm.set('');
             this.isViewVehicleModalOpen.set(false);
             this.isEditVehicleModalOpen.set(true);
         }
@@ -292,34 +239,36 @@ export class FleetComponent implements OnInit {
     saveEditVehicle(): void {
         const vehicle = this.selectedVehicle();
         if (vehicle) {
-            // Validate the vehicle form
-            const validation = this.validationService.validateVehicle({
+            const updatePayload = {
                 vehicleId: this.vehicleForm.vehicleId,
                 vehicleName: this.vehicleForm.vehicleName,
-                type: this.vehicleForm.type,
-                status: this.vehicleForm.status
-            });
-
-            if (!validation.valid) {
-                this.toastService.error(validation.errors.join(', '));
-                return;
-            }
-
-            const updatedVehicle: Vehicle = {
-                ...vehicle,
-                vehicleId: this.vehicleForm.vehicleId,
-                vehicleName: this.vehicleForm.vehicleName,
-                type: this.vehicleForm.type as VehicleType,
-                currentDriver: this.vehicleForm.currentDriver || null,
+                type: vehicle.type,
+                currentDriver: null as any,
                 notes: this.vehicleForm.notes,
                 status: this.vehicleForm.status
             };
 
-            this.vehicles.update(vehicles => vehicles.map(v => v.id === vehicle.id ? updatedVehicle : v));
-            this.selectedVehicle.set(updatedVehicle);
-            this.isEditVehicleModalOpen.set(false);
-            this.isViewVehicleModalOpen.set(true);
-            this.toastService.success('تم تحديث المركبة بنجاح');
+            this.vehicleService.updateVehicle(vehicle.id, updatePayload).subscribe({
+                next: (updatedVehicle) => {
+                    // Merge: old vehicle -> updated data from form -> API response
+                    // This ensures form changes are visible even if API returns partial data
+                    const mergedVehicle = {
+                        ...vehicle,
+                        ...updatePayload,
+                        ...(updatedVehicle && Object.keys(updatedVehicle).length > 0 ? updatedVehicle : {}),
+                        id: vehicle.id // Always preserve the ID
+                    };
+                    this.selectedVehicle.set(mergedVehicle);
+                    this.isEditVehicleModalOpen.set(false);
+                    this.isViewVehicleModalOpen.set(true);
+                    this.toastService.success('تم تحديث المركبة بنجاح');
+                    this.loadData();
+                },
+                error: (error) => {
+                    console.error('Error updating vehicle:', error);
+                    this.toastService.error('فشلت عملية تحديث المركبة');
+                }
+            });
         }
     }
 
@@ -358,12 +307,20 @@ export class FleetComponent implements OnInit {
     confirmDeleteVehicle(): void {
         const vehicle = this.vehicleToDelete();
         if (vehicle) {
-            this.vehicles.update(vehicles => vehicles.filter(v => v.id !== vehicle.id));
-            this.toastService.success(`تم حذف المركبة: ${vehicle.vehicleName}`);
-            this.closeDeleteConfirmation();
-            if (this.selectedVehicle()?.id === vehicle.id) {
-                this.closeViewVehicleModal();
-            }
+            this.vehicleService.deleteVehicle(vehicle.id).subscribe({
+                next: () => {
+                    this.toastService.success(`تم حذف المركبة: ${vehicle.vehicleName}`);
+                    this.closeDeleteConfirmation();
+                    if (this.selectedVehicle()?.id === vehicle.id) {
+                        this.closeViewVehicleModal();
+                    }
+                    this.loadData();
+                },
+                error: (error) => {
+                    console.error('Error deleting vehicle:', error);
+                    this.toastService.error('فشلت عملية حذف المركبة');
+                }
+            });
         }
     }
 }

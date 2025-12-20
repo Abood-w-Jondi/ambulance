@@ -1,0 +1,256 @@
+.vehicle-selection-wrapper {
+  background-color: #f7f8fa;
+  position: relative;
+}
+
+/* Sticky positioning */
+.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.sticky-bottom {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* Backdrop blur effect for bottom bar */
+.backdrop-blur {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Search input styles */
+.input-group .input-group-text {
+  height: 56px;
+  border: none;
+}
+
+.input-group .form-control {
+  height: 56px;
+  border: none;
+  font-size: 1rem;
+}
+
+.input-group .form-control:focus {
+  box-shadow: none;
+  background-color: #f1f3f5;
+}
+
+/* Vehicle card styles */
+.vehicle-card {
+  min-height: 80px;
+  border: 2px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.vehicle-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
+}
+
+.vehicle-card-selected {
+  border-color: #667eea !important;
+  border-width: 2px !important;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 8px 16px rgba(102, 126, 234, 0.2) !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Vehicle icon */
+.vehicle-icon {
+  transition: all 0.3s ease;
+}
+
+/* Status badge custom colors */
+.badge.bg-success-subtle {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: #059669 !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.badge.bg-info-subtle {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  color: #2563eb !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.badge.bg-warning-subtle {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+  color: #d97706 !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* Update existing badge classes */
+.badge.text-bg-success {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: #059669 !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.badge.text-bg-info {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  color: #2563eb !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.badge.text-bg-warning {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+  color: #d97706 !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* Confirm button shadow */
+.btn-primary.shadow-lg {
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3) !important;
+}
+
+.btn-primary.shadow-lg:hover {
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+.btn-primary.shadow-lg:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Loading spinner */
+.spinner-border {
+  border-width: 3px;
+}
+
+/* Scrollbar styling */
+.overflow-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 10px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: #5a42f5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .vehicle-card {
+    min-height: 72px;
+  }
+
+  .vehicle-icon {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .vehicle-icon i {
+    font-size: 1.25rem !important;
+  }
+
+  .input-group .input-group-text,
+  .input-group .form-control {
+    height: 48px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Animation for vehicle cards */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vehicle-card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Pagination styles */
+.pagination-container {
+  padding: 0 1rem;
+}
+
+.pagination {
+  --bs-pagination-padding-x: 0.75rem;
+  --bs-pagination-padding-y: 0.5rem;
+  --bs-pagination-font-size: 0.875rem;
+  --bs-pagination-color: #667eea;
+  --bs-pagination-bg: #ffffff;
+  --bs-pagination-border-width: 1px;
+  --bs-pagination-border-color: #e9ecef;
+  --bs-pagination-border-radius: 0.5rem;
+  --bs-pagination-hover-color: #5a42f5;
+  --bs-pagination-hover-bg: #f8f9ff;
+  --bs-pagination-hover-border-color: #667eea;
+  --bs-pagination-focus-color: #5a42f5;
+  --bs-pagination-focus-bg: #f8f9ff;
+  --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  --bs-pagination-active-color: #fff;
+  --bs-pagination-active-bg: #667eea;
+  --bs-pagination-active-border-color: #667eea;
+  --bs-pagination-disabled-color: #adb5bd;
+  --bs-pagination-disabled-bg: #f8f9fa;
+  --bs-pagination-disabled-border-color: #e9ecef;
+  gap: 0.25rem;
+}
+
+.pagination .page-link {
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  min-width: 36px;
+  text-align: center;
+}
+
+.pagination .page-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.15);
+}
+
+.pagination .page-item.active .page-link {
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.pagination .page-item.disabled .page-link {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Pagination button focus states */
+.pagination .page-link:focus {
+  z-index: 3;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Results info text */
+.pagination-container small {
+  font-weight: 500;
+}

@@ -1,0 +1,65 @@
+<div class="location-search-container">
+  <label class="form-label small fw-medium">{{ label }}</label>
+
+  <div class="position-relative">
+    <!-- Search Input -->
+    <input
+      type="text"
+      class="form-control"
+      [placeholder]="placeholder"
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="onSearchChange()"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      [required]="required"
+      [disabled]="disabled"
+      autocomplete="off"
+    />
+
+    <!-- Loading Spinner -->
+    @if (isLoading()) {
+      <div class="position-absolute top-50 end-0 translate-middle-y me-2">
+        <div class="spinner-border spinner-border-sm text-primary" role="status">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+      </div>
+    }
+
+    <!-- Dropdown -->
+    @if (isDropdownOpen() && !isLoading()) {
+      <div class="dropdown-menu show w-100 mt-1 shadow-sm" style="max-height: 300px; overflow-y: auto;">
+
+        <!-- Filtered Locations -->
+        @if (filteredLocations().length > 0) {
+          @for (location of filteredLocations(); track location.id) {
+            <a
+              class="dropdown-item d-flex justify-content-between align-items-center"
+              href="javascript:void(0)"
+              (click)="selectLocation(location)"
+            >
+              <span>{{ location.name }}</span>
+              <span [class]="getLocationTypeBadgeClass(location.locationType)" class="badge-sm">
+                {{ getLocationTypeLabel(location.locationType) }}
+              </span>
+            </a>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (filteredLocations().length === 0 && searchTerm().length >= 3) {
+          <div class="dropdown-item text-muted text-center">
+            لا توجد نتائج
+          </div>
+        }
+
+        <!-- Show hint when less than 3 characters -->
+        @if (searchTerm().length > 0 && searchTerm().length < 3) {
+          <div class="dropdown-item text-muted small">
+            <i class="fa fa-info-circle me-1"></i>
+            اكتب 3 أحرف على الأقل للبحث
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

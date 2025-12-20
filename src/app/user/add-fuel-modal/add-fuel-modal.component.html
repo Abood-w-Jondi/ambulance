@@ -11,39 +11,13 @@
       </div>
       <div class="modal-body">
         <form (ngSubmit)="onSubmit()" #fuelForm="ngForm">
-          <!-- اختيار سيارة الإسعاف -->
-          <div class="mb-3">
-            <label for="ambulance" class="form-label fw-bold">
-              <i class="fas fa-ambulance me-2 text-primary"></i>
-              سيارة الإسعاف
-            </label>
-            <select 
-              class="form-select" 
-              id="ambulance"
-              [(ngModel)]="selectedAmbulance"
-              name="ambulance"
-              (change)="onAmbulanceChange()"
-              required>
-              <option value="">اختر سيارة الإسعاف</option>
-              <option *ngFor="let ambulance of ambulances" [value]="ambulance.number">
-                {{ ambulance.name }} - {{ ambulance.number }}
-              </option>
-            </select>
-          </div>
-
           <!-- التاريخ -->
           <div class="mb-3">
-            <label for="date" class="form-label fw-bold">
+            <label class="form-label fw-bold">
               <i class="fas fa-calendar me-2 text-primary"></i>
               التاريخ
             </label>
-            <input 
-              type="date" 
-              class="form-control" 
-              id="date"
-              [(ngModel)]="fuelRecord.date"
-              name="date"
-              required>
+            <input type="date" class="form-control" [(ngModel)]="recordForm.date" name="date" required max="9999-12-31">
           </div>
 
           <!-- قراءة العداد -->
@@ -53,11 +27,11 @@
                 <i class="fas fa-tachometer-alt me-2 text-primary"></i>
                 العداد قبل (كم)
               </label>
-              <input 
-                type="number" 
-                class="form-control" 
+              <input
+                type="number"
+                class="form-control"
                 id="odometerBefore"
-                [(ngModel)]="fuelRecord.odometerBefore"
+                [(ngModel)]="recordForm.odometerBefore"
                 name="odometerBefore"
                 min="0"
                 required>
@@ -67,11 +41,11 @@
                 <i class="fas fa-tachometer-alt me-2 text-primary"></i>
                 العداد بعد (كم)
               </label>
-              <input 
-                type="number" 
-                class="form-control" 
+              <input
+                type="number"
+                class="form-control"
                 id="odometerAfter"
-                [(ngModel)]="fuelRecord.odometerAfter"
+                [(ngModel)]="recordForm.odometerAfter"
                 name="odometerAfter"
                 min="0"
                 required>
@@ -90,11 +64,11 @@
               <i class="fas fa-gas-pump me-2 text-primary"></i>
               كمية الوقود (لتر)
             </label>
-            <input 
-              type="number" 
-              class="form-control" 
+            <input
+              type="number"
+              class="form-control"
               id="fuelAmount"
-              [(ngModel)]="fuelRecord.fuelAmount"
+              [(ngModel)]="recordForm.fuelAmount"
               name="fuelAmount"
               step="0.1"
               min="0"
@@ -105,13 +79,13 @@
           <div class="mb-3">
             <label for="cost" class="form-label fw-bold">
               <i class="fas fa-dollar-sign me-2 text-primary"></i>
-              التكلفة ($)
+              التكلفة (₪)
             </label>
-            <input 
-              type="number" 
-              class="form-control" 
+            <input
+              type="number"
+              class="form-control"
               id="cost"
-              [(ngModel)]="fuelRecord.cost"
+              [(ngModel)]="recordForm.cost"
               name="cost"
               step="0.01"
               min="0"
@@ -124,10 +98,10 @@
               <i class="fas fa-sticky-note me-2 text-primary"></i>
               ملاحظات (اختياري)
             </label>
-            <textarea 
-              class="form-control" 
+            <textarea
+              class="form-control"
               id="notes"
-              [(ngModel)]="fuelRecord.notes"
+              [(ngModel)]="recordForm.notes"
               name="notes"
               rows="3"
               placeholder="أضف أي ملاحظات إضافية..."></textarea>

@@ -4,8 +4,8 @@
     <div class="col-12">
       <div class="card bg-success text-white border-0 shadow-sm">
         <div class="card-body text-center py-5">
-          <h2 class="display-4 fw-bold mb-2">{{ driverStatus }}</h2>
-          <p class="mb-0 opacity-75">أنت جاهز للرحلة التالية.</p>
+          <h2 class="display-4 fw-bold mb-2">{{ driverStatus() }}</h2>
+          <p class="mb-0 opacity-75">مرحباً {{ driverName() }}</p>
         </div>
       </div>
     </div>
@@ -28,45 +28,82 @@
   <!-- ملخص اليوم -->
   <h3 class="fw-bold mb-3">ملخص اليوم</h3>
   <div class="row mb-4 g-3">
-    <div class="col-12 col-md-6">
+    <div class="col-6 col-md-3">
       <div class="card border shadow-sm">
-        <div class="card-body">
+        <div class="card-body money">
           <p class="text-muted mb-2">الرحلات المكتملة</p>
-          <h2 class="display-5 fw-bold mb-0">{{ tripsCompleted }}</h2>
+          <h2 class="display-5 fw-bold mb-0">{{ tripsCompleted() }}</h2>
         </div>
       </div>
     </div>
-    <div class="col-12 col-md-6">
+    <div class="col-6 col-md-3">
       <div class="card border shadow-sm">
-        <div class="card-body">
-          <p class="text-muted mb-2">إجمالي الأرباح</p>
-          <h2 class="display-5 fw-bold mb-0">${{ totalEarnings }}</h2>
+        <div class="card-body money">
+          <p class="text-muted mb-2">أرباح اليوم</p>
+          <h2 class="display-5 fw-bold mb-0">{{ totalEarnings() | number:'1.0-2' }} ₪</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border shadow-sm" [class.border-warning]="pendingLoansCount() > 0">
+        <div class="card-body money">
+          <p class="text-muted mb-2">ديون غير محصّلة</p>
+          <h2 class="display-5 fw-bold mb-0" [class.text-warning]="pendingLoansCount() > 0">{{ pendingLoansCount() }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border shadow-sm" [class.border-warning]="pendingLoansAmount() > 0">
+        <div class="card-body money">
+          <p class="text-muted mb-2">إجمالي الديون</p>
+          <h2 class="display-5 fw-bold mb-0" [class.text-warning]="pendingLoansAmount() > 0">{{ pendingLoansAmount() | number:'1.0-2' }} ₪</h2>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- الموقع الحالي -->
+  <!-- الموقع الحالي - Map -->
   <div class="row mb-4">
     <div class="col-12">
       <div class="card border shadow-sm overflow-hidden">
         <div class="row g-0">
-          <div class="col-12 col-lg-6">
-            <div class="ratio ratio-16x9">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqmTI3zG9WJPPfYynjTiTZJFmbi2T1vT6qhMqcdVdQDTIuYawzz13Tw2tGGiXiWAv0K9ibS8-RS4DWN5G4c9bBvKQj99Aq7t4HvPgI76CHi4jjktZEhfo6UcY9_wIJVFjdm0uj81RkPX0xuJ29fBu8wE1mWkxhHKELhd8LlrdULbQE3-hRtcEPXVto8Yp-bKrumvdj5_k77HDIrDGLpGg3Hureet7qoIOAFerqtcgjiO43ddaACU0hUn2XGxMIXv6-2b_wZdMR8dM" 
-                   alt="خريطة الموقع الحالي" 
-                   class="img-fluid object-fit-cover w-100 h-100">
+          <div class="col-12 col-lg-8">
+            <div class="map-container">
+              <div id="driver-location-map" class="driver-map"></div>
+              @if (isLocationLoading()) {
+                <div class="map-loading">
+                  <div class="spinner-border text-primary" role="status"></div>
+                  <p class="mt-2 mb-0">جاري تحديد الموقع...</p>
+                </div>
+              }
+              @if (locationError()) {
+                <div class="map-error">
+                  <i class="fas fa-exclamation-triangle text-warning fa-2x mb-2"></i>
+                  <p class="mb-0">{{ locationError() }}</p>
+                </div>
+              }
             </div>
           </div>
-          <div class="col-12 col-lg-6">
+          <div class="col-12 col-lg-4">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h5 class="fw-bold mb-0">الموقع الحالي</h5>
-                <button class="btn btn-sm btn-light rounded-circle" (click)="refreshLocation()">
-                  <i class="fas fa-sync-alt"></i>
+                <button class="btn btn-sm btn-light rounded-circle" (click)="refreshLocation()" [disabled]="isLocationLoading()">
+                  <i class="fas fa-sync-alt" [class.fa-spin]="isLocationLoading()"></i>
                 </button>
               </div>
-              <p class="text-muted mb-0">{{ currentLocation }}</p>
+              @if (currentPosition()) {
+                <p class="text-muted mb-2">
+                  <i class="fas fa-map-marker-alt me-1"></i>
+                  {{ getFormattedLocation() }}
+                </p>
+                <p class="text-muted small mb-0">
+                  <i class="fas fa-clock me-1"></i>
+                  آخر تحديث: {{ currentPosition()!.timestamp | date:'shortTime' }}
+                </p>
+              } @else if (!locationError()) {
+                <p class="text-muted mb-0">جاري تحديد الموقع...</p>
+              }
             </div>
           </div>
         </div>
@@ -102,10 +139,15 @@
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card border shadow-sm h-100" role="button" (click)="viewWallet()">
+      <div class="card border shadow-sm h-100 position-relative" role="button" (click)="viewLoans()">
         <div class="card-body text-center d-flex flex-column align-items-center justify-content-center py-4">
-          <i class="fas fa-wallet text-primary fa-2x mb-3"></i>
-          <p class="fw-medium mb-0">عرض المحفظة</p>
+          <i class="fas fa-hand-holding-usd text-success fa-2x mb-3"></i>
+          <p class="fw-medium mb-0">تحصيل الديون</p>
+          @if (pendingLoansCount() > 0) {
+            <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger">
+              {{ pendingLoansCount() }}
+            </span>
+          }
         </div>
       </div>
     </div>
@@ -113,15 +155,37 @@
 </div>
 
 <!-- Fuel Modal -->
-<app-add-fuel-modal 
-  *ngIf="showFuelModal" 
+<app-add-fuel-modal
+  *ngIf="showFuelModal"
+  [vehicleId]="vehicleId || ''"
+  [vehicleInternalId]="vehicleId || ''"
+  [driverId]="driver()?.id || ''"
+  [driverInternalId]="driver()?.id || ''"
   (close)="closeFuelModal()"
   (fuelAdded)="onFuelAdded()">
 </app-add-fuel-modal>
 
+<!-- End Shift Confirmation Modal -->
+<app-confirmation-modal
+ [isOpen]="showEndShiftConfirmation()"
+ [config]="endShiftModalConfig()"
+ (confirmed)="confirmEndShift()"
+ (cancelled)="cancelEndShift()">
+</app-confirmation-modal>
+
 <!-- Maintenance Modal -->
-<app-add-maintenance-modal 
-  *ngIf="showMaintenanceModal" 
+<app-add-maintenance-modal
+  *ngIf="showMaintenanceModal"
+  [vehicleId]="vehicleId || ''"
+  [vehicleInternalId]="vehicleId || ''"
   (close)="closeMaintenanceModal()"
   (maintenanceAdded)="onMaintenanceAdded()">
 </app-add-maintenance-modal>
+
+<!-- Checklist Reminder Modal -->
+<app-checklist-reminder
+  [isOpen]="showChecklistReminder()"
+  [vehicleName]="currentVehicleName()"
+  (openChecklist)="openChecklist()"
+  (dismiss)="dismissReminder()">
+</app-checklist-reminder>

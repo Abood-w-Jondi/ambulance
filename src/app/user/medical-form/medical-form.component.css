@@ -1,0 +1,345 @@
+/* --- Modern Variables & Reset --- */
+:root {
+  --primary-color: #0d6efd;
+  --primary-hover: #0b5ed7;
+  --primary-soft: #eff6ff;
+
+  --secondary-color: #64748b;
+  --secondary-bg: #f5f5f5;
+  
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  
+  --bg-page: #f1f5f9;
+  --bg-card: #ffffff;
+  
+  --border-color: #1a1a1a;
+  --border-focus: #3b82f6;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  --radius-md: 0.75rem;
+}
+
+
+body {
+  background-color: var(--bg-page);
+  color: #334155;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- Layout Containers --- */
+.medical-form-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.loading-container {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Modern Card Styling --- */
+.card-modern {
+  background-color: rgba(245, 243, 243, 0.641);
+  border: 1px solid white;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+/* --- Header Section --- */
+.header-card {
+  position: relative;
+  overflow: visible;
+}
+
+.form-title {
+  font-weight: 800;
+  color: #1e293b;
+  font-size: 1.75rem;
+  letter-spacing: -0.5px;
+}
+
+.icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--primary-soft);
+  color: var(--primary-color);
+  font-size: 1.25rem;
+}
+
+.trip-id-text {
+  font-family: monospace;
+  color: var(--secondary-color);
+  font-size: 0.9rem;
+}
+
+.btn-light-secondary {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  color: var(--secondary-color);
+  border-radius: 50px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-light-secondary:hover {
+  background: var(--secondary-bg);
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+/* --- Status Section (Progress & Badges) --- */
+.status-section {
+  border-color: #e2e8f0 !important;
+}
+
+.custom-progress {
+  height: 12px;
+  border-radius: 10px;
+  background-color: #e2e8f0;
+  margin-top: 5px;
+  overflow: hidden;
+}
+
+.percentage-badge {
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.4em 0.8em;
+  color: #fff;
+}
+
+.status-badges .badge {
+  font-weight: 600;
+  padding: 0.5em 1em;
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
+}
+
+/* Subtle backgrounds for badges */
+.bg-info-subtle { background-color: #e0f2fe; color: #0284c7; }
+.bg-success-subtle { background-color: #dcfce7; color: #16a34a; }
+.bg-warning-subtle { background-color: #fef3c7; color: #d97706; }
+.bg-primary-subtle { background-color: #dbeafe; color: #2563eb; }
+.bg-danger-subtle { background-color: #fee2e2; color: #dc2626; }
+.bg-dark-subtle { background-color: #f1f5f9; color: #475569; }
+
+/* --- Accordion Customization --- */
+.custom-accordion .accordion-item {
+  border: none; /* Removed default border */
+  margin-bottom: 1rem;
+}
+
+.custom-accordion .accordion-button {
+  background-color: #fff;
+  padding: 1.25rem 1.5rem;
+  border: none;
+  box-shadow: none;
+  color: #334155;
+}
+
+.custom-accordion .accordion-button:not(.collapsed) {
+  background-color: var(--primary-soft);
+  color: var(--primary-color);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.custom-accordion .accordion-button:focus {
+  box-shadow: none; /* Clean focus state */
+}
+
+/* Custom styling for the icon inside button */
+.section-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary-color);
+  transition: all 0.2s;
+}
+
+.accordion-button:not(.collapsed) .section-icon-wrapper {
+  background: transparent;
+  color: var(--primary-color);
+}
+
+.accordion-body {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* --- Form Fields --- */
+.form-group-modern {
+  margin-bottom: 0.5rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: #1e293b;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  background-color: #fff;
+}
+
+.form-control:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.form-control:disabled {
+  background-color: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Custom Checkboxes */
+.custom-checkbox .form-check-input {
+  width: 1.2em;
+  height: 1.2em;
+  margin-top: 0.15em;
+  border: 2px solid #cbd5e1;
+  cursor: pointer;
+}
+
+.custom-checkbox .form-check-input:checked {
+  background-color: rgb(30, 247, 6) !important;
+  border-color: var(--primary-color);
+  color: rgb(30, 247, 6);
+}
+/* the icons background becomes invisiable */
+.fas{
+background-color: transparent !important; /* Or just background: none; */
+    border: none;
+}
+
+.custom-checkbox .form-check-label {
+  cursor: pointer;
+  padding-right: 0.5rem; /* RTL padding */
+  padding-top: 0.1rem;
+  color: #334155;
+}
+
+.checkbox-group-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+/* --- Subsections --- */
+.subsection-card {
+  border: 1px solid var(--border-color);
+  background-color: #f8fafc;
+}
+
+.subsection-title {
+  font-weight: 700;
+  color: #334155;
+  font-size: 1rem;
+}
+
+.small-icon {
+  font-size: 0.8rem;
+}
+
+/* --- Tables --- */
+.table-responsive {
+  background: #fff;
+  border-color: var(--border-color) !important;
+}
+
+.table th {
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bg-light-focus:focus {
+  background-color: #fff;
+}
+
+/* --- Modal Improvements --- */
+.modal-backdrop-blur {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  z-index: -1;
+}
+
+.modal-content {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+  .header-card .card-body {
+    padding: 1.25rem;
+  }
+  
+  .form-title {
+    font-size: 1.4rem;
+  }
+  
+  .status-badges {
+    justify-content: flex-start;
+  }
+  
+  .action-buttons {
+    width: 100%;
+  }
+  
+  .action-buttons .btn {
+    flex: 1;
+  }
+}
+
+/* --- RTL Specifics --- */
+.accordion-button::after {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+
+[dir="rtl"] .ms-2 { margin-right: 0.5rem !important; margin-left: 0 !important; }
+[dir="rtl"] .me-2 { margin-left: 0.5rem !important; margin-right: 0 !important; }
+[dir="rtl"] .me-3 { margin-left: 1rem !important; margin-right: 0 !important; }

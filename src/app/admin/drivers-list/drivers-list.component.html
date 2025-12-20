@@ -1,12 +1,115 @@
 <div class="d-flex flex-column min-vh-100 bg-light">
 
-    <!-- Confirmation Modal -->
-    <app-confirmation-modal
-        [isOpen]="isDeleteModalOpen()"
-        [config]="confirmationModalConfig()"
-        (confirmed)="confirmDeleteDriver()"
-        (cancelled)="closeDeleteConfirmation()">
+    <!-- Delete Confirmation Modal -->
+    <app-confirmation-modal [isOpen]="isDeleteModalOpen()" [config]="confirmationModalConfig()"
+        (confirmed)="confirmDeleteDriver()" (cancelled)="closeDeleteConfirmation()">
     </app-confirmation-modal>
+
+    <!-- Clear Balance Confirmation Modal -->
+    <app-confirmation-modal [isOpen]="isClearBalanceModalOpen()" [config]="confirmationModalConfig()"
+        (confirmed)="confirmClearBalance()" (cancelled)="closeClearBalanceModal()">
+    </app-confirmation-modal>
+
+    <!-- Payment Modal (Driver pays Company) -->
+    @if (isPaymentModalOpen() && driverForPayment()) {
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-xl shadow-lg border-0">
+                <div class="modal-header bg-danger rounded-top-xl border-0 text-white">
+                    <h5 class="modal-title fw-bold">تسجيل دفع من السائق</h5>
+                    <button type="button" class="btn-close btn-close-white" (click)="closePaymentModal()"></button>
+                </div>
+                <div class="modal-body p-4 text-end">
+                    <p class="mb-3">السائق: <strong>{{ driverForPayment()!.arabicName }}</strong></p>
+
+                    <div class="mb-3">
+                        <label for="paymentAmount" class="form-label fw-medium">المبلغ (₪)</label>
+                        <input
+                            id="paymentAmount"
+                            type="number"
+                            class="form-control"
+                            min="0"
+                            step="0.01"
+                            [ngModel]="paymentAmount()"
+                            (ngModelChange)="paymentAmount.set($event)"
+                            placeholder="أدخل المبلغ">
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fa-solid fa-info-circle me-1"></i>
+                        سيتم خصم هذا المبلغ من المبلغ المستحق على السائق
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" (click)="closePaymentModal()">إلغاء</button>
+                    <button type="button" class="btn btn-danger" (click)="confirmRecordPayment()"
+                        [disabled]="!paymentAmount() || paymentAmount() <= 0">
+                        <i class="fa-solid fa-check me-1"></i>
+                        تأكيد الدفع
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Expense Modal (Company pays Driver) -->
+    @if (isExpenseModalOpen() && driverForExpense()) {
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-xl shadow-lg border-0">
+                <div class="modal-header bg-success rounded-top-xl border-0 text-white">
+                    <h5 class="modal-title fw-bold">صرف مبلغ للسائق</h5>
+                    <button type="button" class="btn-close btn-close-white" (click)="closeExpenseModal()"></button>
+                </div>
+                <div class="modal-body p-4 text-end">
+                    <p class="mb-3">السائق: <strong>{{ driverForExpense()!.arabicName }}</strong></p>
+
+                    <div class="mb-3">
+                        <label for="expenseAmount" class="form-label fw-medium">المبلغ (₪)</label>
+                        <input
+                            id="expenseAmount"
+                            type="number"
+                            class="form-control"
+                            min="0"
+                            step="0.01"
+                            [ngModel]="expenseAmount()"
+                            (ngModelChange)="expenseAmount.set($event)"
+                            placeholder="أدخل المبلغ">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="expenseDescription" class="form-label fw-medium">
+                            الوصف <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            id="expenseDescription"
+                            type="text"
+                            class="form-control"
+                            [ngModel]="expenseDescription()"
+                            (ngModelChange)="expenseDescription.set($event)"
+                            placeholder="مثال: بنزين، صيانة، خسارة">
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fa-solid fa-exclamation-triangle me-1"></i>
+                        سيتم صرف هذا المبلغ من الشركة للسائق وخصمه من المبلغ المستحق له
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" (click)="closeExpenseModal()">إلغاء</button>
+                    <button type="button" class="btn btn-success" (click)="confirmRecordExpense()"
+                        [disabled]="!expenseAmount() || expenseAmount() <= 0 || !expenseDescription() || expenseDescription().trim() === ''">
+                        <i class="fa-solid fa-check me-1"></i>
+                        تأكيد الصرف
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
 
     <!-- Add Driver Modal -->
     @if (isAddModalOpen()) {
@@ -16,7 +119,8 @@
             <div class="modal-content rounded-xl shadow-lg border-0">
                 <div class="modal-header bg-primary-custom rounded-top-xl border-0 justify-content-between">
                     <h5 class="modal-title fw-bold text-white">إضافة سائق جديد</h5>
-                    <button type="button" style="background-color: transparent; border: none; color: white;" (click)="isAddModalOpen.set(false)">
+                    <button type="button" style="background-color: transparent; border: none; color: white;"
+                        (click)="isAddModalOpen.set(false)">
                         <i class="fa-solid fa-xmark" style="font-size: 20px;"></i>
                     </button>
                 </div>
@@ -29,15 +133,17 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label for="newArabicName" class="form-label small fw-medium">الاسم العربي للسائق <span class="text-danger">*</span></label>
-                                <input id="newArabicName" type="text" class="form-control" placeholder="مثال: خالد العلي"
-                                    [(ngModel)]="newDriver.arabicName" name="arabicName" required>
+                                <label for="newArabicName" class="form-label small fw-medium">الاسم العربي للسائق <span
+                                        class="text-danger">*</span></label>
+                                <input id="newArabicName" type="text" class="form-control"
+                                    placeholder="مثال: خالد العلي" [(ngModel)]="newDriver.arabicName" name="arabicName"
+                                    required>
                             </div>
-                            
+
                             <div class="col-md-6">
-                                <label for="newName" class="form-label small fw-medium">الاسم الإنجليزي <span class="text-danger">*</span></label>
+                                <label for="newName" class="form-label small fw-medium">الاسم الإنجليزي</label>
                                 <input id="newName" type="text" class="form-control" placeholder="Example: Khalid Alali"
-                                    [(ngModel)]="newDriver.name" name="name" required>
+                                    [(ngModel)]="newDriver.name" name="name">
                             </div>
 
                             <!-- Login Credentials -->
@@ -48,13 +154,13 @@
                                     يجب إدخال اسم المستخدم أو البريد الإلكتروني (أو كليهما)
                                 </small>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="newUsername" class="form-label small fw-medium">اسم المستخدم</label>
                                 <input id="newUsername" type="text" class="form-control" placeholder="username"
                                     [(ngModel)]="newDriver.username" name="username">
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="newEmail" class="form-label small fw-medium">البريد الإلكتروني</label>
                                 <input id="newEmail" type="email" class="form-control" placeholder="example@email.com"
@@ -62,30 +168,15 @@
                             </div>
 
                             <div class="col-12">
-                                <label for="newPassword" class="form-label small fw-medium">كلمة المرور الأولية <span class="text-danger">*</span></label>
+                                <label for="newPassword" class="form-label small fw-medium">كلمة المرور الأولية <span
+                                        class="text-danger">*</span></label>
                                 <input id="newPassword" type="password" class="form-control" placeholder="كلمة المرور"
                                     [(ngModel)]="newDriver.password" name="password" required>
                             </div>
 
-                            <!-- Financial Information -->
-                            <div class="col-12 mt-4">
-                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">المعلومات المالية</h6>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="newInitialOwed" class="form-label small fw-medium">المبلغ المستحق الأولي (₪)</label>
-                                <input id="newInitialOwed" type="number" class="form-control" min="0" step="0.01"
-                                    [(ngModel)]="newDriver.amountOwed" name="amountOwed" required>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label for="newTrips" class="form-label small fw-medium">عدد الرحلات اليوم</label>
-                                <input id="newTrips" type="number" class="form-control" min="0"
-                                    [(ngModel)]="newDriver.tripsToday" name="tripsToday" required>
-                            </div>
                         </div>
                         <div class="d-flex justify-content-end mt-4">
-                            <button type="submit" class="btn btn-primary-custom rounded-pill px-4 fw-bold" 
+                            <button type="submit" class="btn btn-primary-custom rounded-pill px-4 fw-bold"
                                 [disabled]="!isAddFormValid()">
                                 إضافة السائق
                             </button>
@@ -99,13 +190,14 @@
 
     <!-- Edit Driver Modal -->
     @if (isEditModalOpen() && driverToEdit()) {
-    <div class="modal-backdrop fade show reducedZIndex" ></div>
+    <div class="modal-backdrop fade show reducedZIndex"></div>
     <div class="modal fade show d-block reducedZIndex" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content rounded-xl shadow-lg border-0">
                 <div class="modal-header bg-warning rounded-top-xl border-0 justify-content-between">
                     <h5 class="modal-title fw-bold text-dark">تعديل معلومات السائق</h5>
-                    <button type="button" style="background-color: transparent; border: none;" (click)="closeEditModal()">
+                    <button type="button" style="background-color: transparent; border: none;"
+                        (click)="closeEditModal()">
                         <i class="fa-solid fa-xmark" style="font-size: 20px;"></i>
                     </button>
                 </div>
@@ -116,17 +208,19 @@
                             <div class="col-12">
                                 <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">المعلومات الأساسية</h6>
                             </div>
-                            
+
                             <div class="col-md-6">
-                                <label for="editArabicName" class="form-label small fw-medium">الاسم العربي للسائق <span class="text-danger">*</span></label>
-                                <input id="editArabicName" type="text" class="form-control" placeholder="مثال: خالد العلي"
-                                    [(ngModel)]="editDriver.arabicName" name="arabicName" required>
+                                <label for="editArabicName" class="form-label small fw-medium">الاسم العربي للسائق <span
+                                        class="text-danger">*</span></label>
+                                <input id="editArabicName" type="text" class="form-control"
+                                    placeholder="مثال: خالد العلي" [(ngModel)]="editDriver.arabicName" name="arabicName"
+                                    required>
                             </div>
-                            
+
                             <div class="col-md-6">
-                                <label for="editName" class="form-label small fw-medium">الاسم الإنجليزي <span class="text-danger">*</span></label>
-                                <input id="editName" type="text" class="form-control" placeholder="Example: Khalid Alali"
-                                    [(ngModel)]="editDriver.name" name="name" required>
+                                <label for="editName" class="form-label small fw-medium">الاسم الإنجليزي</label>
+                                <input id="editName" type="text" class="form-control"
+                                    placeholder="Example: Khalid Alali" [(ngModel)]="editDriver.name" name="name">
                             </div>
 
                             <!-- Login Credentials -->
@@ -137,43 +231,107 @@
                                     يجب إدخال اسم المستخدم أو البريد الإلكتروني (أو كليهما)
                                 </small>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="editUsername" class="form-label small fw-medium">اسم المستخدم</label>
                                 <input id="editUsername" type="text" class="form-control" placeholder="username"
                                     [(ngModel)]="editDriver.username" name="username">
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="editEmail" class="form-label small fw-medium">البريد الإلكتروني</label>
                                 <input id="editEmail" type="email" class="form-control" placeholder="example@email.com"
                                     [(ngModel)]="editDriver.email" name="email">
                             </div>
 
+                            <!-- Profile & Job Information -->
+                            <div class="col-12 mt-4">
+                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">معلومات الوظيفة والملف الشخصي</h6>
+                            </div>
+
+                            <!-- Profile Image -->
+                            <div class="col-12">
+                                <label class="form-label small fw-medium">الصورة الشخصية</label>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="position-relative">
+                                        @if (editDriver.profileImageUrl) {
+                                        <img [src]="editDriver.profileImageUrl" alt="صورة السائق"
+                                            class="rounded-circle object-fit-cover border"
+                                            style="width: 80px; height: 80px;">
+                                        <button type="button"
+                                            class="btn btn-danger btn-sm rounded-circle position-absolute top-0 start-0"
+                                            style="width: 24px; height: 24px; padding: 0;"
+                                            (click)="removeProfileImage()" title="إزالة الصورة">
+                                            <i class="fa-solid fa-times" style="font-size: 12px;"></i>
+                                        </button>
+                                        } @else {
+                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                                            style="width: 80px; height: 80px;">
+                                            <i class="fa-solid fa-user text-white" style="font-size: 32px;"></i>
+                                        </div>
+                                        }
+                                    </div>
+                                    <div>
+                                        <input type="file" class="d-none" #profileImageInput accept="image/*"
+                                            (change)="onProfileImageSelected($event)">
+                                        <button type="button" class="btn btn-outline-primary btn-sm"
+                                            (click)="profileImageInput.click()">
+                                            <i class="fa-solid fa-upload me-1"></i>
+                                            {{ editDriver.profileImageUrl ? 'تغيير الصورة' : 'رفع صورة' }}
+                                        </button>
+                                        <small class="text-muted d-block mt-1">الحد الأقصى: 2 ميجابايت</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editJobTitle" class="form-label small fw-medium">الوظيفة</label>
+                                <input id="editJobTitle" type="text" class="form-control" placeholder="مثال: سائق إسعاف"
+                                    [(ngModel)]="editDriver.jobTitle" name="jobTitle">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editEducationLevel" class="form-label small fw-medium">المستوى
+                                    التعليمي</label>
+                                <select id="editEducationLevel" class="form-select"
+                                    [(ngModel)]="editDriver.educationLevel" name="educationLevel">
+                                    <option value="">-- اختر المستوى --</option>
+                                    @for (option of educationLevelOptions; track option.value) {
+                                    <option [value]="option.value">{{ option.label }}</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editPhoneNumber" class="form-label small fw-medium">رقم الهاتف</label>
+                                <input id="editPhoneNumber" type="tel" class="form-control" placeholder="05XX-XXX-XXXX"
+                                    [(ngModel)]="editDriver.phoneNumber" name="phoneNumber" dir="ltr">
+                            </div>
+
                             <!-- Driver Status -->
                             <div class="col-12 mt-4">
                                 <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">حالة السائق</h6>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="editStatus" class="form-label small fw-medium">حالة السائق</label>
-                                <select id="editStatus" class="form-select" [(ngModel)]="editDriver.arabicStatus" name="arabicStatus" required>
+                                <select id="editStatus" class="form-select" [(ngModel)]="editDriver.arabicStatus"
+                                    name="arabicStatus" required>
                                     @for (status of getStatusOptions(); track status) {
                                     <option [value]="status">{{ status }}</option>
                                     }
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="editTrips" class="form-label small fw-medium">عدد الرحلات اليوم</label>
                                 <input id="editTrips" type="number" class="form-control" min="0"
-                                    [(ngModel)]="editDriver.tripsToday" name="tripsToday" required>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label for="editAmountOwed" class="form-label small fw-medium">المبلغ المستحق (₪)</label>
-                                <input id="editAmountOwed" type="number" class="form-control" min="0" step="0.01"
-                                    [(ngModel)]="editDriver.amountOwed" name="amountOwed" required>
+                                    [(ngModel)]="editDriver.tripsToday" name="tripsToday" readonly disabled
+                                    style="background-color: #e9ecef;">
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fa-solid fa-info-circle me-1"></i>
+                                    يتم حساب هذا الرقم تلقائياً من الرحلات
+                                </small>
                             </div>
 
                             <!-- Account Status -->
@@ -182,7 +340,8 @@
                             </div>
 
                             <div class="col-12">
-                                <div class="form-check form-switch d-flex align-items-center justify-content-start gap-2">
+                                <div
+                                    class="form-check form-switch d-flex align-items-center justify-content-start gap-2">
                                     <label class="form-check-label fw-medium" for="editIsActive">
                                         الحساب نشط (يمكن تسجيل الدخول)
                                     </label>
@@ -191,11 +350,11 @@
                                 </div>
                                 <small class="text-muted d-block mt-2 text-end">
                                     @if (editDriver.isActive) {
-                                        <i class="fa-solid fa-circle-check text-success me-1"></i>
-                                        الحساب نشط - يمكن للسائق تسجيل الدخول
+                                    <i class="fa-solid fa-circle-check text-success me-1"></i>
+                                    الحساب نشط - يمكن للسائق تسجيل الدخول
                                     } @else {
-                                        <i class="fa-solid fa-circle-xmark text-danger me-1"></i>
-                                        الحساب معطل - لا يمكن للسائق تسجيل الدخول
+                                    <i class="fa-solid fa-circle-xmark text-danger me-1"></i>
+                                    الحساب معطل - لا يمكن للسائق تسجيل الدخول
                                     }
                                 </small>
                             </div>
@@ -204,26 +363,28 @@
                             <div class="col-12 mt-4">
                                 <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">إعادة تعيين كلمة المرور</h6>
                             </div>
-                            
+
                             <div class="col-12">
-                                <label for="editNewPassword" class="form-label small fw-medium">كلمة المرور الجديدة (اختياري)</label>
-                                <input id="editNewPassword" type="password" class="form-control" 
+                                <label for="editNewPassword" class="form-label small fw-medium">كلمة المرور الجديدة
+                                    (اختياري)</label>
+                                <input id="editNewPassword" type="password" class="form-control"
                                     placeholder="اتركه فارغًا إذا كنت لا تريد تغيير كلمة المرور"
-                                    [(ngModel)]="editDriver.newPassword" name="newPassword" suggest="off" autocomplete="off">
+                                    [(ngModel)]="editDriver.newPassword" name="newPassword" suggest="off"
+                                    autocomplete="off">
                                 <small class="text-muted d-block mt-2">
                                     <i class="fa-solid fa-info-circle me-1"></i>
                                     يمكنك إعادة تعيين كلمة المرور دون معرفة كلمة المرور القديمة
                                 </small>
                             </div>
                         </div>
-                        
+
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-between gap-2 mt-4 pt-3 border-top">
                             <div class="d-flex gap-2">
                                 <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold"
                                     [disabled]="!isEditFormValid()">
                                     <i class="fa-solid fa-floppy-disk me-1"></i>
-                             حفظ
+                                    حفظ
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
                                     (click)="closeEditModal()">إلغاء</button>
@@ -231,7 +392,7 @@
                             <button type="button" class="btn btn-danger rounded-pill px-4"
                                 (click)="showDeleteConfirmation(driverToEdit()!)">
                                 <i class="fa-solid fa-trash me-1"></i>
-حذف
+                                حذف
                             </button>
                         </div>
                     </form>
@@ -245,12 +406,6 @@
         <div class="container-fluid p-0">
 
             <div class="d-flex justify-content-between mb-3 d-lg-none">
-                <button class="btn btn-primary-custom rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
-                    (click)="isAddModalOpen.set(true)">
-                    <i class="fa-solid fa-user-plus fs-6"></i>
-                    <span class="fw-bold">سائق جديد</span>
-                </button>
-
                 <button class="btn rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
                     [ngClass]="{'btn-success': !showFiltersOnMobile(), 'btn-secondary': showFiltersOnMobile()}"
                     (click)="toggleMobileFilters()">
@@ -266,18 +421,13 @@
                 <div class="col-12 col-lg-4">
                     <div id="filter-sidebar" class="card shadow-sm rounded-xl p-4 mt-lg-5 sticky-lg-top awayFromTop"
                         [ngClass]="{'d-block': showFiltersOnMobile(), 'd-none': !showFiltersOnMobile(), 'd-lg-block': true}">
-                        
+
                         <h6 class="fw-bold mb-3 text-dark border-bottom pb-2">خيارات البحث والتصفية</h6>
 
-                        <div class="mb-3">
-                            <label for="searchTerm" class="form-label small fw-medium">البحث</label>
-                            <input id="searchTerm" type="text" class="form-control" placeholder="الاسم، البريد الإلكتروني، أو اسم المستخدم"
-                                [(ngModel)]="searchTermValue" (ngModelChange)="searchTerm.set($event)">
-                        </div>
 
                         <div class="mb-3">
                             <label for="filterStatus" class="form-label small fw-medium">حالة السائق</label>
-                            <select id="filterStatus" class="form-select" [(ngModel)]="filterStatusValue"
+                            <select id="filterStatus" class="form-select" [ngModel]="filterStatus()"
                                 (ngModelChange)="filterStatus.set($event)">
                                 <option value="all">الكل</option>
                                 <option value="متاح">متاح</option>
@@ -286,19 +436,7 @@
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="minOwed" class="form-label small fw-medium">الحد الأدنى للمبلغ المستحق</label>
-                            <input id="minOwed" type="number" class="form-control text-end" [(ngModel)]="minOwedValue"
-                                (ngModelChange)="minOwed.set($event)" style="direction: ltr;">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="maxOwed" class="form-label small fw-medium">الحد الأقصى للمبلغ المستحق</label>
-                            <input id="maxOwed" type="number" class="form-control text-end" [(ngModel)]="maxOwedValue"
-                                (ngModelChange)="maxOwed.set($event)" style="direction: ltr;">
-                        </div>
-
-                        <button class="btn btn-primary-custom w-100 mt-4" (click)="toggleMobileFilters()">
+                        <button class="btn btn-primary-custom w-100 mt-4" (click)="applyFiltersAndToggleMobile()">
                             عرض النتائج
                         </button>
 
@@ -309,15 +447,7 @@
                 </div>
 
                 <div class="col-12 col-lg-8">
-                    <div class="d-lg-flex justify-content-end mb-3 d-none">
-                        <button class="btn btn-primary-custom rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
-                            (click)="isAddModalOpen.set(true)">
-                            <i class="fa-solid fa-user-plus fs-6"></i>
-                            <span class="fw-bold">سائق جديد</span>
-                        </button>
-                    </div>
-                    
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-2 g-4">
                         @for (driver of getPaginatedDrivers(); track driver.id) {
                         <div class="col">
                             <div class="card shadow-sm rounded-xl h-100 position-relative"
@@ -325,19 +455,15 @@
 
                                 <!-- Action Buttons -->
                                 <div class="position-absolute top-0 start-0 m-3 d-flex gap-2">
-                                    <button
-                                        class="btn btn-sm btn-outline-primary rounded-circle"
-                                        style="width: 32px; height: 32px; padding: 0;"
-                                        (click)="openEditModal(driver)"
+                                    <button class="btn btn-sm btn-outline-primary rounded-circle"
+                                        style="width: 32px; height: 32px; padding: 0;" (click)="openEditModal(driver)"
                                         title="تعديل معلومات السائق">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
-                                    <button
-                                        class="btn btn-sm btn-outline-success rounded-circle"
+                                    <button class="btn btn-sm btn-outline-info rounded-circle"
                                         style="width: 32px; height: 32px; padding: 0;"
-                                        (click)="viewUserProfile(driver)"
-                                        title="عرض/تعديل الملف الشخصي">
-                                        <i class="fa-solid fa-user"></i>
+                                        (click)="viewTransactionHistory(driver)" title="عرض سجل المعاملات">
+                                        <i class="fa-solid fa-file-invoice-dollar"></i>
                                     </button>
                                 </div>
 
@@ -354,13 +480,11 @@
                                     <div class="d-flex align-items-center gap-3 mb-4">
                                         <img class="rounded-circle object-fit-cover flex-shrink-0"
                                             style="width: 56px; height: 56px;" [alt]="driver.imageAlt"
-                                            [src]="driver.imageUrl" />
+                                            [src]="driver.imageUrl !== '/assets/default-avatar.png'? driver.imageUrl : 'person-placeholder.jpg'" />
                                         <div class="flex-grow-1">
                                             <p class="h6 fw-bold m-0 text-dark">{{ driver.arabicName }}</p>
                                             <div class="d-flex align-items-center gap-2 mt-1">
-                                                <app-status-badge
-                                                    [status]="driver.arabicStatus"
-                                                    [type]="'driver'"
+                                                <app-status-badge [status]="driver.arabicStatus" [type]="'driver'"
                                                     [size]="'small'">
                                                 </app-status-badge>
                                             </div>
@@ -380,56 +504,49 @@
                                             <p class="h5 fw-semibold m-0 text-dark">{{ driver.tripsToday }}</p>
                                         </div>
                                         <div class="col-6">
-                                            <p class="text-muted small m-0">المبلغ المستحق</p>
-                                            <p class="h5 fw-semibold m-0"
-                                                [class]="{'text-warning': driver.amountOwed > 0, 'text-success': driver.amountOwed === 0}">
-                                                ₪{{ driver.amountOwed.toFixed(2) }}
+                                            @let balanceInfo = getDriverBalanceDisplay(driver);
+                                            <p class="text-muted small m-0">{{ balanceInfo.label }}</p>
+                                            <p class="h5 fw-semibold m-0" [ngClass]="balanceInfo.colorClass">
+                                                ₪{{ balanceInfo.amount.toFixed(2) }}
                                             </p>
                                         </div>
                                     </div>
 
-                                    @if (driver.amountOwed > 0) {
                                     <div class="mt-auto pt-3">
-                                        <div class="input-group mb-2 mt-3">
-                                            <input type="number" class="form-control text-end"
-                                                placeholder="مبلغ التخفيض" min="0.01" [max]="driver.amountOwed"
-                                                [ngModel]="reductionAmounts[driver.id] || null"
-                                                (ngModelChange)="reductionAmounts[driver.id] = $event"
-                                                style="direction: ltr;">
-                                            <span class="input-group-text">₪</span>
-                                        </div>
-                                        
-                                        <button class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
-                                            [disabled]="!reductionAmounts[driver.id] || reductionAmounts[driver.id] <= 0 || reductionAmounts[driver.id] > driver.amountOwed"
-                                            (click)="reduceBalance(driver, reductionAmounts[driver.id])">
-                                            تخفيض الرصيد المحدد
-                                        </button>
+                                        @if (balanceInfo.action === 'collect') {
+                                            <button
+                                                class="btn btn-danger fw-bold w-100 py-3 rounded-lg mb-2 btn-lg-small"
+                                                (click)="recordPayment(driver)">
+                                                <i class="fa-solid fa-hand-holding-dollar me-2"></i>
+                                                تسجيل دفع من السائق
+                                            </button>
+                                        }
 
-                                        <button class="btn btn-success fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small"
-                                            (click)="clearIndividualBalance(driver)">
-                                            تصفية الحساب بالكامل
-                                        </button>
+                                        @if (balanceInfo.action === 'pay') {
+                                            <button
+                                                class="btn btn-success fw-bold w-100 py-3 rounded-lg mb-2 btn-lg-small"
+                                                (click)="recordExpense(driver)">
+                                                <i class="fa-solid fa-money-bill-transfer me-2"></i>
+                                                صرف للسائق
+                                            </button>
+                                        }
+
+                                        @if (balanceInfo.action === 'settled') {
+                                            <div class="alert alert-success mb-2 text-center py-2" role="alert">
+                                                <i class="fa-solid fa-circle-check me-1"></i>
+                                                ✓ محسوب
+                                            </div>
+                                        }
+
+                                        @if (balanceInfo.action !== 'settled') {
+                                            <button
+                                                class="btn btn-outline-secondary fw-bold w-100 py-2 rounded-lg btn-lg-small"
+                                                (click)="clearIndividualBalance(driver)">
+                                                <i class="fa-solid fa-eraser me-1"></i>
+                                                تصفية الحساب
+                                            </button>
+                                        }
                                     </div>
-                                    } @else {
-                                    <div class="mt-auto pt-3">
-                                        <div class="input-group mb-2 mt-3">
-                                            <input type="number" class="form-control text-end"
-                                                placeholder="مبلغ التخفيض" min="0.01" [max]="driver.amountOwed"
-                                                [ngModel]="reductionAmounts[driver.id] || null"
-                                                (ngModelChange)="reductionAmounts[driver.id] = $event"
-                                                style="direction: ltr;" disabled>
-                                            <span class="input-group-text">₪</span>
-                                        </div>
-                                        <button class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
-                                            disabled>
-                                            تخفيض الرصيد المحدد
-                                        </button>
-                                        <button class="btn btn-secondary fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small" 
-                                            disabled>
-                                            تم تصفية الحساب
-                                        </button>
-                                    </div>
-                                    }
                                 </div>
                             </div>
                         </div>
@@ -446,12 +563,8 @@
                     <!-- Pagination -->
                     @if (filteredDrivers().length > 0) {
                     <div class="mt-4">
-                        <app-pagination
-                            [currentPage]="currentPage"
-                            [totalItems]="filteredDrivers().length"
-                            [itemsPerPage]="itemsPerPage"
-                            [maxVisiblePages]="5"
-                            (pageChange)="onPageChange($event)"
+                        <app-pagination [currentPage]="currentPage" [totalItems]="filteredDrivers().length"
+                            [itemsPerPage]="itemsPerPage" [maxVisiblePages]="5" (pageChange)="onPageChange($event)"
                             (itemsPerPageChange)="onItemsPerPageChange($event)">
                         </app-pagination>
                     </div>
@@ -461,5 +574,7 @@
             </div>
         </div>
     </main>
-
+<button class="fab shadow-lg" (click)="isAddModalOpen.set(true)" title="إضافة سائق جديد">
+    <i class="fa-solid fa-plus fa-lg"></i>
+</button>
 </div>

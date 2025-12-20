@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Vehicle, VehicleStatus } from '../models';
 import { PaginatedResponse } from './driver.service';
+import { buildHttpParams } from '../utils/http-params.util';
 
 export interface VehicleQueryParams {
   page?: number;
@@ -12,6 +14,20 @@ export interface VehicleQueryParams {
   search?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+}
+
+export interface VehicleLocation {
+  id: string;
+  vehicleId: string;
+  vehicleName: string;
+  type: string;
+  status: string;
+  latitude: number | null;
+  longitude: number | null;
+  lastLocationUpdate: string | null;
+  driverName: string | null;
+  driverId: string | null;
+  driverStatus: string | null;
 }
 
 @Injectable({
@@ -23,15 +39,7 @@ export class VehicleService {
   constructor(private http: HttpClient) {}
 
   getVehicles(params?: VehicleQueryParams): Observable<PaginatedResponse<Vehicle>> {
-    let httpParams = new HttpParams();
-    if (params) {
-      Object.keys(params).forEach(key => {
-        const value = params[key as keyof VehicleQueryParams];
-        if (value !== undefined && value !== null && value !== '' && value !== 'All') {
-          httpParams = httpParams.set(key, value.toString());
-        }
-      });
-    }
+    const httpParams = buildHttpParams(params);
     return this.http.get<PaginatedResponse<Vehicle>>(this.API_URL, { params: httpParams });
   }
 
@@ -51,8 +59,14 @@ export class VehicleService {
     return this.http.delete<void>(`${this.API_URL}/${id}`);
   }
 
-  updateStatus(id: string, status: VehicleStatus): Observable<Vehicle> {
-    return this.http.patch<Vehicle>(`${this.API_URL}/${id}/status`, { status });
+  /**
+   * Update vehicle status with optional manual override
+   * @param id Vehicle ID
+   * @param status New vehicle status
+   * @param manualOverride Set to true to prevent automatic trip status update
+   */
+  updateStatus(id: string, status: VehicleStatus, manualOverride: boolean = false): Observable<Vehicle> {
+    return this.http.patch<Vehicle>(`${this.API_URL}/${id}/status`, { status, manualOverride });
   }
 
   assignDriver(vehicleId: string, driverId: string): Observable<Vehicle> {
@@ -69,5 +83,52 @@ export class VehicleService {
 
   getVehicleFuel(id: string): Observable<any> {
     return this.http.get(`${this.API_URL}/${id}/fuel`);
+  }
+
+  /**
+   * Update vehicle's current GPS location
+   */
+  updateLocation(vehicleId: string, latitude: number, longitude: number): Observable<any> {
+    return this.http.patch(`${this.API_URL}/${vehicleId}/location`, { latitude, longitude });
+  }
+
+  /**
+   * Get all vehicle locations for real-time map (admin only)
+   */
+  getAllVehicleLocations(): Observable<VehicleLocation[]> {
+    return this.http.get<VehicleLocation[]>(`${this.API_URL}/locations`);
+  }
+
+  /**
+   * Get current odometer reading for a vehicle
+   * Used for auto-populating odometer fields in forms
+   */
+  getCurrentOdometer(vehicleId: string): Observable<{currentOdometer: number}> {
+    return this.http.get<{success: boolean, data: {currentOdometer: number}}>(
+      `${this.API_URL}/${vehicleId}/current-odometer`
+    ).pipe(
+      map((response : any) => response)
+    );
+  }
+
+  /**
+   * Get all maintenance type odometer readings for a vehicle
+   * Shows last odometer and km since last for each maintenance type
+   */
+  getMaintenanceOdometers(vehicleId: string): Observable<{
+    currentOdometer: number;
+    maintenanceTypes: Array<{
+      maintenanceTypeId: string;
+      maintenanceTypeName: string;
+      lastOdometerAfter: number | null;
+      lastMaintenanceDate: string | null;
+      kmSinceLast: number | null;
+    }>;
+  }> {
+    return this.http.get<{success: boolean, data: any}>(
+      `${this.API_URL}/${vehicleId}/maintenance-odometers`
+    ).pipe(
+      map((response: any) => response)
+    );
   }
 }

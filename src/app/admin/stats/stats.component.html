@@ -1,25 +1,76 @@
 <div class="d-flex flex-column min-vh-100 bg-white text-right" style="font-family: 'Inter', sans-serif;" dir="rtl">
 
   <main class="flex-grow-1 p-4" style="background-color: #f8f9fa;">
-    <div class="d-flex gap-2 overflow-auto pb-3 flex-nowrap">
-      <button class="btn rounded-pill px-4" 
-              [ngClass]="{'btn-primary': selectedRange() === 'week', 'btn-light text-dark': selectedRange() !== 'week'}" 
-              (click)="selectedRange.set('week')">
+    <!-- Range Selection Buttons -->
+    <div class="d-flex gap-2 overflow-auto pb-3 flex-nowrap align-items-center">
+      <button class="btn rounded-pill px-4"
+              [ngClass]="{'btn-primary': selectedRange() === 'week', 'btn-light text-dark': selectedRange() !== 'week'}"
+              (click)="onRangeChange('week')"
+              [disabled]="isLoading()">
         هذا الأسبوع
       </button>
-      <button class="btn rounded-pill px-4" 
-              [ngClass]="{'btn-primary': selectedRange() === 'month', 'btn-light text-dark': selectedRange() !== 'month'}" 
-              (click)="selectedRange.set('month')">
+      <button class="btn rounded-pill px-4"
+              [ngClass]="{'btn-primary': selectedRange() === 'month', 'btn-light text-dark': selectedRange() !== 'month'}"
+              (click)="onRangeChange('month')"
+              [disabled]="isLoading()">
         هذا الشهر
       </button>
-      
+
       <button class="btn btn-light rounded-pill px-4 text-dark d-flex align-items-center gap-2"
-              [ngClass]="{'btn-primary': selectedRange() === 'custom', 'btn-light text-dark': selectedRange() !== 'custom'}" 
-              (click)="selectedRange.set('custom')">
+              [ngClass]="{'btn-primary': selectedRange() === 'custom', 'btn-light text-dark': selectedRange() !== 'custom'}"
+              (click)="onRangeChange('custom')"
+              [disabled]="isLoading()">
         نطاق مخصص
         <i class="fas fa-calendar-alt"></i>
       </button>
+      <!-- Refresh Button -->
+      <button class="btn btn-outline-primary rounded-pill px-3"
+              (click)="refreshStats()"
+              [disabled]="isLoading()">
+        <i class="fas fa-sync-alt" [class.fa-spin]="isLoading()"></i>
+        <span class="me-2">تحديث</span>
+      </button>
     </div>
+
+    <!-- Custom Date Range Picker -->
+    @if (selectedRange() === 'custom') {
+      <div class="card shadow-sm rounded-3 p-3 mb-3">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label fw-medium">من تاريخ</label>
+            <input type="date"
+                   class="form-control"
+                   [(ngModel)]="customStartDate"
+                   [disabled]="isLoading()">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-medium">إلى تاريخ</label>
+            <input type="date"
+                   class="form-control"
+                   [(ngModel)]="customEndDate"
+                   [disabled]="isLoading()">
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-primary w-100"
+                    (click)="applyCustomRange()"
+                    [disabled]="isLoading()">
+              <i class="fas fa-check me-2"></i>
+              تطبيق
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+        <p class="mt-3 text-secondary">جاري تحميل الإحصائيات...</p>
+      </div>
+    }
 
     <section class="row g-3 mb-4">
       @for (stat of stats(); track stat.title) {
@@ -96,8 +147,116 @@
   </main>
 
   <div class="position-fixed bottom-0 start-0 p-4">
-    <button class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+    <button class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" (click)="openExportModal()" style="width: 56px; height: 56px;">
       <i class="fas fa-download fa-lg"></i>
     </button>
   </div>
+
+  <!-- Export Modal -->
+  @if (isExportModalOpen()) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content rounded-xl shadow-lg border-0">
+        <div class="modal-header bg-success rounded-top-xl border-0 text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="fas fa-file-excel "></i>
+            تصدير التقرير السنوي
+          </h5>
+          <button type="button" class="btn-close btn-close-white" style="margin-left: 0; margin-right: auto;" (click)="closeExportModal()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form (ngSubmit)="exportAnnualStatement()">
+            <!-- Period Type Selection -->
+            <div class="mb-3">
+              <label class="form-label fw-medium">نوع الفترة</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="exportPeriodType" id="yearlyPeriod"
+                       [checked]="exportPeriodType() === 'yearly'"
+                       (change)="exportPeriodType.set('yearly')">
+                <label class="btn btn-outline-primary" for="yearlyPeriod">سنوي</label>
+
+                <input type="radio" class="btn-check" name="exportPeriodType" id="customPeriod"
+                       [checked]="exportPeriodType() === 'custom'"
+                       (change)="exportPeriodType.set('custom')">
+                <label class="btn btn-outline-primary" for="customPeriod">فترة مخصصة</label>
+              </div>
+            </div>
+
+            <!-- Yearly Options -->
+            @if (exportPeriodType() === 'yearly') {
+            <div class="mb-3">
+              <label class="form-label fw-medium">السنة</label>
+              <input type="number" class="form-control" [(ngModel)]="exportYear"
+                     name="exportYear" min="2020" max="2100"
+                     placeholder="مثال: 2025" required>
+              <small class="text-muted">اختر السنة لتصدير البيانات الشهرية</small>
+            </div>
+            }
+
+            <!-- Custom Range Options -->
+            @if (exportPeriodType() === 'custom') {
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-medium">من تاريخ</label>
+                <input type="date" class="form-control" [(ngModel)]="exportStartDate"
+                       name="exportStartDate" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-medium">إلى تاريخ</label>
+                <input type="date" class="form-control" [(ngModel)]="exportEndDate"
+                       name="exportEndDate" required>
+              </div>
+            </div>
+            }
+
+            <!-- Vehicle Selection (Optional) -->
+            <div class="mb-3">
+              <label class="form-label fw-medium">المركبة (اختياري)</label>
+              <select class="form-select" [(ngModel)]="exportVehicleId" name="exportVehicleId">
+                <option value="">كل المركبات</option>
+                @for (vehicle of vehicles(); track vehicle.id) {
+                <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
+                }
+              </select>
+              <small class="text-muted">اختر مركبة محددة أو اترك الحقل فارغاً لجميع المركبات</small>
+            </div>
+
+            <!-- Export Info -->
+            <div class="alert alert-info border-0 rounded-3">
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>سيتم تصدير:</strong>
+              <ul class="mb-0 mt-2 p-3">
+                <li>ملخص شهري (الوقود، الصيانة، الرحلات، الإيرادات)</li>
+                <li>تفصيل حالات الرحلات حسب الشهر</li>
+                <li>التوزيع المالي (المسعفين، السائقين، الشركة، المالك)</li>
+                @if (exportVehicleId()) {
+                <li>قراءات العداد الشهرية للمركبة المحددة</li>
+                }
+              </ul>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-secondary" (click)="closeExportModal()"
+                      [disabled]="isExporting()">
+                <i class="fas fa-times me-2"></i>
+                إلغاء
+              </button>
+              <button type="submit" class="btn btn-success" [disabled]="isExporting()">
+                @if (isExporting()) {
+                <i class="fas fa-spinner fa-spin me-2"></i>
+                جاري التصدير...
+                } @else {
+                <i class="fas fa-file-excel me-2"></i>
+                تصدير Excel
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
 </div>

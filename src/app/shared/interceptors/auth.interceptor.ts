@@ -29,9 +29,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       // Handle 401 Unauthorized errors
-      if (error.status === 401) {
-        // Token expired or invalid
-        authService.logout().subscribe();
+      if (error.status === 401 && !req.url.includes('/auth/logout')) {
+        // Token expired or invalid - clear local data without calling API
+        // This prevents infinite loop when logout endpoint also returns 401
+        localStorage.removeItem('ambulance_token');
+        localStorage.removeItem('ambulance_refresh_token');
+        localStorage.removeItem('ambulance_user');
         router.navigate(['/login']);
       }
 

@@ -1,10 +1,10 @@
 <div class="main-body">
-<app-side-bar [showSideBar]="showSideBar"></app-side-bar>
+<app-side-bar [showSideBar]="showSideBar" *ngIf="!dontshowsidebar"></app-side-bar>
 
 <div class="main-content" [ngClass]="{'with-sidebar': showSideBar}">
   <router-outlet></router-outlet>
 </div>
-<app-bottom-bar *ngIf="!showSideBar"></app-bottom-bar>
+<app-bottom-bar *ngIf="showBottomBar"></app-bottom-bar>
 
 <app-toast></app-toast>
 </div>

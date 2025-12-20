@@ -24,20 +24,28 @@ export const TRANSFER_STATUS_COLORS: Record<string, string> = {
   [TRANSFER_STATUS.OTHER]: '#6C757D'
 };
 
-// Vehicle Status Constants
+// Vehicle Status Constants (NEW: Expanded to 7 statuses)
 export const VEHICLE_STATUS = {
-  AVAILABLE: 'متاحة',
-  IN_SERVICE: 'في الخدمة',
-  MAINTENANCE: 'صيانة'
+  AVAILABLE: 'متاحة',                          // Available
+  ON_WAY_TO_PATIENT: 'في الطريق للمريض',      // On way to patient
+  AT_LOCATION: 'في الموقع',                   // At location
+  ON_WAY_TO_HOSPITAL: 'في الطريق للمستشفى',   // On way to hospital
+  AT_DESTINATION: 'في الوجهة',                // At destination
+  OUT_OF_SERVICE: 'خارج الخدمة',              // Out of service
+  END_SERVICE: 'إنهاء الخدمة'                 // End of service
 } as const;
 
 export type VehicleStatus = typeof VEHICLE_STATUS[keyof typeof VEHICLE_STATUS];
 
 // Vehicle Status Colors
 export const VEHICLE_STATUS_COLORS: Record<string, string> = {
-  [VEHICLE_STATUS.AVAILABLE]: '#28A745',
-  [VEHICLE_STATUS.IN_SERVICE]: '#17A2B8',
-  [VEHICLE_STATUS.MAINTENANCE]: '#FD7E14'
+  [VEHICLE_STATUS.AVAILABLE]: '#28A745',               // Green
+  [VEHICLE_STATUS.ON_WAY_TO_PATIENT]: '#FFC107',       // Yellow
+  [VEHICLE_STATUS.AT_LOCATION]: '#17A2B8',             // Cyan
+  [VEHICLE_STATUS.ON_WAY_TO_HOSPITAL]: '#007BFF',      // Blue
+  [VEHICLE_STATUS.AT_DESTINATION]: '#6F42C1',          // Purple
+  [VEHICLE_STATUS.OUT_OF_SERVICE]: '#DC3545',          // Red
+  [VEHICLE_STATUS.END_SERVICE]: '#6C757D'              // Gray
 };
 
 // Driver Status Constants
@@ -58,7 +66,7 @@ export const DRIVER_STATUS_COLORS: Record<string, string> = {
 
 // Paramedic Status Constants
 export const PARAMEDIC_STATUS = {
-  AVAILABLE: 'متاح',
+  AVAILABLE: 'متاحة',
   ON_TRIP: 'في رحلة',
   OFFLINE: 'غير متصل',
   ON_LEAVE: 'في إجازة'

@@ -52,6 +52,7 @@ export const adminGuard: CanActivateFn = (
   }
 
   if (authService.isAdmin()) {
+    
     return true;
   }
 
@@ -83,12 +84,12 @@ export const driverGuard: CanActivateFn = (
     return false;
   }
 
-  if (authService.isDriver() || authService.isParamedic()) {
+  if (authService.isDriver() || authService.isParamedic() || authService.isAdmin()) {
     return true;
   }
 
   // Not driver/paramedic, redirect to admin dashboard
-  router.navigate(['/admin/admin-dashboard']);
+  router.navigate(['/login']);
   return false;
 };
 
@@ -103,11 +104,16 @@ export const guestGuard: CanActivateFn = (
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.isAuthenticated()) {
+  // Check if user is authenticated and token is not expired
+  if (!authService.isAuthenticated() || authService.isTokenExpired()) {
+    // Clear auth data if token is expired
+    if (authService.isTokenExpired()) {
+      authService.clearAuthData();
+    }
     return true;
   }
 
-  // Already authenticated, redirect to appropriate dashboard
+  // Already authenticated with valid token, redirect to appropriate dashboard
   if (authService.isAdmin()) {
     router.navigate(['/admin/admin-dashboard']);
   } else if (authService.isDriver() || authService.isParamedic()) {

@@ -6,14 +6,17 @@ export interface MaintenanceRecord {
     id: string;
 
     // Vehicle Information
-    vehicleId: string;         // Vehicle display ID or name
+    vehicleId: string;          // Vehicle ID (e.g., 'AMB-004')
+    vehicleName?: string;       // Vehicle display name (e.g., 'إسعاف 04')
     vehicleInternalId?: string; // Internal vehicle ID for backend reference
 
     // Date & Time
     date: Date;
 
     // Maintenance Details
-    type: string;              // Dynamic maintenance type from database
+    type?: string;                     // Legacy maintenance type (for backward compatibility)
+    maintenanceTypeId?: string;        // Maintenance type ID (FK to maintenance_types)
+    maintenanceTypeName?: string;      // Maintenance type name (populated from join)
 
     // Cost Information
     cost: number;              // Total cost
@@ -24,6 +27,11 @@ export interface MaintenanceRecord {
     // Odometer Information
     odometerBefore: number;    // Odometer reading before service
     odometerAfter: number;     // Odometer reading after service
+    kmSinceMaintenance?: number; // Kilometers driven since this maintenance (calculated from current odometer)
+
+    // Driver Information
+    driverId?: string;         // Driver ID (optional, falls back to vehicle's current driver)
+    driverName?: string;       // Driver name (populated from join)
 
     // Documentation
     notes: string;             // General notes

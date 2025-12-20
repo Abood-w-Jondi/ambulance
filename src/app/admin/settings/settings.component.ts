@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GlobalVarsService } from '../../global-vars.service';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
     selector: 'app-settings',
@@ -14,7 +15,8 @@ import { GlobalVarsService } from '../../global-vars.service';
 export class SettingsComponent {
     constructor(
         private globalVars: GlobalVarsService,
-        private router: Router
+        private router: Router,
+        private authService: AuthService
     ) {
         this.globalVars.setGlobalHeader('الإعدادات');
     }
@@ -28,7 +30,7 @@ export class SettingsComponent {
     }
 
     logout(): void {
-        // TODO: Implement logout logic
+        this.authService.clearAuthData();  // Synchronous clear
         this.router.navigate(['/login']);
     }
 }

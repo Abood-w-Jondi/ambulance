@@ -35,9 +35,9 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label for="newName" class="form-label small fw-medium">الاسم الإنجليزي <span class="text-danger">*</span></label>
+                                <label for="newName" class="form-label small fw-medium">الاسم الإنجليزي</label>
                                 <input id="newName" type="text" class="form-control" placeholder="Example: Ahmad Hassan"
-                                    [(ngModel)]="newParamedic.name" name="name" required>
+                                    [(ngModel)]="newParamedic.name" name="name">
                             </div>
 
                             <!-- Login Credentials -->
@@ -78,11 +78,6 @@
                                     [(ngModel)]="newParamedic.amountOwed" name="amountOwed" required>
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="newTrips" class="form-label small fw-medium">عدد الرحلات اليوم</label>
-                                <input id="newTrips" type="number" class="form-control" min="0"
-                                    [(ngModel)]="newParamedic.tripsToday" name="tripsToday" required>
-                            </div>
                         </div>
                         <div class="d-flex justify-content-end mt-4">
                             <button type="submit" class="btn btn-primary-custom rounded-pill px-4 fw-bold"
@@ -124,9 +119,9 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label for="editName" class="form-label small fw-medium">الاسم الإنجليزي <span class="text-danger">*</span></label>
+                                <label for="editName" class="form-label small fw-medium">الاسم الإنجليزي</label>
                                 <input id="editName" type="text" class="form-control" placeholder="Example: Ahmad Hassan"
-                                    [(ngModel)]="editParamedic.name" name="name" required>
+                                    [(ngModel)]="editParamedic.name" name="name">
                             </div>
 
                             <!-- Login Credentials -->
@@ -150,6 +145,75 @@
                                     [(ngModel)]="editParamedic.email" name="email">
                             </div>
 
+                            <!-- Profile & Job Information -->
+                            <div class="col-12 mt-4">
+                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">معلومات الوظيفة والملف الشخصي</h6>
+                            </div>
+
+                            <!-- Profile Image -->
+                            <div class="col-12">
+                                <label class="form-label small fw-medium">الصورة الشخصية</label>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="position-relative">
+                                        @if (editParamedic.profileImageUrl) {
+                                            <img [src]="editParamedic.profileImageUrl"
+                                                alt="صورة المسعف"
+                                                class="rounded-circle object-fit-cover border"
+                                                style="width: 80px; height: 80px;">
+                                            <button type="button"
+                                                class="btn btn-danger btn-sm rounded-circle position-absolute top-0 start-0"
+                                                style="width: 24px; height: 24px; padding: 0;"
+                                                (click)="removeProfileImage()"
+                                                title="إزالة الصورة">
+                                                <i class="fa-solid fa-times" style="font-size: 12px;"></i>
+                                            </button>
+                                        } @else {
+                                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                                                style="width: 80px; height: 80px;">
+                                                <i class="fa-solid fa-user text-white" style="font-size: 32px;"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div>
+                                        <input type="file"
+                                            class="d-none"
+                                            #profileImageInput
+                                            accept="image/*"
+                                            (change)="onProfileImageSelected($event)">
+                                        <button type="button"
+                                            class="btn btn-outline-primary btn-sm"
+                                            (click)="profileImageInput.click()">
+                                            <i class="fa-solid fa-upload me-1"></i>
+                                            {{ editParamedic.profileImageUrl ? 'تغيير الصورة' : 'رفع صورة' }}
+                                        </button>
+                                        <small class="text-muted d-block mt-1">الحد الأقصى: 2 ميجابايت</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editJobTitle" class="form-label small fw-medium">الوظيفة</label>
+                                <input id="editJobTitle" type="text" class="form-control" placeholder="مثال: مسعف طوارئ"
+                                    [(ngModel)]="editParamedic.jobTitle" name="jobTitle">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editEducationLevel" class="form-label small fw-medium">المستوى التعليمي</label>
+                                <select id="editEducationLevel" class="form-select"
+                                    [(ngModel)]="editParamedic.educationLevel" name="educationLevel">
+                                    <option value="">-- اختر المستوى --</option>
+                                    @for (option of educationLevelOptions; track option.value) {
+                                        <option [value]="option.value">{{ option.label }}</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editPhoneNumber" class="form-label small fw-medium">رقم الهاتف</label>
+                                <input id="editPhoneNumber" type="tel" class="form-control" placeholder="05XX-XXX-XXXX"
+                                    [(ngModel)]="editParamedic.phoneNumber" name="phoneNumber" dir="ltr">
+                            </div>
+
                             <!-- Paramedic Status -->
                             <div class="col-12 mt-4">
                                 <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">حالة المسعف</h6>
@@ -167,7 +231,11 @@
                             <div class="col-md-6">
                                 <label for="editTrips" class="form-label small fw-medium">عدد الرحلات اليوم</label>
                                 <input id="editTrips" type="number" class="form-control" min="0"
-                                    [(ngModel)]="editParamedic.tripsToday" name="tripsToday" required>
+                                    [(ngModel)]="editParamedic.tripsToday" name="tripsToday" readonly disabled style="background-color: #e9ecef;">
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fa-solid fa-info-circle me-1"></i>
+                                    يتم حساب هذا الرقم تلقائياً من الرحلات
+                                </small>
                             </div>
 
                             <div class="col-md-6">
@@ -244,81 +312,12 @@
     <main class="flex-grow-1 p-3 p-lg-4">
         <div class="container-fluid p-0">
 
-            <div class="d-flex justify-content-between mb-3 d-lg-none">
-                <button class="btn btn-primary-custom rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
-                    (click)="isAddModalOpen.set(true)">
-                    <i class="fa-solid fa-user-plus fs-6"></i>
-                    <span class="fw-bold">مسعف جديد</span>
-                </button>
-
-                <button class="btn rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
-                    [ngClass]="{'btn-success': !showFiltersOnMobile(), 'btn-secondary': showFiltersOnMobile()}"
-                    (click)="toggleMobileFilters()">
-                    <i class="fa-solid fa-filter fs-6"></i>
-                    <span class="fw-bold">
-                        {{ showFiltersOnMobile() ? 'إخفاء الفلاتر' : 'إظهار الفلاتر' }}
-                    </span>
-                </button>
-            </div>
 
             <div class="row g-4">
 
-                <div class="col-12 col-lg-4">
-                    <div id="filter-sidebar" class="card shadow-sm rounded-xl p-4 mt-lg-5 sticky-lg-top awayFromTop"
-                        [ngClass]="{'d-block': showFiltersOnMobile(), 'd-none': !showFiltersOnMobile(), 'd-lg-block': true}">
-
-                        <h6 class="fw-bold mb-3 text-dark border-bottom pb-2">خيارات البحث والتصفية</h6>
-
-                        <div class="mb-3">
-                            <label for="searchTerm" class="form-label small fw-medium">البحث</label>
-                            <input id="searchTerm" type="text" class="form-control" placeholder="الاسم، البريد الإلكتروني، أو اسم المستخدم"
-                                [(ngModel)]="searchTermValue" (ngModelChange)="searchTerm.set($event)">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="filterStatus" class="form-label small fw-medium">حالة المسعف</label>
-                            <select id="filterStatus" class="form-select" [(ngModel)]="filterStatusValue"
-                                (ngModelChange)="filterStatus.set($event)">
-                                <option value="all">الكل</option>
-                                <option value="متاح">متاح</option>
-                                <option value="في رحلة">في رحلة</option>
-                                <option value="غير متصل">غير متصل</option>
-                                <option value="في إجازة">في إجازة</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="minOwed" class="form-label small fw-medium">الحد الأدنى للمبلغ المستحق</label>
-                            <input id="minOwed" type="number" class="form-control text-end" [(ngModel)]="minOwedValue"
-                                (ngModelChange)="minOwed.set($event)" style="direction: ltr;">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="maxOwed" class="form-label small fw-medium">الحد الأقصى للمبلغ المستحق</label>
-                            <input id="maxOwed" type="number" class="form-control text-end" [(ngModel)]="maxOwedValue"
-                                (ngModelChange)="maxOwed.set($event)" style="direction: ltr;">
-                        </div>
-
-                        <button class="btn btn-primary-custom w-100 mt-4" (click)="toggleMobileFilters()">
-                            عرض النتائج
-                        </button>
-
-                        <button class="btn btn-outline-secondary w-100 mt-2" (click)="resetFilters()">
-                            إعادة تعيين الفلاتر
-                        </button>
-                    </div>
-                </div>
-
                 <div class="col-12 col-lg-8">
-                    <div class="d-lg-flex justify-content-end mb-3 d-none">
-                        <button class="btn btn-primary-custom rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
-                            (click)="isAddModalOpen.set(true)">
-                            <i class="fa-solid fa-user-plus fs-6"></i>
-                            <span class="fw-bold">مسعف جديد</span>
-                        </button>
-                    </div>
 
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-2 g-4">
                         @for (paramedic of getPaginatedParamedics(); track paramedic.id) {
                         <div class="col">
                             <div class="card shadow-sm rounded-xl h-100 position-relative"
@@ -332,13 +331,6 @@
                                         (click)="openEditModal(paramedic)"
                                         title="تعديل معلومات المسعف">
                                         <i class="fa-solid fa-pen"></i>
-                                    </button>
-                                    <button
-                                        class="btn btn-sm btn-outline-success rounded-circle"
-                                        style="width: 32px; height: 32px; padding: 0;"
-                                        (click)="viewUserProfile(paramedic)"
-                                        title="عرض/تعديل الملف الشخصي">
-                                        <i class="fa-solid fa-user"></i>
                                     </button>
                                 </div>
 
@@ -355,16 +347,9 @@
                                     <div class="d-flex align-items-center gap-3 mb-4">
                                         <img class="rounded-circle object-fit-cover flex-shrink-0"
                                             style="width: 56px; height: 56px;" [alt]="paramedic.imageAlt"
-                                            [src]="paramedic.imageUrl" />
+                                            [src]="paramedic.imageUrl !== '/assets/default-avatar.png' ? paramedic.imageUrl : 'person-placeholder.jpg'" />
                                         <div class="flex-grow-1">
                                             <p class="h6 fw-bold m-0 text-dark">{{ paramedic.arabicName }}</p>
-                                            <div class="d-flex align-items-center gap-2 mt-1">
-                                                <app-status-badge
-                                                    [status]="paramedic.arabicStatus"
-                                                    [type]="'paramedic'"
-                                                    [size]="'small'">
-                                                </app-status-badge>
-                                            </div>
                                             @if (paramedic.email || paramedic.username) {
                                             <p class="small text-muted m-0 mt-1">
                                                 @if (paramedic.username) {
@@ -380,57 +365,9 @@
                                             <p class="text-muted small m-0">عدد الرحلات اليوم</p>
                                             <p class="h5 fw-semibold m-0 text-dark">{{ paramedic.tripsToday }}</p>
                                         </div>
-                                        <div class="col-6">
-                                            <p class="text-muted small m-0">المبلغ المستحق</p>
-                                            <p class="h5 fw-semibold m-0"
-                                                [class]="{'text-warning': paramedic.amountOwed > 0, 'text-success': paramedic.amountOwed === 0}">
-                                                ₪{{ paramedic.amountOwed.toFixed(2) }}
-                                            </p>
-                                        </div>
                                     </div>
 
-                                    @if (paramedic.amountOwed > 0) {
-                                    <div class="mt-auto pt-3">
-                                        <div class="input-group mb-2 mt-3">
-                                            <input type="number" class="form-control text-end"
-                                                placeholder="مبلغ التخفيض" min="0.01" [max]="paramedic.amountOwed"
-                                                [ngModel]="reductionAmounts[paramedic.id] || null"
-                                                (ngModelChange)="reductionAmounts[paramedic.id] = $event"
-                                                style="direction: ltr;">
-                                            <span class="input-group-text">₪</span>
-                                        </div>
 
-                                        <button class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
-                                            [disabled]="!reductionAmounts[paramedic.id] || reductionAmounts[paramedic.id] <= 0 || reductionAmounts[paramedic.id] > paramedic.amountOwed"
-                                            (click)="reduceBalance(paramedic, reductionAmounts[paramedic.id])">
-                                            تخفيض الرصيد المحدد
-                                        </button>
-
-                                        <button class="btn btn-success fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small"
-                                            (click)="clearIndividualBalance(paramedic)">
-                                            تصفية الحساب بالكامل
-                                        </button>
-                                    </div>
-                                    } @else {
-                                    <div class="mt-auto pt-3">
-                                        <div class="input-group mb-2 mt-3">
-                                            <input type="number" class="form-control text-end"
-                                                placeholder="مبلغ التخفيض" min="0.01" [max]="paramedic.amountOwed"
-                                                [ngModel]="reductionAmounts[paramedic.id] || null"
-                                                (ngModelChange)="reductionAmounts[paramedic.id] = $event"
-                                                style="direction: ltr;" disabled>
-                                            <span class="input-group-text">₪</span>
-                                        </div>
-                                        <button class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
-                                            disabled>
-                                            تخفيض الرصيد المحدد
-                                        </button>
-                                        <button class="btn btn-secondary fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small"
-                                            disabled>
-                                            تم تصفية الحساب
-                                        </button>
-                                    </div>
-                                    }
                                 </div>
                             </div>
                         </div>
@@ -439,7 +376,7 @@
                         @if (filteredParamedics().length === 0) {
                         <div class="col-12 text-center text-muted p-5">
                             <i class="fa-solid fa-face-frown fs-2 mb-3"></i>
-                            <p class="h5">لا يوجد مسعفون يطابقون معايير التصفية المحددة.</p>
+                            <p class="h5">لا يوجد مسعفون.</p>
                         </div>
                         }
                     </div>
@@ -462,5 +399,8 @@
             </div>
         </div>
     </main>
+    <button class="fab shadow-lg" (click)="isAddModalOpen.set(true)" title="إضافة مسعف جديد">
+    <i class="fa-solid fa-plus fa-lg"></i>
+</button>
 
 </div>

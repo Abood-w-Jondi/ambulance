@@ -1,0 +1,54 @@
+.loan-list .card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.loan-list .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+}
+
+.modal {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.btn-group .btn {
+  flex: 1;
+}
+
+.dropdown-item.active {
+  background-color: var(--bs-primary);
+  color: white;
+}
+
+/* Aging colors */
+.text-warning {
+  color: #f0ad4e !important;
+}
+
+/* Card with border for collected items */
+.card.border-success {
+  border-color: #198754 !important;
+}
+
+/* Statistics cards */
+.card.bg-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+}
+
+/* Action buttons */
+.d-flex.gap-2 .btn {
+  min-width: 0;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+@media (max-width: 576px) {
+  .d-flex.gap-2 {
+    flex-wrap: wrap;
+  }
+  
+  .d-flex.gap-2 .btn {
+    flex: 1 1 calc(50% - 0.5rem);
+  }
+}
+

@@ -1,0 +1,254 @@
+<div class="container-fluid py-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">
+          <i class="fas fa-notes-medical me-2"></i>
+          النماذج الطبية
+        </h2>
+        <button class="btn btn-outline-secondary" (click)="toggleFilters()">
+          <i class="fas fa-filter me-2"></i>
+          فلتر
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Panel -->
+  <div class="card mb-4" *ngIf="showFilters">
+    <div class="card-body">
+      <div class="row g-3">
+        <div *ngFor="let config of filterConfigs" [ngClass]="config.colClass">
+          <label class="form-label">{{ config.label }}</label>
+
+          <!-- Text Input -->
+          <input *ngIf="config.type === 'text'"
+                 type="text"
+                 class="form-control"
+                 [(ngModel)]="filters[config.key]"
+                 [placeholder]="config.placeholder || ''">
+
+          <!-- Select Input -->
+          <select *ngIf="config.type === 'select'"
+                  class="form-select"
+                  [(ngModel)]="filters[config.key]">
+            <option *ngFor="let option of config.options" [ngValue]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+
+          <!-- Date Input -->
+          <input *ngIf="config.type === 'date'"
+                 type="date"
+                 class="form-control"
+                 [(ngModel)]="filters[config.key]">
+        </div>
+
+        <div class="col-12">
+          <button class="btn btn-primary me-2" (click)="applyFilters()">
+            <i class="fas fa-search me-2"></i>
+            بحث
+          </button>
+          <button class="btn btn-secondary" (click)="resetFilters()">
+            <i class="fas fa-redo me-2"></i>
+            إعادة تعيين
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">جاري التحميل...</span>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && medicalForms.length === 0" class="text-center py-5">
+    <i class="fas fa-notes-medical fa-3x text-muted mb-3"></i>
+    <p class="text-muted">لا توجد نماذج طبية</p>
+  </div>
+
+  <!-- Table -->
+  <div class="card" *ngIf="!isLoading && medicalForms.length > 0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th *ngFor="let col of columnConfigs">{{ col.label }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let form of medicalForms">
+            <td *ngFor="let col of columnConfigs" [ngClass]="{'font-monospace': col.key === 'tripId', 'small': col.type === 'date'}">
+
+              <!-- Text Column -->
+              <ng-container *ngIf="col.type === 'text'">
+                {{ col.getValue!(form) }}
+              </ng-container>
+
+              <!-- Progress Column -->
+              <ng-container *ngIf="col.type === 'progress'">
+                <div class="d-flex align-items-center">
+                  <div class="progress flex-grow-1 me-2" style="height: 20px; min-width: 100px;">
+                    <div class="progress-bar"
+                         role="progressbar"
+                         [style.width.%]="col.getValue!(form)"
+                         [style.background-color]="getCompletionColor(col.getValue!(form))">
+                      {{ col.getValue!(form).toFixed(0) }}%
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+
+              <!-- Badge Column -->
+              <ng-container *ngIf="col.type === 'badge'">
+                <span class="badge" [ngClass]="col.getClass!(form)">
+                  {{ col.render!(form) }}
+                </span>
+              </ng-container>
+
+              <!-- Date Column -->
+              <ng-container *ngIf="col.type === 'date'">
+                {{ formatDate(col.getValue!(form)) }}
+              </ng-container>
+
+              <!-- Actions Column -->
+              <ng-container *ngIf="col.type === 'actions'">
+                <div class="btn-group btn-group-sm" role="group">
+                  <button class="btn btn-outline-primary" (click)="viewForm(form)" title="عرض">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn btn-outline-success" (click)="editForm(form)" title="تعديل">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-outline-warning" *ngIf="form.isLocked" (click)="unlockForm(form)" title="فتح القفل">
+                    <i class="fas fa-unlock"></i>
+                  </button>
+                </div>
+              </ng-container>
+
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="card-footer" *ngIf="totalPages > 1">
+      <nav>
+        <ul class="pagination pagination-sm justify-content-center mb-0">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" (click)="changePage(1)" style="cursor: pointer;">
+              <i class="fas fa-angle-double-right"></i>
+            </a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" (click)="changePage(currentPage - 1)" style="cursor: pointer;">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+          <li class="page-item" *ngFor="let page of getPaginationArray()" [class.active]="currentPage === page">
+            <a class="page-link" (click)="changePage(page)" style="cursor: pointer;">{{ page }}</a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <a class="page-link" (click)="changePage(currentPage + 1)" style="cursor: pointer;">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <a class="page-link" (click)="changePage(totalPages)" style="cursor: pointer;">
+              <i class="fas fa-angle-double-left"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div class="text-center text-muted small mt-2">
+        صفحة {{ currentPage }} من {{ totalPages }} ({{ totalItems }} نموذج)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Form Modal -->
+<div class="modal fade" [class.show]="showViewModal" [style.display]="showViewModal ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-notes-medical me-2"></i>
+          النموذج الطبي - {{ selectedForm?.patientName || 'غير محدد' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeViewModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedForm">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <p><strong>السائق:</strong> {{ selectedForm.driverName || 'غير محدد' }}</p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>نسبة الاكتمال:</strong></p>
+            <div class="progress" style="height: 25px;">
+              <div class="progress-bar"
+                   role="progressbar"
+                   [style.width.%]="selectedForm.completionPercentage"
+                   [style.background-color]="getCompletionColor(selectedForm.completionPercentage)">
+                {{ selectedForm.completionPercentage.toFixed(1) }}%
+              </div>
+            </div>
+            <p class="mt-2">
+              <span class="badge me-2" [class.bg-success]="selectedForm.isComplete" [class.bg-warning]="!selectedForm.isComplete">
+                {{ selectedForm.isComplete ? 'مكتمل' : 'غير مكتمل' }}
+              </span>
+              <span class="badge" [class.bg-danger]="selectedForm.isLocked" [class.bg-success]="!selectedForm.isLocked">
+                {{ selectedForm.isLocked ? 'مقفل' : 'مفتوح' }}
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>
+          لعرض النموذج الطبي الكامل، يرجى الضغط على زر "تعديل" أدناه.
+        </div>
+
+        <div class="row">
+          <div class="col-12">
+            <h6>معلومات النموذج:</h6>
+            <ul>
+              <li><strong>تاريخ الإنشاء:</strong> {{ formatDate(selectedForm.createdAt) }}</li>
+              <li><strong>آخر تحديث:</strong> {{ formatDate(selectedForm.updatedAt) }}</li>
+              <li *ngIf="selectedForm.completedAt"><strong>تاريخ الإكتمال:</strong> {{ formatDate(selectedForm.completedAt) }}</li>
+              <li *ngIf="selectedForm.lockedAt"><strong>تاريخ القفل:</strong> {{ formatDate(selectedForm.lockedAt) }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeViewModal()">
+          <i class="fas fa-times me-2"></i>
+          إغلاق
+        </button>
+        <button type="button" class="btn btn-warning" *ngIf="selectedForm?.isLocked" (click)="unlockForm(selectedForm!); closeViewModal()">
+          <i class="fas fa-unlock me-2"></i>
+          فتح القفل
+        </button>
+        <button type="button" class="btn btn-primary" (click)="editForm(selectedForm!); closeViewModal()">
+          <i class="fas fa-edit me-2"></i>
+          عرض/تعديل النموذج الكامل
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showViewModal" *ngIf="showViewModal"></div>
+<app-confirmation-modal 
+  [isOpen]="isUnlockModalOpen()"
+  [config]="unlockModalConfig()"
+  (confirmed)="handleUnlockConfirmation(true)"
+  (cancelled)="handleUnlockConfirmation(false)">
+</app-confirmation-modal>

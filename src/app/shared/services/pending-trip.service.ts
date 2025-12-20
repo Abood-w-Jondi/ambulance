@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PendingTrip, TripPriority, PendingTripStatus, CreatePendingTripRequest, TripActionResponse } from '../models';
 import { PaginatedResponse } from './driver.service';
+import { buildHttpParams } from '../utils/http-params.util';
 
 export interface PendingTripQueryParams {
   page?: number;
@@ -24,15 +25,7 @@ export class PendingTripService {
   constructor(private http: HttpClient) {}
 
   getPendingTrips(params?: PendingTripQueryParams): Observable<PaginatedResponse<PendingTrip>> {
-    let httpParams = new HttpParams();
-    if (params) {
-      Object.keys(params).forEach(key => {
-        const value = params[key as keyof PendingTripQueryParams];
-        if (value !== undefined && value !== null && value !== '') {
-          httpParams = httpParams.set(key, value.toString());
-        }
-      });
-    }
+    const httpParams = buildHttpParams(params);
     return this.http.get<PaginatedResponse<PendingTrip>>(this.API_URL, { params: httpParams });
   }
 

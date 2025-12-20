@@ -14,54 +14,57 @@
                 <div class="modal-body p-4 text-end" style="max-height: 70vh; overflow-y: auto;">
                     <form (ngSubmit)="addRecord()">
                         <div class="row g-3">
-                            <!-- Date Fields -->
+                            <!-- Date Field -->
                             <div class="col-12">
                                 <label class="form-label small fw-medium">التاريخ</label>
-                                <div class="row g-2">
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.day" name="day" required>
-                                            @for (day of getDaysInMonth(recordForm.month, recordForm.year); track day) {
-                                            <option [value]="day">{{ day }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.month" name="month" required>
-                                            @for (month of getMonths(); track month) {
-                                            <option [value]="month">{{ month }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.year" name="year" required>
-                                            @for (year of getYears(); track year) {
-                                            <option [value]="year">{{ year }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </div>
+                                <input type="date" class="form-control" [(ngModel)]="recordForm.date" name="recordDate" required max="9999-12-31">
                             </div>
                             
                             <div class="col-12">
-                                <label for="vehicleId" class="form-label small fw-medium">المركبة</label>
-                                <select id="vehicleId" class="form-select" [(ngModel)]="recordForm.vehicleId" name="vehicleId" required>
+                                <label for="vehicleSearch" class="form-label small fw-medium">المركبة</label>
+                                <input type="text" id="vehicleSearch" class="form-control mb-2"
+                                    placeholder="بحث عن مركبة..."
+                                    [(ngModel)]="vehicleSearchTerm"
+                                    [ngModelOptions]="{standalone: true}">
+                                <select id="vehicleId" class="form-select" [(ngModel)]="recordForm.vehicleId" name="vehicleId"
+                                    (change)="onVehicleSelected($event)" required>
                                     <option value="">اختر المركبة</option>
-                                    @for (vehicle of vehiclesList; track vehicle) {
-                                        @if (vehicle !== 'جميع المركبات') {
-                                        <option [value]="vehicle">{{ vehicle }}</option>
-                                        }
+                                    @for (vehicle of filteredVehicles(); track vehicle.id) {
+                                        <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                                     }
                                 </select>
+                                <small class="text-muted d-block mt-1">
+                                    عرض {{ filteredVehicles().length }} من {{ vehiclesList.length }} مركبة
+                                </small>
                             </div>
-                            
+
+                            <!-- Driver Selection (Optional) -->
                             <div class="col-12">
-                                <label for="type" class="form-label small fw-medium">نوع الصيانة</label>
-                                <select id="type" class="form-select" [(ngModel)]="recordForm.type" name="type" required>
-                                    <option value="">اختر النوع</option>
-                                    @for (type of maintenanceTypes; track type) {
-                                    <option [value]="type">{{ type }}</option>
+                                <label for="driverSelect" class="form-label small fw-medium">السائق (اختياري)</label>
+                                <select
+                                    id="driverSelect"
+                                    class="form-select"
+                                    [(ngModel)]="recordForm.driverId"
+                                    name="driverId"
+                                >
+                                    <option value="">تلقائي (السائق الحالي للمركبة)</option>
+                                    @for (driver of driversList; track driver.id) {
+                                        <option [value]="driver.id">
+                                            {{ driver.arabicName || driver.name }}
+                                        </option>
                                     }
                                 </select>
+                                <small class="text-muted d-block mt-1">إذا تركت فارغاً، سيتم تعيين السائق الحالي للمركبة</small>
+                            </div>
+
+                            <div class="col-12">
+                                <app-maintenance-type-search
+                                    [label]="'نوع الصيانة'"
+                                    [placeholder]="'ابحث عن نوع الصيانة...'"
+                                    [selectedTypeId]="''"
+                                    [selectedTypeName]="recordForm.type"
+                                    (typeSelected)="onMaintenanceTypeSelected($event)">
+                                </app-maintenance-type-search>
                             </div>
                             
                             <div class="col-6">
@@ -90,12 +93,21 @@
                                 <input id="odometerBefore" type="number" class="form-control text-end" placeholder="0"
                                     [(ngModel)]="recordForm.odometerBefore" name="odometerBefore" min="0" style="direction: ltr;" required>
                             </div>
-                            
+
                             <div class="col-6">
                                 <label for="odometerAfter" class="form-label small fw-medium">عداد المسافات (بعد)</label>
                                 <input id="odometerAfter" type="number" class="form-control text-end" placeholder="0"
                                     [(ngModel)]="recordForm.odometerAfter" name="odometerAfter" min="0" style="direction: ltr;" required>
                             </div>
+
+                            @if (calculatedKm > 0) {
+                                <div class="col-12">
+                                    <div class="alert alert-info mb-0 py-2">
+                                        <i class="fa fa-road me-2"></i>
+                                        <strong>الكيلومترات المقطوعة:</strong> {{ calculatedKm }} كم
+                                    </div>
+                                </div>
+                            }
                             
                             <div class="col-12">
                                 <label for="notes" class="form-label small fw-medium">ملاحظات</label>
@@ -132,49 +144,59 @@
                             <!-- Date Fields -->
                             <div class="col-12">
                                 <label class="form-label small fw-medium">التاريخ</label>
-                                <div class="row g-2">
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.day" name="day" required>
-                                            @for (day of getDaysInMonth(recordForm.month, recordForm.year); track day) {
-                                            <option [value]="day">{{ day }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.month" name="month" required>
-                                            @for (month of getMonths(); track month) {
-                                            <option [value]="month">{{ month }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-4">
-                                        <select class="form-select" [(ngModel)]="recordForm.year" name="year" required>
-                                            @for (year of getYears(); track year) {
-                                            <option [value]="year">{{ year }}</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </div>
+                                <input
+                                  type="date"
+                                  class="form-control"
+                                  [(ngModel)]="recordForm.date"
+                                  name="recordDate"
+                                  required
+                                  max="9999-12-31">
                             </div>
                             
                             <div class="col-12">
-                                <label for="editVehicleId" class="form-label small fw-medium">المركبة</label>
+                                <label for="editVehicleSearch" class="form-label small fw-medium">المركبة</label>
+                                <input type="text" id="editVehicleSearch" class="form-control mb-2"
+                                    placeholder="بحث عن مركبة..."
+                                    [(ngModel)]="vehicleSearchTerm"
+                                    [ngModelOptions]="{standalone: true}">
                                 <select id="editVehicleId" class="form-select" [(ngModel)]="recordForm.vehicleId" name="vehicleId" required>
-                                    @for (vehicle of vehiclesList; track vehicle) {
-                                        @if (vehicle !== 'جميع المركبات') {
-                                        <option [value]="vehicle">{{ vehicle }}</option>
-                                        }
+                                    <option value="">اختر المركبة</option>
+                                    @for (vehicle of filteredVehicles(); track vehicle.id) {
+                                        <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                                     }
                                 </select>
+                                <small class="text-muted d-block mt-1">
+                                    عرض {{ filteredVehicles().length }} من {{ vehiclesList.length }} مركبة
+                                </small>
                             </div>
-                            
+
+                            <!-- Driver Selection (Optional) -->
                             <div class="col-12">
-                                <label for="editType" class="form-label small fw-medium">نوع الصيانة</label>
-                                <select id="editType" class="form-select" [(ngModel)]="recordForm.type" name="type" required>
-                                    @for (type of maintenanceTypes; track type) {
-                                    <option [value]="type">{{ type }}</option>
+                                <label for="editDriverSelect" class="form-label small fw-medium">السائق (اختياري)</label>
+                                <select
+                                    id="editDriverSelect"
+                                    class="form-select"
+                                    [(ngModel)]="recordForm.driverId"
+                                    name="driverId"
+                                >
+                                    <option value="">تلقائي (السائق الحالي للمركبة)</option>
+                                    @for (driver of driversList; track driver.id) {
+                                        <option [value]="driver.id">
+                                            {{ driver.arabicName || driver.name }}
+                                        </option>
                                     }
                                 </select>
+                                <small class="text-muted d-block mt-1">إذا تركت فارغاً، سيتم تعيين السائق الحالي للمركبة</small>
+                            </div>
+
+                            <div class="col-12">
+                                <app-maintenance-type-search
+                                    [label]="'نوع الصيانة'"
+                                    [placeholder]="'ابحث عن نوع الصيانة...'"
+                                    [selectedTypeId]="recordForm.maintenanceTypeId"
+                                    [selectedTypeName]="recordForm.type"
+                                    (typeSelected)="onMaintenanceTypeSelected($event)">
+                                </app-maintenance-type-search>
                             </div>
                             
                             <div class="col-6">
@@ -246,7 +268,7 @@
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
                                     <p class="text-muted small mb-1">المركبة</p>
-                                    <h5 class="fw-bold">{{ record.vehicleId }}</h5>
+                                    <h5 class="fw-bold cursor-pointer text-primary-hover" (click)="navigateToFleet(record.vehicleInternalId); $event.stopPropagation()">{{ record.vehicleName || record.vehicleId }}</h5>
                                 </div>
                                 <app-status-badge
                                     [status]="record.status"
@@ -261,7 +283,7 @@
                         </div>
                         <div class="col-6">
                             <p class="text-muted small mb-1">نوع الصيانة</p>
-                            <p class="fw-bold">{{ record.type }}</p>
+                            <p class="fw-bold">{{ record.maintenanceTypeName || record.type || 'غير محدد' }}</p>
                         </div>
                         <div class="col-12">
                             <p class="text-muted small mb-1">التكلفة</p>
@@ -309,17 +331,6 @@
     <main class="flex-grow-1 p-3 p-lg-4" dir="rtl">
         <div class="container-fluid" style="max-width: 1200px;">
             
-            <!-- Search Bar -->
-            <div class="mb-4">
-                <div class="input-group shadow-sm">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="fa-solid fa-search text-muted"></i>
-                    </span>
-                    <input type="text" class="form-control border-start-0" 
-                        placeholder="البحث في موقع الصيانة، المركبة، أو الملاحظات..."
-                        [(ngModel)]="searchTerm">
-                </div>
-            </div>
             
             <!-- Filter Section -->
             <div class="card shadow-sm rounded-xl p-4 mb-4">
@@ -386,21 +397,23 @@
                     <div class="col-md-6">
                         <label for="vehicleFilter" class="form-label small fw-medium">المركبة</label>
                         <select id="vehicleFilter" class="form-select" [(ngModel)]="selectedVehicle">
-                            @for (vehicle of vehiclesList; track vehicle) {
-                            <option [value]="vehicle">{{ vehicle }}</option>
+                            <option value="جميع المركبات">جميع المركبات</option>
+                            @for (vehicle of vehiclesList; track vehicle.id) {
+                            <option [value]="vehicle.id">{{ vehicle.vehicleName }} ({{ vehicle.vehicleId }})</option>
                             }
                         </select>
                     </div>
                     
                     <!-- Maintenance Type Filter -->
                     <div class="col-md-6">
-                        <label for="maintenanceTypeFilter" class="form-label small fw-medium">نوع الصيانة</label>
-                        <select id="maintenanceTypeFilter" class="form-select" [(ngModel)]="selectedMaintenanceType">
-                            <option value="جميع الأنواع">جميع الأنواع</option>
-                            @for (type of maintenanceTypes; track type) {
-                            <option [value]="type">{{ type }}</option>
-                            }
-                        </select>
+                        <app-maintenance-type-search
+                            [label]="'نوع الصيانة'"
+                            [placeholder]="'ابحث عن نوع الصيانة... (اختياري)'"
+                            [required]="false"
+                            [selectedTypeId]="maintenanceTypeFilter()"
+                            [selectedTypeName]="selectedMaintenanceType"
+                            (typeSelected)="onFilterMaintenanceTypeSelected($event)">
+                        </app-maintenance-type-search>
                     </div>
                 </div>
                 
@@ -425,7 +438,10 @@
                         <div class="card-header bg-white border-bottom p-3">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="text-end">
-                                    <h5 class="fw-bold mb-1">{{ record.vehicleId }}</h5>
+                                    <h5 class="fw-bold mb-1">
+                                        <span class="cursor-pointer text-primary-hover" (click)="navigateToFleet(record.vehicleInternalId); $event.stopPropagation()" title="عرض تفاصيل المركبة">{{ record.vehicleName || record.vehicleId }}</span>
+                                        <i class="fa-solid fa-filter ms-2 text-muted cursor-pointer" style="font-size: 0.8rem;" (click)="filterByVehicle(record.vehicleId, $event)" title="فلترة حسب هذه المركبة"></i>
+                                    </h5>
                                     <p class="text-muted small mb-0">{{ formatDate(record.date) }}</p>
                                 </div>
                                 <app-status-badge
@@ -439,7 +455,10 @@
                             <div class="row g-3 text-end">
                                 <div class="col-6">
                                     <p class="text-muted small mb-1">نوع الصيانة</p>
-                                    <p class="fw-semibold mb-0">{{ record.type }}</p>
+                                    <p class="fw-semibold mb-0">
+                                        <span class="cursor-pointer text-primary-hover" (click)="filterByMaintenanceType(record.maintenanceTypeId, $event)" title="فلترة حسب هذا النوع">{{ record.maintenanceTypeName || record.type || 'غير محدد' }}</span>
+                                        <i class="fa-solid fa-filter ms-1 text-muted cursor-pointer" style="font-size: 0.7rem;" (click)="filterByMaintenanceType(record.maintenanceTypeId, $event)" title="فلترة حسب هذا النوع"></i>
+                                    </p>
                                 </div>
                                 <div class="col-6">
                                     <p class="text-muted small mb-1">التكلفة</p>
@@ -449,7 +468,8 @@
                                     <p class="text-muted small mb-1">موقع الخدمة</p>
                                     <p class="fw-semibold mb-0">
                                         <i class="fa-solid fa-location-dot text-danger me-1"></i>
-                                        {{ record.serviceLocation }}
+                                        <span class="cursor-pointer text-primary-hover" (click)="filterByServiceLocation(record.serviceLocation, $event)" title="البحث عن هذا الموقع">{{ record.serviceLocation }}</span>
+                                        <i class="fa-solid fa-filter ms-1 text-muted cursor-pointer" style="font-size: 0.7rem;" (click)="filterByServiceLocation(record.serviceLocation, $event)" title="البحث عن هذا الموقع"></i>
                                     </p>
                                 </div>
                                 <div class="col-12">
@@ -457,6 +477,17 @@
                                     <p class="fw-semibold mb-0">
                                         قبل: {{ record.odometerBefore.toLocaleString() }} ميل /
                                         بعد: {{ record.odometerAfter.toLocaleString() }} ميل
+                                    </p>
+                                </div>
+                                <div class="col-12">
+                                    <p class="text-muted small mb-1">كم منذ الصيانة</p>
+                                    <p class="fw-semibold mb-0">
+                                        @if (record.kmSinceMaintenance !== null && record.kmSinceMaintenance !== undefined) {
+                                            <i class="fa-solid fa-road text-primary me-1"></i>
+                                            {{ record.kmSinceMaintenance | number }} كم
+                                        } @else {
+                                            <span class="text-muted">---</span>
+                                        }
                                     </p>
                                 </div>
                                 <div class="col-12">
@@ -477,11 +508,11 @@
             </div>
 
             <!-- Pagination -->
-            @if (filteredRecords().length > 0) {
+            @if (totalRecords > 0) {
             <div class="mt-4">
                 <app-pagination
                     [currentPage]="currentPage"
-                    [totalItems]="filteredRecords().length"
+                    [totalItems]="totalRecords"
                     [itemsPerPage]="itemsPerPage"
                     (pageChange)="onPageChange($event)"
                     (itemsPerPageChange)="onItemsPerPageChange($event)">
@@ -496,3 +527,10 @@
         <i class="fa-solid fa-plus fa-lg"></i>
     </button>
 </div>
+
+<app-confirmation-modal 
+  [isOpen]="isDeleteRecordModalOpen()"
+  [config]="deleteRecordModalConfig()"
+  (confirmed)="handleDeleteRecordConfirmation(true)"
+  (cancelled)="handleDeleteRecordConfirmation(false)">  
+</app-confirmation-modal>
