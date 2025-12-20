@@ -169,14 +169,6 @@
                                     required>
                                 <small class="text-muted">يتم خصمها أولاً قبل توزيع الباقي</small>
                             </div>
-                            <div class="col-12">
-                                <label for="paramedicPaidAmount" class="form-label small fw-medium">المبلغ المدفوع
-                                    للضابط في الموقع (₪)</label>
-                                <input id="paramedicPaidAmount" type="number" class="form-control text-end"
-                                    placeholder="0.00" [(ngModel)]="tripForm.paramedicPaidAmount"
-                                    name="paramedicPaidAmount" min="0" step="0.01" style="direction: ltr;">
-                                <small class="text-muted">المبلغ الذي تم دفعه فعلياً للضابط (الباقي يضاف للذمم)</small>
-                            </div>
                             }
                             <div class="col-12">
                                 <label for="tripNotes" class="form-label small fw-medium">ملاحظات الرحلة</label>
@@ -361,14 +353,6 @@
                                     [style.background-color]="tripForm.tripType !== 'اخرى' && tripForm.tripType !== '' ? '#e9ecef' : 'white'"
                                     required>
                                 <small class="text-muted">يتم خصمها أولاً قبل توزيع الباقي</small>
-                            </div>
-                            <div class="col-md-12">
-                                <label for="editParamedicPaidAmount" class="form-label small fw-medium">المبلغ المدفوع
-                                    للضابط في الموقع (₪)</label>
-                                <input id="editParamedicPaidAmount" type="number" class="form-control text-end"
-                                    placeholder="0.00" [(ngModel)]="tripForm.paramedicPaidAmount"
-                                    name="paramedicPaidAmount" min="0" step="0.01" style="direction: ltr;">
-                                <small class="text-muted">المبلغ الذي تم دفعه فعلياً للضابط (الباقي يضاف للذمم)</small>
                             </div>
                         </div>
                         <div class="row g-3 mt-1">

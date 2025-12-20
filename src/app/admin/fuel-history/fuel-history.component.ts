@@ -231,20 +231,20 @@ export class FuelHistoryComponent implements OnInit {
 
     // 🛠️ AFTER: Robust null/invalid date check
 formatDate(date: Date | string | null | undefined): string {
-    // 1. Check if the input is truthy (not null, undefined, or empty string)
+    // 1. Check if the input is truthy
     if (!date) {
-        return '---'; // Placeholder for missing date
+        return '---';
     }
 
     let dateObject: Date;
 
-    // 2. If it's a string, convert it to Date (if Step 1 didn't catch it, this is a fallback)
+    // 2. Convert to Date object
     if (typeof date === 'string') {
         dateObject = new Date(date);
     } else if (date instanceof Date) {
-        dateObject = date;
+        dateObject = new Date(date.getTime()); // Create a copy to avoid mutating the original
     } else {
-        return 'تاريخ غير صالح'; // Catch unexpected types
+        return 'تاريخ غير صالح';
     }
 
     // 3. Check if the resulting Date object is valid
@@ -252,10 +252,17 @@ formatDate(date: Date | string | null | undefined): string {
         return 'تاريخ غير صالح';
     }
 
-    // 4. Return the formatted date string
-    return dateObject.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-}
+    // --- ADDED LOGIC: Add 1 day ---
+    dateObject.setDate(dateObject.getDate() + 1);
+    // ------------------------------
 
+    // 4. Return the formatted date string
+    return dateObject.toLocaleDateString('ar-EG', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+}
     openAddRecordModal(): void {
         this.recordForm = {
             date: new Date().toISOString().split('T')[0],

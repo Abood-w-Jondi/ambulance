@@ -112,7 +112,6 @@ export class TripsComponent implements OnInit {
         totalPrice: 0,
         payedPrice: 0,
         paramedicShare: 0,
-        paramedicPaidAmount: 0,
         tripNotes: ''
     };
 
@@ -206,8 +205,9 @@ export class TripsComponent implements OnInit {
         // eqShare = (afterFuel / 3) * 2
         const afterParamedic = totalPrice - paramedicShare;
         const afterFuel = afterParamedic - fuelCost;  // Deduct fuel BEFORE splitting
-        const driverShare = afterFuel / 3;
-        const eqShare = (afterFuel / 3) * 2;  // 2/3 of remaining
+        const afterOtherCosts = afterFuel - (this.tripForm.otherExpenses || 0); // Deduct other expenses BEFORE splitting
+        const driverShare = afterOtherCosts / 3;
+        const eqShare = (afterOtherCosts / 3) * 2;  // 2/3 of remaining
         return { paramedicShare, driverShare, eqShare };
     }
 
@@ -464,7 +464,6 @@ export class TripsComponent implements OnInit {
             totalPrice: 0,
             payedPrice: 0,
             paramedicShare: 0,
-            paramedicPaidAmount: 0,
             tripNotes: ''
         };
         this.vehicleSearchTerm.set('');
@@ -606,7 +605,6 @@ export class TripsComponent implements OnInit {
             otherExpenses: this.tripForm.otherExpenses,
             totalPrice: this.tripForm.totalPrice,
             payedPrice: this.tripForm.payedPrice,
-            paramedicPaidAmount: this.tripForm.paramedicPaidAmount,
             tripNotes: this.tripForm.tripNotes,
             ...shares
         }).subscribe({
@@ -651,7 +649,6 @@ export class TripsComponent implements OnInit {
                 totalPrice: trip.totalPrice,
                 payedPrice: trip.payedPrice,
                 paramedicShare: trip.paramedicShare,
-                paramedicPaidAmount: trip.paramedicPaidAmount || 0,
                 tripNotes: trip.tripNotes || ''
             };
             this.vehicleSearchTerm.set('');
@@ -694,7 +691,6 @@ export class TripsComponent implements OnInit {
                 otherExpenses: this.tripForm.otherExpenses,
                 totalPrice: this.tripForm.totalPrice,
                 payedPrice: this.tripForm.payedPrice,
-                paramedicPaidAmount: this.tripForm.paramedicPaidAmount,
                 tripNotes: this.tripForm.tripNotes,
                 ...shares
             };

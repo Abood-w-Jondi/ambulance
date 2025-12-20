@@ -447,15 +447,6 @@
                 </div>
 
                 <div class="col-12 col-lg-8">
-                    <div class="d-lg-flex justify-content-end mb-3 d-none">
-                        <button
-                            class="btn btn-primary-custom rounded-pill shadow-sm d-flex align-items-center gap-2 py-2 px-3"
-                            (click)="isAddModalOpen.set(true)">
-                            <i class="fa-solid fa-user-plus fs-6"></i>
-                            <span class="fw-bold">سائق جديد</span>
-                        </button>
-                    </div>
-
                     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-2 g-4">
                         @for (driver of getPaginatedDrivers(); track driver.id) {
                         <div class="col">
@@ -583,5 +574,7 @@
             </div>
         </div>
     </main>
-
+<button class="fab shadow-lg" (click)="isAddModalOpen.set(true)" title="إضافة سائق جديد">
+    <i class="fa-solid fa-plus fa-lg"></i>
+</button>
 </div>

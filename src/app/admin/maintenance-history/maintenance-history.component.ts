@@ -35,7 +35,7 @@ export class MaintenanceHistoryComponent implements OnInit {
     endMonth: number = new Date().getMonth() + 1;
     endYear: number = new Date().getFullYear();
     selectedVehicle: string = 'جميع المركبات';
-    selectedMaintenanceType: string = 'جميع الأنواع';
+    selectedMaintenanceType: string = '';
     
     // Filters for computation
     dateFilterFrom = signal<Date | null>(null);
@@ -178,12 +178,20 @@ export class MaintenanceHistoryComponent implements OnInit {
         const fromDate = this.dateFilterFrom();
         const toDate = this.dateFilterTo();
         if (fromDate && toDate) {
-            params.startDate = fromDate.toISOString().split('T')[0];
-            params.endDate = toDate.toISOString().split('T')[0];
-        }
+    // Create new Date objects to avoid mutating the original variables
+    const nextFromDate = new Date(fromDate);
+    const nextToDate = new Date(toDate);
 
+    // Add 1 day to each
+    nextFromDate.setDate(nextFromDate.getDate() + 1);
+    nextToDate.setDate(nextToDate.getDate() + 1);
+
+    // Format to YYYY-MM-DD
+    params.startDate = nextFromDate.toISOString().split('T')[0];
+    params.endDate = nextToDate.toISOString().split('T')[0];
+}
         // Add maintenance type filter
-        if (this.maintenanceTypeFilter() && this.maintenanceTypeFilter() !== 'جميع الأنواع') {
+        if (this.maintenanceTypeFilter() && this.maintenanceTypeFilter() !== '') {
             params.maintenanceType = this.maintenanceTypeFilter();
         }
 
@@ -231,7 +239,6 @@ export class MaintenanceHistoryComponent implements OnInit {
         this.dateFilterFrom.set(fromDate);
         this.dateFilterTo.set(toDate);
         this.vehicleFilter.set(this.selectedVehicle);
-        this.maintenanceTypeFilter.set(this.selectedMaintenanceType);
         this.currentPage = 1;
         this.loadData();
     }
@@ -244,7 +251,7 @@ export class MaintenanceHistoryComponent implements OnInit {
         this.endMonth = 12;
         this.endYear = new Date().getFullYear();
         this.selectedVehicle = 'جميع المركبات';
-        this.selectedMaintenanceType = 'جميع الأنواع';
+        this.selectedMaintenanceType = '';
         this.searchTerm.set('');
 
         this.dateFilterFrom.set(null);
@@ -348,7 +355,7 @@ formatDate(date: Date | string | null | undefined): string {
             this.selectedMaintenanceType = selection.name;
             this.maintenanceTypeFilter.set(selection.id);
         } else {
-            this.selectedMaintenanceType = 'جميع الأنواع';
+            this.selectedMaintenanceType = '';
             this.maintenanceTypeFilter.set('');
         }
     }
