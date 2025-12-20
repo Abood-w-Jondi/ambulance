@@ -44,5 +44,36 @@ pre {
   background-color: rgb(208, 226, 43);  
 }
 .MA-bg{
-  background-color: rgb(37, 66, 182);  
+  background-color: rgb(37, 66, 182);
+}
+
+/* Transaction direction indicators (for corrected financial logic) */
+.transaction-receivable {
+  background-color: #d4edda;
+  border-left: 4px solid #28a745;
+}
+
+.transaction-payable {
+  background-color: #f8d7da;
+  border-left: 4px solid #dc3545;
+}
+
+.transaction-neutral {
+  background-color: #d1ecf1;
+  border-left: 4px solid #17a2b8;
+}
+
+.badge-receivable {
+  background-color: #28a745;
+  color: white;
+}
+
+.badge-payable {
+  background-color: #dc3545;
+  color: white;
+}
+
+.badge-neutral {
+  background-color: #6c757d;
+  color: white;
 }

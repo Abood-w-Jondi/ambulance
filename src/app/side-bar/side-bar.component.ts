@@ -41,6 +41,10 @@ img$: Observable<string>;
   }
   
   navigateTo(path: string) {
+    if(path === 'profile'){
+      this.router.navigate([`user/${path}`]);
+      return;
+    }
     this.router.navigate([`admin/${path}`]);
     this.closeSidebar();
   }

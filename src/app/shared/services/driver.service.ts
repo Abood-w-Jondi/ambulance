@@ -98,7 +98,21 @@ export class DriverService {
   }
 
   /**
-   * Reduce driver balance
+   * Record payment from driver to company (reduces payable)
+   */
+  recordPayment(id: string, amount: number, description?: string): Observable<Driver> {
+    return this.http.patch<Driver>(`${this.API_URL}/${id}/record-payment`, { amount, description });
+  }
+
+  /**
+   * Record expense from company to driver (reduces receivable)
+   */
+  recordExpense(id: string, amount: number, description: string): Observable<Driver> {
+    return this.http.patch<Driver>(`${this.API_URL}/${id}/record-expense`, { amount, description });
+  }
+
+  /**
+   * Reduce driver balance (legacy - kept for backwards compatibility)
    */
   reduceBalance(id: string, amount: number): Observable<Driver> {
     return this.http.patch<Driver>(`${this.API_URL}/${id}/reduce-balance`, { amount });
@@ -107,8 +121,8 @@ export class DriverService {
   /**
    * Clear driver balance (set to zero)
    */
-  clearBalance(id: string): Observable<Driver> {
-    return this.http.patch<Driver>(`${this.API_URL}/${id}/clear-balance`, {});
+  clearBalance(id: string, description?: string): Observable<Driver> {
+    return this.http.patch<Driver>(`${this.API_URL}/${id}/clear-balance`, { description });
   }
 
   /**

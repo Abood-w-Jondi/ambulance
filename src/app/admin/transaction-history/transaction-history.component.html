@@ -90,6 +90,7 @@
               <tr>
                 <th>التاريخ</th>
                 <th>النوع</th>
+                <th>الاتجاه</th>
                 <th>الوصف</th>
                 <th>المبلغ</th>
                 <th>الرصيد قبل</th>
@@ -105,6 +106,13 @@
                     <span class="badge {{ getTransactionTypeClass(transaction.transactionType) }}">
                       {{ transaction.transactionType }}
                     </span>
+                  </td>
+                  <td>
+                    @if (transaction.transactionDirection) {
+                      <span [class]="getDirectionBadgeClass(transaction.transactionDirection)">
+                        {{ getDirectionLabel(transaction.transactionDirection) }}
+                      </span>
+                    }
                   </td>
                   <td>
                     @if (transaction.patientName) {

@@ -257,6 +257,48 @@
 
           <div class="card border-0 shadow-sm rounded-4 mb-3">
             <div class="card-body p-4">
+              <h6 class="text-uppercase text-muted fw-bold small mb-4">صافي المستحقات</h6>
+
+              <!-- Driver Net Position -->
+              @if (dashboardStats()!.financial.netDriverPosition > 0) {
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
+                  <span class="text-danger"><i class="fa-solid fa-hand-holding-dollar ms-2"></i>اجمع من السائقين</span>
+                  <span class="fw-bold font-monospace text-danger">₪{{ dashboardStats()!.financial.netDriverPosition | number:'1.2-2' }}</span>
+                </div>
+              } @else if (dashboardStats()!.financial.netDriverPosition < 0) {
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
+                  <span class="text-success"><i class="fa-solid fa-money-bill-transfer ms-2"></i>ادفع للسائقين</span>
+                  <span class="fw-bold font-monospace text-success">₪{{ (dashboardStats()!.financial.netDriverPosition * -1) | number:'1.2-2' }}</span>
+                </div>
+              } @else {
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
+                  <span class="text-muted"><i class="fa-solid fa-check-circle ms-2"></i>السائقين - محسوب</span>
+                  <span class="fw-bold font-monospace text-muted">₪0.00</span>
+                </div>
+              }
+
+              <!-- Paramedic Net Position -->
+              @if (dashboardStats()!.financial.netParamedicPosition > 0) {
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-danger"><i class="fa-solid fa-hand-holding-dollar ms-2"></i>اجمع من المسعفين</span>
+                  <span class="fw-bold font-monospace text-danger">₪{{ dashboardStats()!.financial.netParamedicPosition | number:'1.2-2' }}</span>
+                </div>
+              } @else if (dashboardStats()!.financial.netParamedicPosition < 0) {
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-success"><i class="fa-solid fa-money-bill-transfer ms-2"></i>ادفع للمسعفين</span>
+                  <span class="fw-bold font-monospace text-success">₪{{ (dashboardStats()!.financial.netParamedicPosition * -1) | number:'1.2-2' }}</span>
+                </div>
+              } @else {
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted"><i class="fa-solid fa-check-circle ms-2"></i>المسعفين - محسوب</span>
+                  <span class="fw-bold font-monospace text-muted">₪0.00</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm rounded-4 mb-3">
+            <div class="card-body p-4">
               <h6 class="text-uppercase text-muted fw-bold small mb-3">ملخص الوقود</h6>
               <div class="row g-2 text-center">
                 <div class="col-6">

@@ -7,7 +7,6 @@ import { ToastService } from '../../shared/services/toast.service';
 import { ValidationService } from '../../shared/services/validation.service';
 import { ParamedicService } from '../../shared/services/paramedic.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
-import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 import { Paramedic, ParamedicFilterStatus, EducationLevel } from '../../shared/models';
 
@@ -15,7 +14,7 @@ type FilterStatus = ParamedicFilterStatus;
 
 @Component({
     selector: 'app-paramedics-list',
-    imports: [CommonModule, FormsModule, PaginationComponent, StatusBadgeComponent, ConfirmationModalComponent],
+    imports: [CommonModule, FormsModule, PaginationComponent, ConfirmationModalComponent],
     templateUrl: './paramedics-list.component.html',
     styleUrl: './paramedics-list.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -472,5 +471,104 @@ export class ParamedicsListComponent implements OnInit {
 
     removeProfileImage(): void {
         this.editParamedic.profileImageUrl = '';
+    }
+
+    /**
+     * Get simplified balance display for admin view
+     * Shows single net amount instead of separate receivable/payable
+     * Positive = Collect from paramedic (red)
+     * Negative = Pay to paramedic (green)
+     */
+    getParamedicBalanceDisplay(paramedic: Paramedic): {
+        amount: number;
+        label: string;
+        colorClass: string;
+        action: 'collect' | 'pay' | 'settled';
+    } {
+        const receivable = paramedic.amountReceivable || 0;
+        const payable = paramedic.amountPayable || 0;
+        const netAmount = payable - receivable;
+
+        if (netAmount > 0) {
+            return {
+                amount: netAmount,
+                label: 'اجمع من المسعف',  // Collect from paramedic
+                colorClass: 'text-danger',
+                action: 'collect'
+            };
+        } else if (netAmount < 0) {
+            return {
+                amount: Math.abs(netAmount),
+                label: 'ادفع للمسعف',  // Pay to paramedic
+                colorClass: 'text-success',
+                action: 'pay'
+            };
+        } else {
+            return {
+                amount: 0,
+                label: 'محسوب',  // Settled
+                colorClass: 'text-muted',
+                action: 'settled'
+            };
+        }
+    }
+
+    /**
+     * Record payment FROM paramedic TO company
+     * Reduces paramedic's payable (what they owe)
+     */
+    recordPayment(paramedic: Paramedic): void {
+        const balanceInfo = this.getParamedicBalanceDisplay(paramedic);
+        if (balanceInfo.action !== 'collect') {
+            this.toastService.error('المسعف لا يملك مبلغ مستحق للشركة');
+            return;
+        }
+
+        // Prompt for amount
+        const amountStr = prompt(`المبلغ المطلوب تحصيله من ${paramedic.arabicName}:`, balanceInfo.amount.toString());
+        if (!amountStr) return;
+
+        const amount = parseFloat(amountStr);
+        if (isNaN(amount) || amount <= 0) {
+            this.toastService.error('الرجاء إدخال مبلغ صحيح');
+            return;
+        }
+
+        this.paramedicService.reduceBalance(paramedic.id, amount).subscribe({
+            next: () => {
+                this.toastService.success(`تم تسجيل دفع من ${paramedic.arabicName}: ₪${amount.toFixed(2)}`, 3000);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error recording payment:', error);
+                this.toastService.error('فشلت عملية تسجيل الدفع');
+            }
+        });
+    }
+
+    /**
+     * Record expense FROM company TO paramedic
+     * Reduces paramedic's receivable (what company owes them)
+     */
+    recordExpense(paramedic: Paramedic): void {
+        const balanceInfo = this.getParamedicBalanceDisplay(paramedic);
+        if (balanceInfo.action !== 'pay') {
+            this.toastService.error('الشركة لا تملك مبلغ مستحق للمسعف');
+            return;
+        }
+
+        // Prompt for amount
+        const amountStr = prompt(`المبلغ المطلوب صرفه لـ ${paramedic.arabicName}:`, balanceInfo.amount.toString());
+        if (!amountStr) return;
+
+        const amount = parseFloat(amountStr);
+        if (isNaN(amount) || amount <= 0) {
+            this.toastService.error('الرجاء إدخال مبلغ صحيح');
+            return;
+        }
+
+        // For now, we'll use the existing API - in a full implementation, you'd add a new endpoint
+        // This is a placeholder showing the intent
+        this.toastService.warning('ميزة صرف المبالغ للمسعفين قيد التطوير', 3000);
     }
 }

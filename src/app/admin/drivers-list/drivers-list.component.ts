@@ -9,7 +9,6 @@ import { DriverService } from '../../shared/services/driver.service';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { StatusBadgeComponent } from '../../shared/status-badge/status-badge.component';
 import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
-import { DRIVER_STATUS } from '../../shared/constants/status.constants';
 import { Driver, DriverFilterStatus, EducationLevel } from '../../shared/models';
 
 type FilterStatus = DriverFilterStatus;
@@ -55,14 +54,23 @@ export class DriversListComponent implements OnInit {
     showFiltersOnMobile = signal(false);
     searchTerm = signal('');
     filterStatus = signal<FilterStatus>('all');
-    minOwed = signal<number | null>(null);
-    maxOwed = signal<number | null>(null);
 
     isAddModalOpen = signal(false);
     isEditModalOpen = signal(false);
     isDeleteModalOpen = signal(false);
+    isPaymentModalOpen = signal(false);
+    isExpenseModalOpen = signal(false);
+    isClearBalanceModalOpen = signal(false);
+
     driverToEdit = signal<Driver | null>(null);
     driverToDelete = signal<Driver | null>(null);
+    driverForPayment = signal<Driver | null>(null);
+    driverForExpense = signal<Driver | null>(null);
+    driverForClearBalance = signal<Driver | null>(null);
+
+    paymentAmount = signal<number>(0);
+    expenseAmount = signal<number>(0);
+    expenseDescription = signal<string>('');
 
     // Confirmation modal state
     confirmationModalConfig = signal<ConfirmationModalConfig>({
@@ -79,16 +87,12 @@ export class DriversListComponent implements OnInit {
         username: string;
         email: string;
         password: string;
-        amountOwed: number;
-        tripsToday: number;
     } = {
         arabicName: '',
         name: '',
         username: '',
         email: '',
         password: '',
-        amountOwed: 0,
-        tripsToday: 0,
     };
 
     editDriver: {
@@ -98,7 +102,6 @@ export class DriversListComponent implements OnInit {
         email: string;
         arabicStatus: 'متاح' | 'في رحلة' | 'غير متصل';
         tripsToday: number;
-        amountOwed: number;
         newPassword: string;
         isActive: boolean;
         jobTitle: string;
@@ -112,7 +115,6 @@ export class DriversListComponent implements OnInit {
         email: '',
         arabicStatus: 'متاح',
         tripsToday: 0,
-        amountOwed: 0,
         newPassword: '',
         isActive: true,
         jobTitle: '',
@@ -160,9 +162,7 @@ export class DriversListComponent implements OnInit {
             page: this.currentPage,
             limit: this.itemsPerPage,
             search: this.searchTerm() || undefined,
-            status: this.filterStatus() !== 'all' ? this.filterStatus() as any : undefined,
-            minOwed: this.minOwed() || undefined,
-            maxOwed: this.maxOwed() || undefined
+            status: this.filterStatus() !== 'all' ? this.filterStatus() as any : undefined
         }).subscribe({
             next: (response) => {
                 this.drivers.set(response.data);
@@ -193,14 +193,12 @@ export class DriversListComponent implements OnInit {
             name: this.newDriver.name,
             username: this.newDriver.username || undefined,
             email: this.newDriver.email || undefined,
-            password: this.newDriver.password,
-            amountOwed: this.newDriver.amountOwed || 0,
-            tripsToday: this.newDriver.tripsToday || 0
+            password: this.newDriver.password
         } as any).subscribe({
             next: (driver) => {
                 this.toastService.success(`تمت إضافة سائق جديد: ${driver.arabicName} (${driver.name})`, 3000);
                 this.isAddModalOpen.set(false);
-                this.newDriver = { arabicName: '', name: '', username: '', email: '', password: '', amountOwed: 0, tripsToday: 0 };
+                this.newDriver = { arabicName: '', name: '', username: '', email: '', password: '' };
                 this.loadData();
             },
             error: (error) => {
@@ -219,7 +217,6 @@ export class DriversListComponent implements OnInit {
             email: driver.email || '',
             arabicStatus: driver.arabicStatus,
             tripsToday: driver.tripsToday,
-            amountOwed: driver.amountOwed,
             newPassword: '',
             isActive: driver.isActive,
             jobTitle: driver.jobTitle || '',
@@ -240,7 +237,6 @@ export class DriversListComponent implements OnInit {
             email: '',
             arabicStatus: 'متاح',
             tripsToday: 0,
-            amountOwed: 0,
             newPassword: '',
             isActive: true,
             jobTitle: '',
@@ -271,7 +267,6 @@ export class DriversListComponent implements OnInit {
             email: this.editDriver.email || undefined,
             arabicStatus: this.editDriver.arabicStatus,
             tripsToday: this.editDriver.tripsToday,
-            amountOwed: this.editDriver.amountOwed,
             isActive: this.editDriver.isActive,
             jobTitle: this.editDriver.jobTitle || undefined,
             educationLevel: this.editDriver.educationLevel || undefined,
@@ -362,20 +357,6 @@ export class DriversListComponent implements OnInit {
         });
     }
 
-    clearIndividualBalance(driver: Driver) {
-        this.driverService.clearBalance(driver.id).subscribe({
-            next: () => {
-                delete this.reductionAmounts[driver.id];
-                this.toastService.success(`تم تصفير الرصيد للسائق: ${driver.arabicName}`, 3000);
-                this.loadData();
-            },
-            error: (error) => {
-                console.error('Error clearing balance:', error);
-                this.toastService.error('فشلت عملية تصفير الرصيد');
-            }
-        });
-    }
-
     ngOnInit(): void {
         this.route.queryParams.subscribe(params => {
             if (params['filterValue']) {
@@ -386,9 +367,14 @@ export class DriversListComponent implements OnInit {
         this.loadData();
     }
 
+// This method is now replaced by recordPayment() which uses the new balance system
+// Keeping for backwards compatibility but not used in the UI anymore
 reduceBalance(driver: Driver, amount: number) {
+    const balanceInfo = this.getDriverBalanceDisplay(driver);
+    const currentBalance = balanceInfo.amount;
+
     // Use validation service
-    const validation = this.validationService.validateBalanceReduction(amount, driver.amountOwed);
+    const validation = this.validationService.validateBalanceReduction(amount, currentBalance);
 
     if (!validation.valid) {
         validation.errors.forEach(error => {
@@ -409,9 +395,9 @@ reduceBalance(driver: Driver, amount: number) {
             delete this.reductionAmounts[driver.id];
 
             let message: string;
-            if (amount > driver.amountOwed) {
+            if (amount > currentBalance) {
                 // Overpayment - creates debt (they owe company)
-                const debtAmount = amount - driver.amountOwed;
+                const debtAmount = amount - currentBalance;
                 message = `تم الدفع وتسجيل دين للسائق: ${driver.arabicName} (دين: ₪${debtAmount.toFixed(2)})`;
             } else {
                 // Normal reduction
@@ -435,8 +421,6 @@ reduceBalance(driver: Driver, amount: number) {
     resetFilters() {
         this.searchTerm.set('');
         this.filterStatus.set('all');
-        this.minOwed.set(null);
-        this.maxOwed.set(null);
 
         this.showFiltersOnMobile.set(false);
         this.toastService.info('تمت إعادة تعيين الفلاتر', 3000);
@@ -502,5 +486,195 @@ reduceBalance(driver: Driver, amount: number) {
 
     removeProfileImage(): void {
         this.editDriver.profileImageUrl = '';
+    }
+
+    /**
+     * Get simplified balance display for admin view
+     * Shows single net amount instead of separate receivable/payable
+     * Positive = Collect from driver (red)
+     * Negative = Pay to driver (green)
+     */
+    getDriverBalanceDisplay(driver: Driver): {
+        amount: number;
+        label: string;
+        colorClass: string;
+        action: 'collect' | 'pay' | 'settled';
+    } {
+        const receivable = driver.amountReceivable || 0;
+        const payable = driver.amountPayable || 0;
+        const netAmount = payable - receivable;
+
+        if (netAmount > 0) {
+            return {
+                amount: netAmount,
+                label: 'اجمع من السائق',  // Collect from driver
+                colorClass: 'text-danger',
+                action: 'collect'
+            };
+        } else if (netAmount < 0) {
+            return {
+                amount: Math.abs(netAmount),
+                label: 'ادفع للسائق',  // Pay to driver
+                colorClass: 'text-success',
+                action: 'pay'
+            };
+        } else {
+            return {
+                amount: 0,
+                label: 'محسوب',  // Settled
+                colorClass: 'text-muted',
+                action: 'settled'
+            };
+        }
+    }
+
+    /**
+     * Show payment modal (driver pays company)
+     */
+    recordPayment(driver: Driver): void {
+        const balanceInfo = this.getDriverBalanceDisplay(driver);
+        if (balanceInfo.action !== 'collect') {
+            this.toastService.error('السائق لا يملك مبلغ مستحق للشركة');
+            return;
+        }
+
+        this.driverForPayment.set(driver);
+        this.paymentAmount.set(balanceInfo.amount);
+        this.isPaymentModalOpen.set(true);
+    }
+
+    /**
+     * Confirm and process payment from driver
+     */
+    confirmRecordPayment(): void {
+        const driver = this.driverForPayment();
+        const amount = this.paymentAmount();
+
+        if (!driver || !amount || amount <= 0) {
+            this.toastService.error('الرجاء إدخال مبلغ صحيح');
+            return;
+        }
+
+        this.driverService.recordPayment(driver.id, amount, 'دفع من السائق للشركة').subscribe({
+            next: () => {
+                this.toastService.success(`تم تسجيل دفع من ${driver.arabicName}: ₪${amount.toFixed(2)}`, 3000);
+                this.closePaymentModal();
+                this.loadData();
+            },
+            error: (error: any) => {
+                console.error('Error recording payment:', error);
+                this.toastService.error('فشلت عملية تسجيل الدفع');
+            }
+        });
+    }
+
+    /**
+     * Close payment modal
+     */
+    closePaymentModal(): void {
+        this.isPaymentModalOpen.set(false);
+        this.driverForPayment.set(null);
+        this.paymentAmount.set(0);
+    }
+
+    /**
+     * Show expense modal (company pays driver)
+     */
+    recordExpense(driver: Driver): void {
+        const balanceInfo = this.getDriverBalanceDisplay(driver);
+        if (balanceInfo.action !== 'pay') {
+            this.toastService.error('الشركة لا تملك مبلغ مستحق للسائق');
+            return;
+        }
+
+        this.driverForExpense.set(driver);
+        this.expenseAmount.set(balanceInfo.amount);
+        this.expenseDescription.set('');
+        this.isExpenseModalOpen.set(true);
+    }
+
+    /**
+     * Confirm and process expense to driver
+     */
+    confirmRecordExpense(): void {
+        const driver = this.driverForExpense();
+        const amount = this.expenseAmount();
+        const description = this.expenseDescription();
+
+        if (!driver || !amount || amount <= 0) {
+            this.toastService.error('الرجاء إدخال مبلغ صحيح');
+            return;
+        }
+
+        if (!description || description.trim() === '') {
+            this.toastService.error('الرجاء إدخال وصف للعملية');
+            return;
+        }
+
+        this.driverService.recordExpense(driver.id, amount, description).subscribe({
+            next: () => {
+                this.toastService.success(`تم صرف مبلغ لـ ${driver.arabicName}: ₪${amount.toFixed(2)}`, 3000);
+                this.closeExpenseModal();
+                this.loadData();
+            },
+            error: (error: any) => {
+                console.error('Error recording expense:', error);
+                this.toastService.error('فشلت عملية صرف المبلغ');
+            }
+        });
+    }
+
+    /**
+     * Close expense modal
+     */
+    closeExpenseModal(): void {
+        this.isExpenseModalOpen.set(false);
+        this.driverForExpense.set(null);
+        this.expenseAmount.set(0);
+        this.expenseDescription.set('');
+    }
+
+    /**
+     * Show clear balance confirmation
+     */
+    clearIndividualBalance(driver: Driver): void {
+        this.driverForClearBalance.set(driver);
+        this.confirmationModalConfig.set({
+            type: 'warning',
+            title: 'تأكيد تصفية الحساب',
+            message: `هل أنت متأكد من تصفية حساب السائق ${driver.arabicName}؟<br>سيتم مسح جميع المبالغ المستحقة والمدفوعات.`,
+            confirmButtonText: 'تصفية الحساب',
+            cancelButtonText: 'إلغاء',
+            highlightedText: driver.arabicName
+        });
+        this.isClearBalanceModalOpen.set(true);
+    }
+
+    /**
+     * Confirm and clear driver balance
+     */
+    confirmClearBalance(): void {
+        const driver = this.driverForClearBalance();
+        if (!driver) return;
+
+        this.driverService.clearBalance(driver.id, 'تصفية حساب من قبل المسؤول').subscribe({
+            next: () => {
+                this.toastService.success(`تم تصفية حساب السائق: ${driver.arabicName}`, 3000);
+                this.closeClearBalanceModal();
+                this.loadData();
+            },
+            error: (error: any) => {
+                console.error('Error clearing balance:', error);
+                this.toastService.error('فشلت عملية تصفية الحساب');
+            }
+        });
+    }
+
+    /**
+     * Close clear balance modal
+     */
+    closeClearBalanceModal(): void {
+        this.isClearBalanceModalOpen.set(false);
+        this.driverForClearBalance.set(null);
     }
 }

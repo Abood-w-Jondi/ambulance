@@ -442,41 +442,47 @@
                                             <p class="h5 fw-semibold m-0 text-dark">{{ paramedic.tripsToday }}</p>
                                         </div>
                                         <div class="col-6">
-                                            <p class="text-muted small m-0">المبلغ المستحق</p>
-                                            <p class="h5 fw-semibold m-0"
-                                                [class]="{'text-warning': paramedic.amountOwed > 0, 'text-success': paramedic.amountOwed === 0}">
-                                                ₪{{ paramedic.amountOwed.toFixed(2) }}
+                                            @let balanceInfo = getParamedicBalanceDisplay(paramedic);
+                                            <p class="text-muted small m-0">{{ balanceInfo.label }}</p>
+                                            <p class="h5 fw-semibold m-0" [ngClass]="balanceInfo.colorClass">
+                                                ₪{{ balanceInfo.amount.toFixed(2) }}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div class="mt-auto pt-3">
-                                        <div class="input-group mb-2 mt-3">
-                                            <input type="number" class="form-control text-end" placeholder="مبلغ الدفع"
-                                                min="0.01" [ngModel]="reductionAmounts[paramedic.id] || null"
-                                                (ngModelChange)="reductionAmounts[paramedic.id] = $event"
-                                                style="direction: ltr;">
-                                            <span class="input-group-text">₪</span>
-                                        </div>
+                                        @if (balanceInfo.action === 'collect') {
+                                            <button
+                                                class="btn btn-danger fw-bold w-100 py-3 rounded-lg mb-2 btn-lg-small"
+                                                (click)="recordPayment(paramedic)">
+                                                <i class="fa-solid fa-hand-holding-dollar me-2"></i>
+                                                تسجيل دفع من المسعف
+                                            </button>
+                                        }
 
-                                        <button
-                                            class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
-                                            (click)="reduceBalance(paramedic, reductionAmounts[paramedic.id])"
-                                            [disabled]="!reductionAmounts[paramedic.id]">
-                                            {{ paramedic.amountOwed > 0 ? 'تخفيض الرصيد المحدد' : 'دفع مسبق' }}
-                                        </button>
+                                        @if (balanceInfo.action === 'pay') {
+                                            <button
+                                                class="btn btn-success fw-bold w-100 py-3 rounded-lg mb-2 btn-lg-small"
+                                                (click)="recordExpense(paramedic)">
+                                                <i class="fa-solid fa-money-bill-transfer me-2"></i>
+                                                صرف للمسعف
+                                            </button>
+                                        }
 
-                                        @if (paramedic.amountOwed > 0) {
-                                        <button
-                                            class="btn btn-success fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small"
-                                            (click)="clearIndividualBalance(paramedic)">
-                                            تصفية الحساب بالكامل
-                                        </button>
-                                        } @else {
-                                        <div class="alert alert-success mt-3 mb-0 text-center py-2" role="alert">
-                                            <i class="fa-solid fa-circle-check me-1"></i>
-                                            الحساب مصفى بالكامل
-                                        </div>
+                                        @if (balanceInfo.action === 'settled') {
+                                            <div class="alert alert-success mb-2 text-center py-2" role="alert">
+                                                <i class="fa-solid fa-circle-check me-1"></i>
+                                                ✓ محسوب
+                                            </div>
+                                        }
+
+                                        @if (balanceInfo.action !== 'settled') {
+                                            <button
+                                                class="btn btn-outline-secondary fw-bold w-100 py-2 rounded-lg btn-lg-small"
+                                                (click)="clearIndividualBalance(paramedic)">
+                                                <i class="fa-solid fa-eraser me-1"></i>
+                                                تصفية الحساب
+                                            </button>
                                         }
                                     </div>
                                 </div>

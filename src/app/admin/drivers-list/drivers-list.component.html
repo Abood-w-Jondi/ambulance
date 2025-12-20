@@ -1,9 +1,115 @@
 <div class="d-flex flex-column min-vh-100 bg-light">
 
-    <!-- Confirmation Modal -->
+    <!-- Delete Confirmation Modal -->
     <app-confirmation-modal [isOpen]="isDeleteModalOpen()" [config]="confirmationModalConfig()"
         (confirmed)="confirmDeleteDriver()" (cancelled)="closeDeleteConfirmation()">
     </app-confirmation-modal>
+
+    <!-- Clear Balance Confirmation Modal -->
+    <app-confirmation-modal [isOpen]="isClearBalanceModalOpen()" [config]="confirmationModalConfig()"
+        (confirmed)="confirmClearBalance()" (cancelled)="closeClearBalanceModal()">
+    </app-confirmation-modal>
+
+    <!-- Payment Modal (Driver pays Company) -->
+    @if (isPaymentModalOpen() && driverForPayment()) {
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-xl shadow-lg border-0">
+                <div class="modal-header bg-danger rounded-top-xl border-0 text-white">
+                    <h5 class="modal-title fw-bold">تسجيل دفع من السائق</h5>
+                    <button type="button" class="btn-close btn-close-white" (click)="closePaymentModal()"></button>
+                </div>
+                <div class="modal-body p-4 text-end">
+                    <p class="mb-3">السائق: <strong>{{ driverForPayment()!.arabicName }}</strong></p>
+
+                    <div class="mb-3">
+                        <label for="paymentAmount" class="form-label fw-medium">المبلغ (₪)</label>
+                        <input
+                            id="paymentAmount"
+                            type="number"
+                            class="form-control"
+                            min="0"
+                            step="0.01"
+                            [ngModel]="paymentAmount()"
+                            (ngModelChange)="paymentAmount.set($event)"
+                            placeholder="أدخل المبلغ">
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fa-solid fa-info-circle me-1"></i>
+                        سيتم خصم هذا المبلغ من المبلغ المستحق على السائق
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" (click)="closePaymentModal()">إلغاء</button>
+                    <button type="button" class="btn btn-danger" (click)="confirmRecordPayment()"
+                        [disabled]="!paymentAmount() || paymentAmount() <= 0">
+                        <i class="fa-solid fa-check me-1"></i>
+                        تأكيد الدفع
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Expense Modal (Company pays Driver) -->
+    @if (isExpenseModalOpen() && driverForExpense()) {
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-xl shadow-lg border-0">
+                <div class="modal-header bg-success rounded-top-xl border-0 text-white">
+                    <h5 class="modal-title fw-bold">صرف مبلغ للسائق</h5>
+                    <button type="button" class="btn-close btn-close-white" (click)="closeExpenseModal()"></button>
+                </div>
+                <div class="modal-body p-4 text-end">
+                    <p class="mb-3">السائق: <strong>{{ driverForExpense()!.arabicName }}</strong></p>
+
+                    <div class="mb-3">
+                        <label for="expenseAmount" class="form-label fw-medium">المبلغ (₪)</label>
+                        <input
+                            id="expenseAmount"
+                            type="number"
+                            class="form-control"
+                            min="0"
+                            step="0.01"
+                            [ngModel]="expenseAmount()"
+                            (ngModelChange)="expenseAmount.set($event)"
+                            placeholder="أدخل المبلغ">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="expenseDescription" class="form-label fw-medium">
+                            الوصف <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            id="expenseDescription"
+                            type="text"
+                            class="form-control"
+                            [ngModel]="expenseDescription()"
+                            (ngModelChange)="expenseDescription.set($event)"
+                            placeholder="مثال: بنزين، صيانة، خسارة">
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fa-solid fa-exclamation-triangle me-1"></i>
+                        سيتم صرف هذا المبلغ من الشركة للسائق وخصمه من المبلغ المستحق له
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" (click)="closeExpenseModal()">إلغاء</button>
+                    <button type="button" class="btn btn-success" (click)="confirmRecordExpense()"
+                        [disabled]="!expenseAmount() || expenseAmount() <= 0 || !expenseDescription() || expenseDescription().trim() === ''">
+                        <i class="fa-solid fa-check me-1"></i>
+                        تأكيد الصرف
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
 
     <!-- Add Driver Modal -->
     @if (isAddModalOpen()) {
@@ -66,18 +172,6 @@
                                         class="text-danger">*</span></label>
                                 <input id="newPassword" type="password" class="form-control" placeholder="كلمة المرور"
                                     [(ngModel)]="newDriver.password" name="password" required>
-                            </div>
-
-                            <!-- Financial Information -->
-                            <div class="col-12 mt-4">
-                                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">المعلومات المالية</h6>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="newInitialOwed" class="form-label small fw-medium">المبلغ المستحق الأولي
-                                    (₪)</label>
-                                <input id="newInitialOwed" type="number" class="form-control" min="0" step="0.01"
-                                    [(ngModel)]="newDriver.amountOwed" name="amountOwed" required>
                             </div>
 
                         </div>
@@ -240,13 +334,6 @@
                                 </small>
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="editAmountOwed" class="form-label small fw-medium">المبلغ المستحق
-                                    (₪)</label>
-                                <input id="editAmountOwed" type="number" class="form-control" min="0" step="0.01"
-                                    [(ngModel)]="editDriver.amountOwed" name="amountOwed" required>
-                            </div>
-
                             <!-- Account Status -->
                             <div class="col-12 mt-4">
                                 <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">حالة الحساب</h6>
@@ -361,18 +448,6 @@
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="minOwed" class="form-label small fw-medium">الحد الأدنى للمبلغ المستحق</label>
-                            <input id="minOwed" type="number" class="form-control text-end" [ngModel]="minOwed()"
-                                (ngModelChange)="minOwed.set($event)" style="direction: ltr;">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="maxOwed" class="form-label small fw-medium">الحد الأقصى للمبلغ المستحق</label>
-                            <input id="maxOwed" type="number" class="form-control text-end" [ngModel]="maxOwed()"
-                                (ngModelChange)="maxOwed.set($event)" style="direction: ltr;">
-                        </div>
-
                         <button class="btn btn-primary-custom w-100 mt-4" (click)="applyFiltersAndToggleMobile()">
                             عرض النتائج
                         </button>
@@ -450,41 +525,47 @@
                                             <p class="h5 fw-semibold m-0 text-dark">{{ driver.tripsToday }}</p>
                                         </div>
                                         <div class="col-6">
-                                            <p class="text-muted small m-0">المبلغ المستحق</p>
-                                            <p class="h5 fw-semibold m-0"
-                                                [class]="{'text-warning': driver.amountOwed > 0, 'text-success': driver.amountOwed === 0}">
-                                                ₪{{ driver.amountOwed.toFixed(2) }}
+                                            @let balanceInfo = getDriverBalanceDisplay(driver);
+                                            <p class="text-muted small m-0">{{ balanceInfo.label }}</p>
+                                            <p class="h5 fw-semibold m-0" [ngClass]="balanceInfo.colorClass">
+                                                ₪{{ balanceInfo.amount.toFixed(2) }}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div class="mt-auto pt-3">
-                                        <div class="input-group mb-2 mt-3">
-                                            <input type="number" class="form-control text-end" placeholder="مبلغ الدفع"
-                                                min="0.01" [ngModel]="reductionAmounts[driver.id] || null"
-                                                (ngModelChange)="reductionAmounts[driver.id] = $event"
-                                                style="direction: ltr;">
-                                            <span class="input-group-text">₪</span>
-                                        </div>
+                                        @if (balanceInfo.action === 'collect') {
+                                            <button
+                                                class="btn btn-danger fw-bold w-100 py-3 rounded-lg mb-2 btn-lg-small"
+                                                (click)="recordPayment(driver)">
+                                                <i class="fa-solid fa-hand-holding-dollar me-2"></i>
+                                                تسجيل دفع من السائق
+                                            </button>
+                                        }
 
-                                        <button
-                                            class="btn btn-primary-custom fw-bold w-100 py-3 rounded-lg d-block d-lg-block d-xl-block btn-lg-small"
-                                            (click)="reduceBalance(driver, reductionAmounts[driver.id])"
-                                            [disabled]="!reductionAmounts[driver.id]">
-                                            {{ driver.amountOwed > 0 ? 'تخفيض الرصيد المحدد' : 'دفع مسبق' }}
-                                        </button>
+                                        @if (balanceInfo.action === 'pay') {
+                                            <button
+                                                class="btn btn-success fw-bold w-100 py-3 rounded-lg mb-2 btn-lg-small"
+                                                (click)="recordExpense(driver)">
+                                                <i class="fa-solid fa-money-bill-transfer me-2"></i>
+                                                صرف للسائق
+                                            </button>
+                                        }
 
-                                        @if (driver.amountOwed > 0) {
-                                        <button
-                                            class="btn btn-success fw-bold w-100 py-3 rounded-lg mb-2 mt-3 d-block d-lg-block d-xl-block btn-lg-small"
-                                            (click)="clearIndividualBalance(driver)">
-                                            تصفية الحساب بالكامل
-                                        </button>
-                                        } @else {
-                                        <div class="alert alert-success mt-3 mb-0 text-center py-2" role="alert">
-                                            <i class="fa-solid fa-circle-check me-1"></i>
-                                            الحساب مصفى بالكامل
-                                        </div>
+                                        @if (balanceInfo.action === 'settled') {
+                                            <div class="alert alert-success mb-2 text-center py-2" role="alert">
+                                                <i class="fa-solid fa-circle-check me-1"></i>
+                                                ✓ محسوب
+                                            </div>
+                                        }
+
+                                        @if (balanceInfo.action !== 'settled') {
+                                            <button
+                                                class="btn btn-outline-secondary fw-bold w-100 py-2 rounded-lg btn-lg-small"
+                                                (click)="clearIndividualBalance(driver)">
+                                                <i class="fa-solid fa-eraser me-1"></i>
+                                                تصفية الحساب
+                                            </button>
                                         }
                                     </div>
                                 </div>

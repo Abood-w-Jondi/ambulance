@@ -7,11 +7,18 @@ import { CommonModule } from '@angular/common';
 import { Transaction, CollectionSummary } from '../../shared/models/transaction.model';
 
 interface WalletSummary {
-  currentBalance: number;
+  // CORRECTED FINANCIAL LOGIC
+  amountReceivable: number;   // Company owes you (green/positive)
+  amountPayable: number;      // You owe company (red/debt)
+  netBalance: number;         // Net position (receivable - payable)
+
   pendingBalance: number;
   totalEarnings: number;
   totalWithdrawals: number;
   lastPaymentDate: Date | null;
+
+  // DEPRECATED - Legacy field
+  currentBalance?: number;
 }
 
 @Component({
@@ -23,7 +30,9 @@ interface WalletSummary {
 export class WalletComponent implements OnInit {
 
   walletSummary: WalletSummary = {
-    currentBalance: 0,
+    amountReceivable: 0,
+    amountPayable: 0,
+    netBalance: 0,
     pendingBalance: 0,
     totalEarnings: 0,
     totalWithdrawals: 0,

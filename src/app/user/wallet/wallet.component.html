@@ -17,39 +17,58 @@
 
   <!-- Wallet Summary Cards -->
   <div class="row mb-4 g-3">
-    <!-- Current Balance -->
-    <div class="col-12 col-lg-6">
-      <div class="card border-0 shadow-lg bg-gradient-primary text-white">
+    <!-- Amount Receivable (Company owes you) -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-lg bg-gradient-success text-white">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-start mb-3">
             <div>
-              <p class="mb-1 opacity-75">الرصيد المتاح</p>
-              <h2 class="display-4 fw-bold mb-0">${{ walletSummary.currentBalance.toFixed(2) }}</h2>
+              <p class="mb-1 opacity-75">الشركة مدينة لك</p>
+              <h2 class="display-5 fw-bold mb-0">{{ walletSummary.amountReceivable.toFixed(2) }} ₪</h2>
             </div>
-            <i class="fas fa-wallet fa-3x opacity-25"></i>
+            <i class="fas fa-hand-holding-usd fa-3x opacity-25"></i>
           </div>
           <p class="mb-0 small opacity-75">
             <i class="fas fa-info-circle me-2"></i>
-            يمكنك سحب هذا المبلغ في أي وقت
+            مبلغ مستحق لك من الشركة
           </p>
         </div>
       </div>
     </div>
 
-    <!-- Pending Balance -->
-    <div class="col-12 col-lg-6">
-      <div class="card border-0 shadow-lg bg-gradient-warning text-white">
+    <!-- Amount Payable (You owe company) -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-lg bg-gradient-danger text-white">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-start mb-3">
             <div>
-              <p class="mb-1 opacity-75">الرصيد المعلق</p>
-              <h2 class="display-4 fw-bold mb-0">${{ walletSummary.pendingBalance.toFixed(2) }}</h2>
+              <p class="mb-1 opacity-75">أنت مدين للشركة</p>
+              <h2 class="display-5 fw-bold mb-0">{{ walletSummary.amountPayable.toFixed(2) }} ₪</h2>
             </div>
-            <i class="fas fa-clock fa-3x opacity-25"></i>
+            <i class="fas fa-money-bill-wave fa-3x opacity-25"></i>
           </div>
           <p class="mb-0 small opacity-75">
-            <i class="fas fa-hourglass-half me-2"></i>
-            قيد المراجعة، سيتم إضافته قريباً
+            <i class="fas fa-exclamation-circle me-2"></i>
+            مبلغ مطلوب منك للشركة
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Net Balance -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-lg" [ngClass]="walletSummary.netBalance >= 0 ? 'bg-gradient-primary' : 'bg-gradient-warning'" style="color: white;">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <p class="mb-1 opacity-75">الرصيد الصافي</p>
+              <h2 class="display-5 fw-bold mb-0">{{ walletSummary.netBalance.toFixed(2) }} ₪</h2>
+            </div>
+            <i class="fas fa-balance-scale fa-3x opacity-25"></i>
+          </div>
+          <p class="mb-0 small opacity-75">
+            <i class="fas fa-calculator me-2"></i>
+            {{ walletSummary.netBalance >= 0 ? 'الشركة تدين لك' : 'أنت تدين للشركة' }}
           </p>
         </div>
       </div>

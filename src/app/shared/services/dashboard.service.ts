@@ -46,6 +46,8 @@ export interface DashboardStats {
     companyBalance: number;
     companyDebtToOwner: number;
     ownerBalance: number;
+    netDriverPosition: number;      // Positive = collect from drivers, Negative = pay to drivers
+    netParamedicPosition: number;   // Positive = collect from paramedics, Negative = pay to paramedics
   };
   fuel: {
     totalAmount: number;

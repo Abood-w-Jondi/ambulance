@@ -131,4 +131,32 @@ export class TransactionHistoryComponent implements OnInit {
     // Navigate to trip details
     this.router.navigate(['/admin/trips', tripId]);
   }
+
+  /**
+   * Get transaction direction label in Arabic
+   * @param direction Transaction direction
+   * @returns Arabic label
+   */
+  getDirectionLabel(direction: string | undefined): string {
+    switch(direction) {
+      case 'receivable': return 'الشركة مدينة';  // Company owes
+      case 'payable': return 'المستخدم مدين';      // User owes
+      case 'neutral': return 'محايد';                    // Neutral
+      default: return '';                         // Not specified
+    }
+  }
+
+  /**
+   * Get CSS class for transaction direction badge
+   * @param direction Transaction direction
+   * @returns CSS class name
+   */
+  getDirectionBadgeClass(direction: string | undefined): string {
+    switch(direction) {
+      case 'receivable': return 'badge bg-success';
+      case 'payable': return 'badge bg-danger';
+      case 'neutral': return 'badge bg-secondary';
+      default: return '';
+    }
+  }
 }

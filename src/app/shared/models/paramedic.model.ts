@@ -21,9 +21,15 @@ export interface Paramedic {
     // Work Information
     tripsToday: number;
 
-    // Financial Information
-    amountOwed: number;
-    isAccountCleared: boolean;
+    // Financial Balances (CORRECTED LOGIC)
+    amountReceivable: number;  // Money company owes paramedic (green/positive)
+    amountPayable: number;     // Money paramedic owes company (red/debt)
+    netBalance: number;        // receivable - payable (net position)
+
+    // DEPRECATED - Legacy field (kept for backward compatibility)
+    amountOwed?: number;       // Old field - use amountReceivable/amountPayable instead
+
+    isAccountCleared: boolean; // Whether both balances are zero
 
     // Display Information
     imageUrl: string;

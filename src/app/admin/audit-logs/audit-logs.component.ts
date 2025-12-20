@@ -60,7 +60,11 @@ export class AuditLogsComponent implements OnInit {
     'checklist_completed': 'ادخال تشكلست',
     'trip_unclosed' : 'اعادة فتح رحلة من المدير',
     'update-trip' : 'تعديل على رحلة',
-    'createM' : 'اضافة صيانة'
+    'createM' : 'اضافة صيانة',
+    'medical_form_accessed': 'عرض نموذج طبي',
+    'medical_form_completed': 'إكمال نموذج طبي',
+    'medical_form_unlocked': 'فتح نموذج طبي مغلق',
+    'medical_form_created': 'إنشاء نموذج طبي',
   };
 
   entityTypeKeys: string[] = Object.keys(this.entityTypeLabels);
@@ -189,5 +193,33 @@ actionTypeKeys: string[] = Object.keys(this.actionTypeLabels);
     if (value === null || value === undefined) return '-';
     if (typeof value === 'object') return JSON.stringify(value, null, 2);
     return String(value);
+  }
+
+  /**
+   * Get transaction direction label in Arabic
+   * @param direction Transaction direction
+   * @returns Arabic label
+   */
+  getDirectionLabel(direction: string | undefined): string {
+    switch(direction) {
+      case 'receivable': return 'الشركة مدينة';  // Company owes
+      case 'payable': return 'السائق/المسعف مدين';      // Driver/Paramedic owes
+      case 'neutral': return 'محايد';                    // Neutral
+      default: return 'غير محدد';                         // Not specified
+    }
+  }
+
+  /**
+   * Get CSS class for transaction direction badge
+   * @param direction Transaction direction
+   * @returns CSS class name
+   */
+  getDirectionBadgeClass(direction: string | undefined): string {
+    switch(direction) {
+      case 'receivable': return 'badge-receivable';
+      case 'payable': return 'badge-payable';
+      case 'neutral': return 'badge-neutral';
+      default: return 'badge-secondary';
+    }
   }
 }

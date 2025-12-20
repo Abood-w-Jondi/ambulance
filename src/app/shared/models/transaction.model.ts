@@ -31,11 +31,16 @@ export interface Transaction {
     fuelRecordId?: string;
     maintenanceRecordId?: string;
 
+    // Transaction direction (NEW - for corrected financial logic)
+    transactionDirection?: TransactionDirection;
+
     // Trip details (if transaction is related to a trip)
     patientName?: string;
     transferFrom?: string;
     transferTo?: string;
 }
+
+export type TransactionDirection = 'receivable' | 'payable' | 'neutral';
 
 export type TransactionType = 'رحلة' | 'دفع' | 'سحب' | 'تعديل' | 'وقود' | 'صيانة' | 'مكافأة' | 'خصم';
 

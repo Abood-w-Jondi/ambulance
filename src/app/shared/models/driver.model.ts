@@ -21,8 +21,16 @@ export interface Driver {
 
     // Work & Financial Information
     tripsToday: number;
-    amountOwed: number;        // Amount driver owes to company
-    isAccountCleared: boolean; // Whether balance is zero
+
+    // Financial Balances (CORRECTED LOGIC)
+    amountReceivable: number;  // Money company owes driver (green/positive)
+    amountPayable: number;     // Money driver owes company (red/debt)
+    netBalance: number;        // receivable - payable (net position)
+
+    // DEPRECATED - Legacy field (kept for backward compatibility)
+    amountOwed?: number;       // Old field - use amountReceivable/amountPayable instead
+
+    isAccountCleared: boolean; // Whether both balances are zero
 
     // Profile Media
     imageUrl: string;
