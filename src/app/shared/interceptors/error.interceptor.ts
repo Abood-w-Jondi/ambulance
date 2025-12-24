@@ -14,7 +14,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       let errorMessage = 'حدث خطأ غير متوقع';
 
-      if (error.error instanceof ErrorEvent) {
+      if ( typeof ErrorEvent !== 'undefined' &&  error.error instanceof ErrorEvent) {
         // Client-side or network error
         errorMessage = `خطأ في الاتصال: ${error.error.message}`;
       } else {

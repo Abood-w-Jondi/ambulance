@@ -7,6 +7,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './shared/interceptors/auth.interceptor';
 import { errorInterceptor } from './shared/interceptors/error.interceptor';
 import { responseInterceptor } from './shared/interceptors/response.interceptor';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -19,6 +20,6 @@ export const appConfig: ApplicationConfig = {
     ),
 
     // Animations
-    provideAnimationsAsync()
+    provideAnimationsAsync(), provideClientHydration(withEventReplay())
   ]
 };

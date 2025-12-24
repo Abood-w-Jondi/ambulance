@@ -1,5 +1,5 @@
-import { Component, OnInit, signal, computed, AfterViewChecked } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, computed, Inject, PLATFORM_ID } from '@angular/core'; // Added Inject, PLATFORM_ID
+import { CommonModule, isPlatformBrowser } from '@angular/common'; // Added isPlatformBrowser
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChecklistService } from '../../shared/services/checklist.service';
@@ -22,6 +22,7 @@ export class VehicleChecklistComponent implements OnInit {
 
   items = signal<ChecklistItem[]>([]);
   generalNotes = signal('');
+  isBrowser: boolean; // Add this
 
   // Track which category is expanded in accordion
   expandedCategory = signal<string | null>(null);
@@ -76,16 +77,16 @@ export class VehicleChecklistComponent implements OnInit {
   uncheckedCount = computed(() =>
     this.items().filter(item => item.isAvailable !== true && item.isAvailable !== false).length
   );
-
+  
   constructor(
     private checklistService: ChecklistService,
     private toastService: ToastService,
     private router: Router,
     private vehicleCookieService: VehicleCookieService,
-    public globalVars: GlobalVarsService
-
-
+    public globalVars: GlobalVarsService,
+    @Inject(PLATFORM_ID) platformId: Object // Inject this
   ) {
+    this.isBrowser = isPlatformBrowser(platformId);
     this.globalVars.setGlobalHeader(' قائمة فحص المركبة ');
   }
 
@@ -136,7 +137,6 @@ export class VehicleChecklistComponent implements OnInit {
 
  toggleCategory(categoryName: string): void {
     const isCurrentlyExpanded = this.expandedCategory() === categoryName;
-    
     // 1. Update the expanded state immediately
     if (isCurrentlyExpanded) {
       this.expandedCategory.set(null);
@@ -146,7 +146,7 @@ export class VehicleChecklistComponent implements OnInit {
 
     // 2. Add a small delay to allow Angular and Bootstrap's collapse transition
     // to complete and update the DOM before scrolling.
-    if (!isCurrentlyExpanded) {
+    if (!isCurrentlyExpanded && this.isBrowser) {
       setTimeout(() => {
         // Find the accordion button element
         const headerElement = document.getElementById('header-' + categoryName);

@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import * as XLSX from 'xlsx';
 
 export interface ExportColumn {
@@ -18,7 +19,7 @@ export interface ExportSheet {
 })
 export class ExportService {
 
-  constructor() { }
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) { }
 
   /**
    * Export data to Excel with single sheet
@@ -137,17 +138,25 @@ export class ExportService {
    * @param buffer Excel file buffer
    * @param filename Filename without extension
    */
-  private saveAsExcelFile(buffer: any, filename: string): void {
-    const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(data);
-    link.download = `${filename}.xlsx`;
-    link.click();
+private saveAsExcelFile(buffer: any, filename: string): void {
+    // Only execute if we are in the browser
+    if (isPlatformBrowser(this.platformId)) {
+      const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(data);
+      link.download = `${filename}.xlsx`;
+      link.click();
 
-    // Clean up
-    setTimeout(() => {
-      window.URL.revokeObjectURL(link.href);
-    }, 100);
+      // Clean up
+      setTimeout(() => {
+        if (isPlatformBrowser(this.platformId)) {
+          window.URL.revokeObjectURL(link.href);
+        }
+      }, 100);
+    } else {
+      // During 'ng build', this log will show in your terminal instead of crashing
+      console.warn('Skipping File Save: Not in browser environment.');
+    }
   }
 
   /**

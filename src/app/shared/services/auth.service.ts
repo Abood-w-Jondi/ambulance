@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, Inject, PLATFORM_ID } from '@angular/core'; // Added Inject, PLATFORM_ID
+import { isPlatformBrowser } from '@angular/common'; // Added isPlatformBrowser
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError } from 'rxjs';
@@ -13,9 +14,12 @@ export class AuthService {
   private readonly API_URL = environment.apiEndpoint;
   private readonly TOKEN_KEY = environment.jwt.tokenKey;
   private readonly REFRESH_TOKEN_KEY = environment.jwt.refreshTokenKey;
+  private isBrowser: boolean; // Flag to track environment
 
-  // Signals for reactive state (single source of truth)
-  currentUser = signal<User | null>(this.getUserFromStorage());
+  // Signals for reactive state
+  // We initialize with null first to be safe for SSR
+  currentUser = signal<User | null>(null);
+  
   isAuthenticated = computed(() => this.currentUser() !== null);
   userRole = computed(() => this.currentUser()?.role || null);
   isAdmin = computed(() => this.userRole() === 'admin');
@@ -24,9 +28,11 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object // Inject Platform ID
   ) {
-    // Initialize user from storage on service creation
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    // Only try to read from storage if we are in a real browser
     this.initializeAuth();
   }
 
@@ -34,9 +40,11 @@ export class AuthService {
    * Initialize authentication state from storage
    */
   private initializeAuth(): void {
-    const user = this.getUserFromStorage();
-    if (user) {
-      this.currentUser.set(user);
+    if (this.isBrowser) {
+      const user = this.getUserFromStorage();
+      if (user) {
+        this.currentUser.set(user);
+      }
     }
   }
 
@@ -58,7 +66,6 @@ export class AuthService {
   logout(): Observable<void> {
     const token = this.getAccessToken();
 
-    // If we have a valid token, notify the server BEFORE clearing local data
     if (token) {
       return this.http.post<void>(`${this.API_URL}/auth/logout`, {}).pipe(
         tap(() => {
@@ -66,14 +73,12 @@ export class AuthService {
           this.router.navigate(['/login']);
         }),
         catchError(() => {
-          // Even if server logout fails, clear local data and navigate
           this.clearAuthData();
           this.router.navigate(['/login']);
           return throwError(() => new Error('Logout failed'));
         })
       );
     } else {
-      // No token, just clear and navigate to login
       this.clearAuthData();
       this.router.navigate(['/login']);
       return new Observable(observer => {
@@ -174,14 +179,20 @@ export class AuthService {
    * Get access token
    */
   getAccessToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    if (this.isBrowser) {
+      return localStorage.getItem(this.TOKEN_KEY);
+    }
+    return null;
   }
 
   /**
    * Get refresh token
    */
   getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    if (this.isBrowser) {
+      return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    }
+    return null;
   }
 
   /**
@@ -193,7 +204,7 @@ export class AuthService {
 
     try {
       const payload = this.decodeToken(token);
-      const expiryTime = payload.exp * 1000; // Convert to milliseconds
+      const expiryTime = payload.exp * 1000;
       return Date.now() >= expiryTime;
     } catch {
       return true;
@@ -219,14 +230,11 @@ export class AuthService {
    * Handle successful login
    */
   private handleLoginSuccess(response: LoginResponse): void {
-    // Store tokens
-    localStorage.setItem(this.TOKEN_KEY, response.accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
-
-    // Store user
-    localStorage.setItem('ambulance_user', JSON.stringify(response.user));
-
-    // Update state
+    if (this.isBrowser) {
+      localStorage.setItem(this.TOKEN_KEY, response.accessToken);
+      localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
+      localStorage.setItem('ambulance_user', JSON.stringify(response.user));
+    }
     this.setUser(response.user);
   }
 
@@ -235,13 +243,17 @@ export class AuthService {
    */
   private setUser(user: User): void {
     this.currentUser.set(user);
-    localStorage.setItem('ambulance_user', JSON.stringify(user));
+    if (this.isBrowser) {
+      localStorage.setItem('ambulance_user', JSON.stringify(user));
+    }
   }
 
   /**
    * Get user from storage
    */
   private getUserFromStorage(): User | null {
+    if (!this.isBrowser) return null; // Added safe check
+
     try {
       const userJson = localStorage.getItem('ambulance_user');
       if (userJson) {
@@ -257,9 +269,11 @@ export class AuthService {
    * Clear all authentication data
    */
   public clearAuthData(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    localStorage.removeItem('ambulance_user');
+    if (this.isBrowser) {
+      localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+      localStorage.removeItem('ambulance_user');
+    }
     this.currentUser.set(null);
   }
 
@@ -268,14 +282,11 @@ export class AuthService {
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = error.message || 'حدث خطأ غير متوقع';
-    console.log(error, "handling error in AuthService");
-    if (error.error instanceof ErrorEvent) {
-      // Client-side error
+    if (typeof ErrorEvent !== 'undefined' && error.error instanceof ErrorEvent) {
       errorMessage = `خطأ: ${error.error.message}`;
     } else {
-      // Server-side error
       if (error.status === 401) {
-        errorMessage = error.message || 'اسم المستخدم أو كلمة المرور غير صحيحة';
+        errorMessage = 'اسم المستخدم أو كلمة المرور غير صحيحة';
       } else if (error.status === 403) {
         errorMessage = 'ليس لديك صلاحية للوصول';
       } else if (error.status === 404) {
@@ -286,7 +297,6 @@ export class AuthService {
         errorMessage = error.error.message;
       }
     }
-
     return throwError(() => new Error(errorMessage));
   }
 }

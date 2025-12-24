@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, AfterViewInit, signal, computed, Inject, PLATFORM_ID } from '@angular/core'; // ADDED Inject, PLATFORM_ID
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { ToastService } from '../../shared/services/toast.service';
 import { DriverService } from '../../shared/services/driver.service';
@@ -14,7 +14,7 @@ import { ChecklistReminderComponent } from '../../shared/checklist-reminder/chec
 import { Driver } from '../../shared/models';
 import { Subscription } from 'rxjs';
 import { ConfirmationModalComponent , ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
-import * as L from 'leaflet';
+//import * as L from 'leaflet';
 import { UserService } from '../../shared/services/user.service';
 @Component({
   selector: 'app-driver-dashboard',
@@ -24,7 +24,9 @@ import { UserService } from '../../shared/services/user.service';
   styleUrls: ['./driver-dashboard.component.css']
 })
 export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
-  // Driver data
+  isBrowser: boolean;
+  private L: any;
+
   driver = signal<Driver | null>(null);
   driverName = signal<string>('...');
   driverStatus = signal<string>('جاري التحميل...');
@@ -86,8 +88,11 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     private locationTrackingService: LocationTrackingService,
     private vehicleCookieService: VehicleCookieService,
     private checklistService: ChecklistService,
-    private userService : UserService
-  ) {}
+    private userService : UserService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
 
   ngOnInit(): void {
     this.loadDriverData();
@@ -96,12 +101,15 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     this.startPeriodicReminderCheck();
   }
 
-  ngAfterViewInit(): void {
+  async ngAfterViewInit(): Promise<void> { // Made async
+  if (this.isBrowser) {
+    this.L = await import('leaflet');
     // Small delay to ensure DOM is ready
     setTimeout(() => {
       this.initMap();
     }, 100);
   }
+}
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
@@ -119,34 +127,34 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     if (!mapElement) return;
 
     // Fix Leaflet default icon issue
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
-    L.Icon.Default.mergeOptions({
+    delete (this.L.Icon.Default.prototype as any)._getIconUrl;
+    this.L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
       iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
     });
 
     // Default to Palestine center
-    this.map = L.map('driver-location-map', {
+    this.map = this.L.map('driver-location-map', {
       center: [31.5, 35.0],
       zoom: 8
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap',
       maxZoom: 18
     }).addTo(this.map);
   }
 
   private updateMapPosition(position: GeoPosition): void {
-    if (!this.map) return;
+    if (!this.map || !this.L) return;
 
-    const latLng: L.LatLngExpression = [position.latitude, position.longitude];
+    const latLng: [number, number] = [position.latitude, position.longitude];
 
     if (this.marker) {
       this.marker.setLatLng(latLng);
     } else {
-      const icon = L.divIcon({
+      const icon = this.L.divIcon({
         className: 'driver-marker',
         html: `
           <div class="marker-pulse"></div>
@@ -158,7 +166,7 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
         iconAnchor: [20, 20]
       });
 
-      this.marker = L.marker(latLng, { icon }).addTo(this.map);
+      this.marker = this.L.marker(latLng, { icon }).addTo(this.map);
     }
 
     this.map.setView(latLng, 15);
@@ -383,7 +391,7 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
    */
   private startPeriodicReminderCheck(): void {
     // Skip for admins
-    if (this.authService.isAdmin()) {
+    if (this.authService.isAdmin() || !this.isBrowser) {
       return;
     }
 

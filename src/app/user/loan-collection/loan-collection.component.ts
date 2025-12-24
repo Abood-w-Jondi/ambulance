@@ -1,5 +1,5 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, computed , Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TripService } from '../../shared/services/trip.service';
@@ -84,14 +84,17 @@ export class LoanCollectionComponent implements OnInit {
     { label: 'الأعلى مبلغ', sortBy: 'amount' as SortBy, sortOrder: 'desc' as SortOrder },
     { label: 'الأقل مبلغ', sortBy: 'amount' as SortBy, sortOrder: 'asc' as SortOrder }
   ];
-
+  private isBrowser: boolean;
   constructor(
     private tripService: TripService,
     private driverService: DriverService,
     private toastService: ToastService,
     private authService: AuthService,
-    private router: Router
-  ) {}
+    private router: Router,
+    @Inject(PLATFORM_ID) platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit(): void {
     this.loadDriverAndLoans(true);
@@ -263,7 +266,7 @@ export class LoanCollectionComponent implements OnInit {
   }
 
   callPatient(phone: string | undefined): void {
-    if (phone) {
+   if (phone && this.isBrowser) {
       window.location.href = `tel:${phone}`;
     }
   }

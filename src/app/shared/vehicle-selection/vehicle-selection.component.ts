@@ -1,5 +1,5 @@
-import { Component, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, computed, OnInit, ChangeDetectionStrategy, Inject, PLATFORM_ID } from '@angular/core'; // Added Inject, PLATFORM_ID
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { VehicleService } from '../services/vehicle.service';
@@ -63,14 +63,17 @@ export class VehicleSelectionComponent implements OnInit {
   hasNextPage = computed(() => {
     return this.currentPage() < this.totalPages();
   });
-
+  isBrowser: boolean;
   constructor(
     private vehicleService: VehicleService,
     private router: Router,
     private toastService: ToastService,
     public authService: AuthService,
-    private vehicleCookieService: VehicleCookieService
-  ) {}
+    private vehicleCookieService: VehicleCookieService,
+    @Inject(PLATFORM_ID) platformId: Object // Add this
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit(): void {
     this.loadVehicles();
@@ -119,23 +122,22 @@ export class VehicleSelectionComponent implements OnInit {
   }
 
   confirmSelection(): void {
-    const vehicleId = this.selectedVehicleId();
-    if (!vehicleId) {
-      this.toastService.error('الرجاء اختيار مركبة');
-      return;
-    }
-
-    // Set persistent cookie (no expiry date)
-    this.setCookie('selected_vehicle_id', vehicleId, 365 * 100); // 100 years = effectively no expiry
-
-    const vehicle = this.vehicles().find(v => v.id === vehicleId);
-    if (vehicle) {
-      this.toastService.success(`تم اختيار المركبة: ${vehicle.vehicleName}`);
-    }
-
-    // Redirect to login or appropriate page
-    this.router.navigate(['/login']);
+  const vehicleId = this.selectedVehicleId();
+  if (!vehicleId) {
+    this.toastService.error('الرجاء اختيار مركبة');
+    return;
   }
+
+  // CHANGE THIS: Use the service we already protected!
+  this.vehicleCookieService.setSelectedVehicleId(vehicleId); 
+
+  const vehicle = this.vehicles().find(v => v.id === vehicleId);
+  if (vehicle) {
+    this.toastService.success(`تم اختيار المركبة: ${vehicle.vehicleName}`);
+  }
+
+  this.router.navigate(['/login']);
+}
 
   skipSelection(): void {
     // Mark as skipped in cookie
@@ -157,13 +159,6 @@ export class VehicleSelectionComponent implements OnInit {
 
     // Non-admin authenticated users cannot skip
     this.toastService.error('غير مصرح لك بتخطي اختيار المركبة');
-  }
-
-  private setCookie(name: string, value: string, days: number): void {
-    const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-    const expires = `expires=${date.toUTCString()}`;
-    document.cookie = `${name}=${value};${expires};path=/`;
   }
 
   getStatusBadgeClass(status: string): string {

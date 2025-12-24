@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
@@ -7,13 +8,18 @@ export class VehicleCookieService {
   private readonly COOKIE_NAME = 'selected_vehicle_id';
   private readonly SKIP_COOKIE_NAME = 'vehicle_selection_skipped';
   private readonly SKIPPED_VALUE = 'true';
+  private isBrowser: boolean;
 
-  constructor() {}
+  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   /**
    * Get the selected vehicle ID from cookie
    */
   getSelectedVehicleId(): string | null {
+    if (!this.isBrowser) return null; // Safe guard
+
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {
       const [name, value] = cookie.trim().split('=');
@@ -26,15 +32,14 @@ export class VehicleCookieService {
 
   /**
    * Set the selected vehicle ID in a persistent cookie
-   * @param vehicleId - The vehicle ID to store
-   * @param days - Number of days until expiry (default: 36500 = ~100 years)
    */
   setSelectedVehicleId(vehicleId: string, days: number = 36500): void {
+    if (!this.isBrowser) return; // Safe guard
+
     const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
     const expires = `expires=${date.toUTCString()}`;
     document.cookie = `${this.COOKIE_NAME}=${vehicleId};${expires};path=/`;
-    // Clear skip cookie when vehicle is selected
     this.clearSkipSelection();
   }
 
@@ -49,18 +54,21 @@ export class VehicleCookieService {
    * Clear the selected vehicle cookie
    */
   clearSelectedVehicle(): void {
-    document.cookie = `${this.COOKIE_NAME}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+    if (this.isBrowser) {
+      document.cookie = `${this.COOKIE_NAME}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+    }
   }
 
   /**
    * Mark that the user has skipped vehicle selection
    */
   setSkipSelection(days: number = 36500): void {
+    if (!this.isBrowser) return;
+
     const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
     const expires = `expires=${date.toUTCString()}`;
     document.cookie = `${this.SKIP_COOKIE_NAME}=${this.SKIPPED_VALUE};${expires};path=/`;
-    // Clear vehicle selection when skipping
     this.clearSelectedVehicle();
   }
 
@@ -68,6 +76,8 @@ export class VehicleCookieService {
    * Check if the user has skipped vehicle selection
    */
   hasSkippedSelection(): boolean {
+    if (!this.isBrowser) return false;
+
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {
       const [name, value] = cookie.trim().split('=');
@@ -82,11 +92,13 @@ export class VehicleCookieService {
    * Clear the skip selection cookie
    */
   clearSkipSelection(): void {
-    document.cookie = `${this.SKIP_COOKIE_NAME}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+    if (this.isBrowser) {
+      document.cookie = `${this.SKIP_COOKIE_NAME}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+    }
   }
 
   /**
-   * Check if vehicle selection has been completed (either selected or skipped)
+   * Check if vehicle selection has been completed
    */
   hasCompletedSelection(): boolean {
     return this.hasSelectedVehicle() || this.hasSkippedSelection();

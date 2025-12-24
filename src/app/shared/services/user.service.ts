@@ -95,7 +95,7 @@ export class UserService {
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'حدث خطأ غير متوقع';
 
-    if (error.error instanceof ErrorEvent) {
+    if (typeof ErrorEvent !== 'undefined' &&  error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = `خطأ: ${error.error.message}`;
     } else {

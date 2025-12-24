@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, signal, computed, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, AfterViewInit, signal, computed, HostListener , Inject, PLATFORM_ID} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VehicleService, VehicleLocation } from '../../shared/services/vehicle.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { GlobalVarsService } from '../../global-vars.service';
-import * as L from 'leaflet';
+//import * as L from 'leaflet';
 
 @Component({
   selector: 'app-vehicle-map',
@@ -14,10 +14,12 @@ import * as L from 'leaflet';
   styleUrls: ['./vehicle-map.component.css']
 })
 export class VehicleMapComponent implements OnInit, AfterViewInit, OnDestroy {
-  private map!: L.Map;
-  private markers: Map<string, L.Marker> = new Map();
+  private L: any;
+  private map!: any;
+  private markers: Map<string,any> = new Map();
   private refreshInterval: any;
   public isMobileView = false;
+  isBrowser : boolean = false;
 
   // Signals
   vehicles = signal<VehicleLocation[]>([]);
@@ -46,7 +48,7 @@ export class VehicleMapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.filteredVehicles().filter(v => !v.latitude || !v.longitude)
   );
 
-  private readonly PALESTINE_CENTER: L.LatLngExpression = [31.5, 35.0];
+  private readonly PALESTINE_CENTER: any = [31.5, 35.0];
   private readonly DEFAULT_ZOOM = 9;
 
   // Status Colors
@@ -64,54 +66,68 @@ export class VehicleMapComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private vehicleService: VehicleService,
     private toastService: ToastService,
-    private globalVars: GlobalVarsService
+    private globalVars: GlobalVarsService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
     this.globalVars.setGlobalHeader('خريطة المركبات');
+    if (this.isBrowser) {
     this.checkScreenSize();
+  }
   }
 
   ngOnInit(): void {}
-
-  ngAfterViewInit(): void {
+async ngAfterViewInit(): Promise<void> {
+  if (this.isBrowser) {
+    this.L = await import('leaflet'); // Dynamically load the library
     this.initMap();
     this.loadVehicleLocations();
+    
+    // Add the manual listener here
+    window.addEventListener('resize', () => this.checkScreenSize());
     
     this.refreshInterval = setInterval(() => {
       this.loadVehicleLocations();
     }, 30000);
   }
+}
 
-  ngOnDestroy(): void {
+ngOnDestroy(): void {
+  if (this.isBrowser) {
+    window.removeEventListener('resize', () => this.checkScreenSize()); // Cleanup
     if (this.refreshInterval) clearInterval(this.refreshInterval);
     if (this.map) this.map.remove();
   }
+}
 
-  @HostListener('window:resize', ['$event'])
-  onResize() {
-    this.checkScreenSize();
-  }
+/*
+@HostListener('window:resize', ['$event'])
+onResize() {
+  this.checkScreenSize();
+}
+*/
 
   private checkScreenSize() {
+  if (this.isBrowser) {
     this.isMobileView = window.innerWidth <= 768;
-    // Optional: Auto-close on mobile load if you want
-    // if (this.isMobileView) this.isSidebarOpen.set(false);
   }
+}
 
   toggleSidebar() {
     this.isSidebarOpen.update(v => !v);
   }
 
   private initMap(): void {
-    this.map = L.map('vehicle-map', {
+    this.map = this.L.map('vehicle-map', {
       center: this.PALESTINE_CENTER,
       zoom: this.DEFAULT_ZOOM,
       zoomControl: false 
     });
 
     // Zoom control on Left (since layout is RTL)
-    L.control.zoom({ position: 'topleft' }).addTo(this.map);
+    this.L.control.zoom({ position: 'topleft' }).addTo(this.map);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    this.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap &copy; CARTO',
       maxZoom: 20
     }).addTo(this.map);
@@ -147,7 +163,7 @@ export class VehicleMapComponent implements OnInit, AfterViewInit, OnDestroy {
     vehicles.forEach(vehicle => {
       if (!vehicle.latitude || !vehicle.longitude) return;
 
-      const latLng: L.LatLngExpression = [vehicle.latitude, vehicle.longitude];
+      const latLng: any = [vehicle.latitude, vehicle.longitude];
       const isSelected = this.selectedVehicle()?.id === vehicle.id;
 
       if (this.markers.has(vehicle.id)) {
@@ -157,7 +173,7 @@ export class VehicleMapComponent implements OnInit, AfterViewInit, OnDestroy {
         // Ensure z-index is higher if selected
         marker.setZIndexOffset(isSelected ? 1000 : 0);
       } else {
-        const marker = L.marker(latLng, { 
+        const marker = this.L.marker(latLng, { 
           icon: this.createModernIcon(vehicle, false) 
         }).addTo(this.map);
 
@@ -170,11 +186,11 @@ export class VehicleMapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private createModernIcon(vehicle: VehicleLocation, isSelected: boolean): L.DivIcon {
+  private createModernIcon(vehicle: VehicleLocation, isSelected: boolean): any {
     const color = this.STATUS_COLORS[vehicle.status] || '#6c757d';
     const pulseHtml = isSelected ? `<div class="marker-pulse" style="background-color: ${color}"></div>` : '';
 
-    return L.divIcon({
+    return this.L.divIcon({
       className: 'custom-marker-wrapper',
       html: `
         <div style="position: relative;">
@@ -189,6 +205,7 @@ export class VehicleMapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  
   centerOnVehicle(vehicle: VehicleLocation): void {
     if (vehicle.latitude && vehicle.longitude) {
       this.selectedVehicle.set(vehicle);
