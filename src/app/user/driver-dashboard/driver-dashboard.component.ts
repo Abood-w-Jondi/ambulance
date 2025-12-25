@@ -16,6 +16,7 @@ import { Subscription } from 'rxjs';
 import { ConfirmationModalComponent , ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 import * as L from 'leaflet';
 import { UserService } from '../../shared/services/user.service';
+import { GlobalVarsService } from '../../global-vars.service';
 @Component({
   selector: 'app-driver-dashboard',
   standalone: true,
@@ -86,8 +87,11 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     private locationTrackingService: LocationTrackingService,
     private vehicleCookieService: VehicleCookieService,
     private checklistService: ChecklistService,
-    private userService : UserService
-  ) {}
+    private userService : UserService,
+    private globalVarsService : GlobalVarsService
+  ) {
+    this.globalVarsService.setGlobalHeader("الصفحة الرئيسية")
+  }
 
   ngOnInit(): void {
     this.loadDriverData();
