@@ -207,7 +207,6 @@ export class ValidationService {
     }
 
     if (!this.isRequired(maintenance.date)) {
-      console.log(maintenance.date , '<<');
       errors.push('التاريخ مطلوب');
     }
 

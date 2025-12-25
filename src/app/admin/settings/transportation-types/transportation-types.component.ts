@@ -7,16 +7,27 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { TransportationTypeService } from '../../../shared/services/transportation-type.service';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { TransportationTypeConfig } from '../../../shared/models';
-
+import { 
+    ConfirmationModalComponent, 
+    ConfirmationModalConfig 
+} from '../../../shared/confirmation-modal/confirmation-modal.component';
 @Component({
     selector: 'app-transportation-types',
     standalone: true,
-    imports: [CommonModule, FormsModule, PaginationComponent],
+    imports: [CommonModule, FormsModule, PaginationComponent,ConfirmationModalComponent],
     templateUrl: './transportation-types.component.html',
     styleUrl: './transportation-types.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransportationTypesComponent implements OnInit {
+    isDeleteModalOpen = signal(false);
+    deleteModalConfig = signal<ConfirmationModalConfig>({
+        type: 'delete',
+        title: 'تأكيد الحذف',
+        message: '',
+        confirmButtonText: 'حذف',
+        cancelButtonText: 'إلغاء'
+    });
     // State
     searchTerm = signal('');
     isAddModalOpen = signal(false);
@@ -45,7 +56,7 @@ export class TransportationTypesComponent implements OnInit {
         private toastService: ToastService,
         private transportationTypeService: TransportationTypeService
     ) {
-        this.globalVars.setGlobalHeader('إدارة أنواع النقليات');
+        this.globalVars.setGlobalHeader('إدارة أنواع التشخيصات');
     }
 
     ngOnInit(): void {
@@ -68,7 +79,7 @@ export class TransportationTypesComponent implements OnInit {
             },
             error: (error) => {
                 console.error('Error loading transportation types:', error);
-                this.toastService.error('فشل تحميل أنواع النقليات');
+                this.toastService.error('فشل تحميل أنواع التشخيصات');
                 this.isLoading.set(false);
             }
         });
@@ -160,21 +171,43 @@ export class TransportationTypesComponent implements OnInit {
         });
     }
 
-    deleteType(type: TransportationTypeConfig): void {
-        if (confirm(`هل أنت متأكد من حذف "${type.name}"؟`)) {
-            this.transportationTypeService.deleteTransportationType(type.id).subscribe({
-                next: () => {
-                    this.toastService.success('تم حذف التشخيص بنجاح');
-                    this.loadData();
-                },
-                error: (error) => {
-                    console.error('Error deleting transportation type:', error);
-                    this.toastService.error('فشلت عملية حذف التشخيص');
-                }
-            });
-        }
+deleteType(type: TransportationTypeConfig): void {
+        this.selectedType.set(type);
+        this.deleteModalConfig.set({
+            type: 'delete',
+            title: 'تأكيد الحذف',
+            message: `هل أنت متأكد من حذف "${type.name}"؟`,
+            highlightedText: type.name,
+            confirmButtonText: 'حذف',
+            cancelButtonText: 'إلغاء'
+        });
+        this.isDeleteModalOpen.set(true);
     }
 
+    confirmDelete(): void {
+        const type = this.selectedType();
+        if (!type) return;
+
+        this.transportationTypeService.deleteTransportationType(type.id).subscribe({
+            next: () => {
+                this.toastService.success('تم حذف التشخيص بنجاح');
+                this.isDeleteModalOpen.set(false);
+                this.selectedType.set(null);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error deleting:', error);
+                this.toastService.error('فشلت عملية حذف التشخيص');
+                this.isDeleteModalOpen.set(false);
+            }
+        });
+    }
+
+    cancelDelete(): void {
+        this.isDeleteModalOpen.set(false);
+        this.selectedType.set(null);
+    }
+    
     toggleStatus(type: TransportationTypeConfig): void {
         const updateData = {
             isActive: !type.isActive

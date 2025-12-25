@@ -88,4 +88,9 @@ export class TransactionService {
   getCollectionSummary(userId: string): Observable<CollectionSummary> {
     return this.http.get<CollectionSummary>(`${this.apiUrl}/collection-summary/${userId}`);
   }
+  inverseTransaction(transactionId: string, reason?: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${transactionId}/inverse`, {
+      reason
+    });
+  }
 }

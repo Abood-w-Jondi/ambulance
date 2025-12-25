@@ -419,7 +419,6 @@ formatDate(date: Date | string | null | undefined): string {
 
     addRecord(): void {
         const date = this.recordForm.date; // Already in YYYY-MM-DD format from HTML5 input
-       console.log('Adding record with date:', date);
         const validationData = {
             ambulanceId: this.recordForm.vehicleId,
             type: this.recordForm.maintenanceTypeId,
@@ -492,8 +491,6 @@ formatDate(date: Date | string | null | undefined): string {
         if (record) {
             // Date is already in YYYY-MM-DD format from HTML5 input
             const date = this.recordForm.date;
-            console.log('Updating record with date:', date);
-
             // Validate the maintenance record
             const validationData = {
                 ambulanceId: this.recordForm.vehicleId,

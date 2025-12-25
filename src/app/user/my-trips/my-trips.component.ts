@@ -361,8 +361,10 @@ export class MyTripsComponent implements OnInit, OnDestroy {
       this.toastService.error('لا يمكن تعديل رحلة مغلقة');
       return;
     }
+    const vehicleId  = trip.vehicleId
+    console.log("vehicle ID : - ",vehicleId)
     this.router.navigate(['/user/trip-form', trip.id], {
-      queryParams: { mode: 'edit' }
+      queryParams: { mode: 'edit' , vehicleId : `${vehicleId}`}
     });
   }
 

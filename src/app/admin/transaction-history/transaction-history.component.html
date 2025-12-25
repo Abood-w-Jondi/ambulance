@@ -6,9 +6,8 @@
         <div>
           <h2 class="fw-bold mb-0">
             <i class="fas fa-file-invoice-dollar me-2 text-primary"></i>
-            سجل المعاملات
+            سجل المعاملات - {{ userName }}
           </h2>
-          <p class="text-muted mb-0">{{ userName }}</p>
         </div>
         <button class="btn btn-outline-secondary" (click)="goBack()">
           <i class="fas fa-arrow-right me-2"></i>
@@ -93,8 +92,6 @@
                 <th>الاتجاه</th>
                 <th>الوصف</th>
                 <th>المبلغ</th>
-                <th>الرصيد قبل</th>
-                <th>الرصيد بعد</th>
               </tr>
             </thead>
             <tbody>
@@ -106,13 +103,13 @@
                       {{ transaction.transactionType }}
                     </span>
                   </td>
-                  <td>
-                    @if (transaction.transactionDirection) {
-                      <span [class]="getDirectionBadgeClass(transaction.transactionDirection)">
-                        {{ getDirectionLabel(transaction.transactionDirection) }}
-                      </span>
-                    }
-                  </td>
+<td>
+  @if (transaction.transactionDirection) {
+    <span [class]="getDirectionBadgeClass(transaction)">
+      {{ getDirectionLabel(transaction) }}
+    </span>
+  }
+</td>
                   <td>
                     @if (transaction.patientName) {
                       <div>
@@ -126,17 +123,11 @@
                       <span>{{ transaction.description }}</span>
                     }
                   </td>
-                  <td>
-                    <span class="fw-bold {{ getAmountClass(transaction.amount) }}">
-                      {{ transaction.amount >= 0 ? '+' : '' }}{{ transaction.amount.toFixed(2) }} ₪
-                    </span>
-                  </td>
-                  <td>{{ transaction.balanceBefore.toFixed(2) }} ₪</td>
-                  <td>
-                    <span class="fw-bold {{ getAmountClass(transaction.balanceAfter) }}">
-                      {{ transaction.balanceAfter.toFixed(2) }} ₪
-                    </span>
-                  </td>
+<td>
+  <span class="fw-bold {{ getAmountClass(transaction) }}">
+    {{ getAmountPrefix(transaction) }}{{ getamount(transaction.amount).toFixed(2) }} ₪
+  </span>
+</td>
                 </tr>
               }
             </tbody>

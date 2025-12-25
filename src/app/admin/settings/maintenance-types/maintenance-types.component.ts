@@ -7,16 +7,28 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { MaintenanceTypeService } from '../../../shared/services/maintenance-type.service';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { MaintenanceTypeConfig } from '../../../shared/models';
+import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../../shared/confirmation-modal/confirmation-modal.component';
 
 @Component({
     selector: 'app-maintenance-types',
     standalone: true,
-    imports: [CommonModule, FormsModule, PaginationComponent],
+    imports: [CommonModule, FormsModule, PaginationComponent, ConfirmationModalComponent],
     templateUrl: './maintenance-types.component.html',
     styleUrl: './maintenance-types.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MaintenanceTypesComponent implements OnInit {
+
+    // Add these with your other signals
+    isDeleteModalOpen = signal(false);
+    deleteConfig = signal<ConfirmationModalConfig>({
+        type: 'delete',
+        title: 'حذف نوع الصيانة',
+        message: '',
+        confirmButtonText: 'حذف',
+        cancelButtonText: 'إلغاء'
+    });
+
     // State
     searchTerm = signal('');
     isAddModalOpen = signal(false);
@@ -168,19 +180,34 @@ export class MaintenanceTypesComponent implements OnInit {
         });
     }
 
+    // 1. This opens the modal and sets the configuration
     deleteType(type: MaintenanceTypeConfig): void {
-        if (confirm(`هل أنت متأكد من حذف "${type.name}"؟`)) {
-            this.maintenanceTypeService.deleteMaintenanceType(type.id).subscribe({
-                next: () => {
-                    this.toastService.success('تم حذف نوع الصيانة بنجاح');
-                    this.loadData();
-                },
-                error: (error) => {
-                    console.error('Error deleting maintenance type:', error);
-                    this.toastService.error('فشلت عملية حذف نوع الصيانة');
-                }
-            });
-        }
+        this.selectedType.set(type);
+        this.deleteConfig.update(prev => ({
+            ...prev,
+            message: `هل أنت متأكد من حذف "${type.name}"؟ لا يمكن التراجع عن هذا الإجراء.`,
+            highlightedText: type.name
+        }));
+        this.isDeleteModalOpen.set(true);
+    }
+
+    // 2. This is called when the user clicks 'Confirm' in the modal
+    confirmDelete(): void {
+        const type = this.selectedType();
+        if (!type) return;
+
+        this.maintenanceTypeService.deleteMaintenanceType(type.id).subscribe({
+            next: () => {
+                this.toastService.success('تم حذف نوع الصيانة بنجاح');
+                this.isDeleteModalOpen.set(false);
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error deleting:', error);
+                this.toastService.error('فشلت عملية حذف نوع الصيانة');
+                this.isDeleteModalOpen.set(false);
+            }
+        });
     }
 
     toggleStatus(type: MaintenanceTypeConfig): void {

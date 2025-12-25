@@ -42,7 +42,7 @@ export interface Transaction {
 
 export type TransactionDirection = 'receivable' | 'payable' | 'neutral';
 
-export type TransactionType = 'رحلة' | 'دفع' | 'سحب' | 'تعديل' | 'وقود' | 'صيانة' | 'مكافأة' | 'خصم';
+export type TransactionType = 'رحلة' | 'دفع' | 'سحب' | 'تعديل' | 'وقود' | 'صيانة' | 'مكافأة' | 'خصم' | 'عكس معاملة';
 
 export type CollectionStatus = 'pending_collection' | 'collected' | 'rejected' | 'n/a';
 

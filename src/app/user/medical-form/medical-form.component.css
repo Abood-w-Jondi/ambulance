@@ -227,10 +227,19 @@ body {
   cursor: not-allowed;
 }
 
+.custom-checkbox {
+  display: flex;
+  align-items: center;
+  /* Use row-reverse to put checkbox on the right of the text */
+  gap: 0.5rem;
+  margin-bottom: 0;
+}
+
 /* Custom Checkboxes */
 .custom-checkbox .form-check-input {
   width: 1.2em;
   height: 1.2em;
+  margin: 0;
   margin-top: 0.15em;
   border: 2px solid #cbd5e1;
   cursor: pointer;
@@ -251,19 +260,35 @@ background-color: transparent !important; /* Or just background: none; */
   cursor: pointer;
   padding-right: 0.5rem; /* RTL padding */
   padding-top: 0.1rem;
+  user-select: none;
   color: #334155;
+  padding: 0;
+  white-space: nowrap;
 }
 
 .checkbox-group-container {
-  display: flex;
+  grid-template-columns: repeat(4, 1fr);
+  display: grid;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.25rem;
+  align-items: center;
+  direction: rtl;
   background: #fff;
   border: 1px solid var(--border-color);
   padding: 1rem;
   border-radius: 8px;
 }
+@media (max-width: 768px) {
+  .checkbox-group-container {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
+  }
+}
 
+@media (max-width: 480px) {
+  .checkbox-group-container {
+    grid-template-columns: 1fr; /* 1 column on small phones */
+  }
+}
 /* --- Subsections --- */
 .subsection-card {
   border: 1px solid var(--border-color);
@@ -338,6 +363,17 @@ background-color: transparent !important; /* Or just background: none; */
 .accordion-button::after {
   margin-left: 0 !important;
   margin-right: auto !important;
+}
+.Scheck{
+  position: relative;
+}
+.Scheck::after{
+position: absolute;
+left: -100%;
+right: -100%;
+bottom: -40%;
+top: -40%;
+content: "";
 }
 
 [dir="rtl"] .ms-2 { margin-right: 0.5rem !important; margin-left: 0 !important; }

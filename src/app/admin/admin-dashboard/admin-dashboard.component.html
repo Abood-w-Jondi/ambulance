@@ -72,43 +72,6 @@
         </div>
       </div>
 
-      <!-- EQ Balance Cards -->
-      <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-6">
-          <div class="card border-0 shadow-sm rounded-4 h-100 stat-card border-success">
-            <div class="card-body p-4">
-              <div class="d-flex align-items-center justify-content-between mb-3">
-                <h6 class="text-muted fw-bold mb-0">رصيد الشركة</h6>
-                <div class="icon-box bg-success-subtle text-success rounded-circle">
-                  <i class="fa-solid fa-building fs-5"></i>
-                </div>
-              </div>
-              <h3 class="fw-bolder text-success mb-2">₪{{ dashboardStats()!.financial.companyBalance | number:'1.0-2' }}</h3>
-              @if (dashboardStats()!.financial.companyDebtToOwner > 0) {
-                <small class="text-danger">
-                  <i class="fa-solid fa-exclamation-triangle me-1"></i>
-                  دين للمالك: ₪{{ dashboardStats()!.financial.companyDebtToOwner | number:'1.0-2' }}
-                </small>
-              }
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-sm-6">
-          <div class="card border-0 shadow-sm rounded-4 h-100 stat-card border-info">
-            <div class="card-body p-4">
-              <div class="d-flex align-items-center justify-content-between mb-3">
-                <h6 class="text-muted fw-bold mb-0">رصيد المالك</h6>
-                <div class="icon-box bg-info-subtle text-info rounded-circle">
-                  <i class="fa-solid fa-user-tie fs-5"></i>
-                </div>
-              </div>
-              <h3 class="fw-bolder text-info mb-0">₪{{ dashboardStats()!.financial.ownerBalance | number:'1.0-2' }}</h3>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
           <div class="card border-0 shadow-sm rounded-4 p-3 h-100 border-start-custom border-primary">
@@ -252,48 +215,6 @@
                 <span class="text-info fw-bold"><i class="fa-solid fa-user-tie ms-2"></i>حصة المالك</span>
                 <span class="fw-bolder text-info h5 mb-0">₪{{ dashboardStats()!.financial.totalOwnerShare | number:'1.0-0' }}</span>
               </div>
-            </div>
-          </div>
-
-          <div class="card border-0 shadow-sm rounded-4 mb-3">
-            <div class="card-body p-4">
-              <h6 class="text-uppercase text-muted fw-bold small mb-4">صافي المستحقات</h6>
-
-              <!-- Driver Net Position -->
-              @if (dashboardStats()!.financial.netDriverPosition > 0) {
-                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
-                  <span class="text-danger"><i class="fa-solid fa-hand-holding-dollar ms-2"></i>اجمع من السائقين</span>
-                  <span class="fw-bold font-monospace text-danger">₪{{ dashboardStats()!.financial.netDriverPosition | number:'1.2-2' }}</span>
-                </div>
-              } @else if (dashboardStats()!.financial.netDriverPosition < 0) {
-                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
-                  <span class="text-success"><i class="fa-solid fa-money-bill-transfer ms-2"></i>ادفع للسائقين</span>
-                  <span class="fw-bold font-monospace text-success">₪{{ (dashboardStats()!.financial.netDriverPosition * -1) | number:'1.2-2' }}</span>
-                </div>
-              } @else {
-                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
-                  <span class="text-muted"><i class="fa-solid fa-check-circle ms-2"></i>السائقين - محسوب</span>
-                  <span class="fw-bold font-monospace text-muted">₪0.00</span>
-                </div>
-              }
-
-              <!-- Paramedic Net Position -->
-              @if (dashboardStats()!.financial.netParamedicPosition > 0) {
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="text-danger"><i class="fa-solid fa-hand-holding-dollar ms-2"></i>اجمع من المسعفين</span>
-                  <span class="fw-bold font-monospace text-danger">₪{{ dashboardStats()!.financial.netParamedicPosition | number:'1.2-2' }}</span>
-                </div>
-              } @else if (dashboardStats()!.financial.netParamedicPosition < 0) {
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="text-success"><i class="fa-solid fa-money-bill-transfer ms-2"></i>ادفع للمسعفين</span>
-                  <span class="fw-bold font-monospace text-success">₪{{ (dashboardStats()!.financial.netParamedicPosition * -1) | number:'1.2-2' }}</span>
-                </div>
-              } @else {
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="text-muted"><i class="fa-solid fa-check-circle ms-2"></i>المسعفين - محسوب</span>
-                  <span class="fw-bold font-monospace text-muted">₪0.00</span>
-                </div>
-              }
             </div>
           </div>
 

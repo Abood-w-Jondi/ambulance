@@ -1,4 +1,10 @@
 <div class="container-fluid p-4">
+  <app-confirmation-modal
+    [isOpen]="isDeleteModalOpen()"
+    [config]="deleteConfig()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="isDeleteModalOpen.set(false)">
+</app-confirmation-modal>
   <!-- Header Actions -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <button class="btn btn-outline-secondary" (click)="goBack()">

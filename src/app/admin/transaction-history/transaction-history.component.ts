@@ -37,7 +37,9 @@ export class TransactionHistoryComponent implements OnInit {
     private router: Router,
     private transactionService: TransactionService,
     private globalVarsService: GlobalVarsService
-  ) {}
+  ) {
+      this.globalVarsService.setGlobalHeader(`سجل المعاملات`);
+  }
 
   ngOnInit() {
     this.route.params.subscribe(params => {
@@ -47,7 +49,6 @@ export class TransactionHistoryComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.userType = params['type'] || '';
       this.userName = params['name'] || '';
-      this.globalVarsService.setGlobalHeader(`سجل المعاملات - ${this.userName}`);
       this.loadTransactions();
     });
   }
@@ -109,6 +110,16 @@ export class TransactionHistoryComponent implements OnInit {
       minute: '2-digit'
     });
   }
+  getEffectiveDirection(transaction: Transaction): string {
+    const isNegative = transaction.amount < 0;
+    let dir = transaction.transactionDirection || '';
+
+    if (isNegative) {
+      if (dir === 'payable') return 'receivable';
+      if (dir === 'receivable') return 'payable';
+    }
+    return dir;
+  }
 
   getTransactionTypeClass(type: string): string {
     switch (type) {
@@ -122,9 +133,16 @@ export class TransactionHistoryComponent implements OnInit {
         return 'bg-secondary';
     }
   }
-
-  getAmountClass(amount: number): string {
-    return amount >= 0 ? 'text-success' : 'text-danger';
+getAmountPrefix(transaction: Transaction): string {
+     const direction = this.getEffectiveDirection(transaction);
+     return direction === 'receivable' ? '+' : '-';
+  }
+  getAmountClass(transaction: Transaction): string {
+    const direction = this.getEffectiveDirection(transaction);
+    return direction == 'receivable' ? 'text-success' : 'text-danger';
+  }
+  getamount(amount: number) {
+    return Math.abs(amount);
   }
 
   viewTrip(tripId: string) {
@@ -137,12 +155,13 @@ export class TransactionHistoryComponent implements OnInit {
    * @param direction Transaction direction
    * @returns Arabic label
    */
-  getDirectionLabel(direction: string | undefined): string {
+getDirectionLabel(transaction: Transaction): string {
+    const direction = this.getEffectiveDirection(transaction); 
     switch(direction) {
-      case 'receivable': return 'الشركة مدينة';  // Company owes
-      case 'payable': return 'المستخدم مدين';      // User owes
-      case 'neutral': return 'محايد';                    // Neutral
-      default: return '';                         // Not specified
+      case 'receivable': return 'دفع للشركة'; 
+      case 'payable': return 'المستخدم مدين';   
+      case 'neutral': return 'محايد';           
+      default: return '';                       
     }
   }
 
@@ -151,7 +170,8 @@ export class TransactionHistoryComponent implements OnInit {
    * @param direction Transaction direction
    * @returns CSS class name
    */
-  getDirectionBadgeClass(direction: string | undefined): string {
+getDirectionBadgeClass(transaction: Transaction): string {
+    const direction = this.getEffectiveDirection(transaction);
     switch(direction) {
       case 'receivable': return 'badge bg-success';
       case 'payable': return 'badge bg-danger';

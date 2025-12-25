@@ -47,7 +47,7 @@ export class LocationService {
    */
   getCustomLocations(): Observable<LocationReference[]> {
     return this.http.get<{success: boolean, data: LocationReference[]}>(`${this.API_URL}/custom`)
-      .pipe(map(response => response.data || []));
+      .pipe(map((response :any) => (response)|| []));
   }
 
   /**
@@ -72,7 +72,7 @@ export class LocationService {
    */
   createLocation(location: CreateLocationRequest): Observable<Location> {
     return this.http.post<{success: boolean, data: {id: string}}>(this.API_URL, location)
-      .pipe(map(response => ({ id: response.data.id, ...location } as Location)));
+      .pipe(map(response => ({ id: response.data, ...location } as any)));
   }
 
   /**
