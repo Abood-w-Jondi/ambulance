@@ -7,16 +7,26 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { LocationService } from '../../../shared/services/location.service';
 import { CommonLocation, LocationType, Location, LocationReference } from '../../../shared/models';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
+import { ConfirmationModalComponent, ConfirmationModalConfig } from '../../../shared/confirmation-modal/confirmation-modal.component';
 
 @Component({
     selector: 'app-common-locations',
     standalone: true,
-    imports: [CommonModule, FormsModule, PaginationComponent],
+    imports: [CommonModule, FormsModule, PaginationComponent, ConfirmationModalComponent],
     templateUrl: './common-locations.component.html',
     styleUrl: './common-locations.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CommonLocationsComponent implements OnInit {
+
+    isDeleteModalOpen = signal(false);
+    deleteConfig = signal<ConfirmationModalConfig>({
+        type: 'delete',
+        title: 'حذف الموقع',
+        message: '',
+        confirmButtonText: 'حذف',
+        cancelButtonText: 'إلغاء'
+    });
     // State
     searchTerm = signal('');
     filterType = signal<string>('الكل');
@@ -303,19 +313,35 @@ export class CommonLocationsComponent implements OnInit {
         });
     }
 
+    // Triggers the modal to open
     deleteLocation(location: CommonLocation): void {
-        if (confirm(`هل أنت متأكد من حذف "${location.name}"؟`)) {
-            this.locationService.deleteLocation(location.id).subscribe({
-                next: () => {
-                    this.toastService.success('تم حذف الموقع بنجاح');
-                    this.loadLocations();
-                },
-                error: (error) => {
-                    console.error('Error deleting location:', error);
-                    this.toastService.error('فشل حذف الموقع');
-                }
-            });
-        }
+        this.selectedLocation.set(location);
+        this.deleteConfig.update(prev => ({
+            ...prev,
+            message: `هل أنت متأكد من حذف الموقع "${location.name}"؟ سيتم حذف جميع البيانات المرتبطة به.`,
+            highlightedText: location.name
+        }));
+        this.isDeleteModalOpen.set(true);
+    }
+
+    // Executes after user clicks 'Confirm' in the modal
+    confirmDelete(): void {
+        const selected = this.selectedLocation();
+        if (!selected) return;
+
+        this.locationService.deleteLocation(selected.id).subscribe({
+            next: () => {
+                this.toastService.success('تم حذف الموقع بنجاح');
+                this.isDeleteModalOpen.set(false);
+                this.selectedLocation.set(null);
+                this.loadLocations();
+            },
+            error: (error) => {
+                console.error('Error deleting location:', error);
+                this.toastService.error('فشل حذف الموقع');
+                this.isDeleteModalOpen.set(false);
+            }
+        });
     }
 
     toggleStatus(location: CommonLocation): void {

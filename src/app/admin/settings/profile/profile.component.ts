@@ -99,8 +99,7 @@ export class ProfileComponent implements OnInit {
         this.userService.getCurrentUserProfile().subscribe({
             next: (profile) => {
                 this.userProfile.set(profile);
-                console.log('Loaded profile:', profile);
-                console.log('Profile Signal:', this.userProfile());
+
                 this.loadProfileToForm();
                 this.isLoading.set(false);
             },

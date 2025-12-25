@@ -26,6 +26,7 @@ export class ParamedicsListComponent implements OnInit {
     totalRecords = 0;
     isLoading = signal(false);
 
+
     constructor(
         private globalVarsService: GlobalVarsService,
         private route: ActivatedRoute,
@@ -137,6 +138,10 @@ export class ParamedicsListComponent implements OnInit {
     getPaginatedParamedics(): Paramedic[] {
         return this.paramedics();
     }
+    getEducationLabel(value: string): string {
+    const option = this.educationLevelOptions.find(o => o.value === value);
+    return option ? option.label : value || 'غير محدد';
+}
 
     onPageChange(page: number): void {
         this.currentPage = page;
@@ -169,38 +174,6 @@ export class ParamedicsListComponent implements OnInit {
                 console.error('Error loading paramedics:', error);
                 this.toastService.error('فشل تحميل بيانات المسعفين');
                 this.isLoading.set(false);
-            }
-        });
-    }
-
-    addNewParamedic() {
-        const validation = this.validationService.validateDriver(this.newParamedic);
-
-        if (!validation.valid) {
-            validation.errors.forEach(error => {
-                this.toastService.error(error);
-            });
-            return;
-        }
-
-        this.paramedicService.createParamedic({
-            arabicName: this.newParamedic.arabicName,
-            name: this.newParamedic.name,
-            username: this.newParamedic.username || undefined,
-            email: this.newParamedic.email || undefined,
-            password: this.newParamedic.password,
-            amountOwed: this.newParamedic.amountOwed || 0,
-            tripsToday: this.newParamedic.tripsToday || 0
-        } as any).subscribe({
-            next: (paramedic) => {
-                this.toastService.success(`تمت إضافة مسعف جديد: ${paramedic.arabicName} (${paramedic.name})`, 3000);
-                this.isAddModalOpen.set(false);
-                this.newParamedic = { arabicName: '', name: '', username: '', email: '', password: '', amountOwed: 0, tripsToday: 0 };
-                this.loadData();
-            },
-            error: (error) => {
-                console.error('Error creating paramedic:', error);
-                this.toastService.error('فشلت عملية إضافة المسعف');
             }
         });
     }
@@ -429,9 +402,7 @@ export class ParamedicsListComponent implements OnInit {
 
     isAddFormValid(): boolean {
         return !!(
-            this.newParamedic.arabicName &&
-            this.newParamedic.password &&
-            (this.newParamedic.username || this.newParamedic.email)
+            this.newParamedic.arabicName
         );
     }
 
@@ -571,4 +542,48 @@ export class ParamedicsListComponent implements OnInit {
         // This is a placeholder showing the intent
         this.toastService.warning('ميزة صرف المبالغ للمسعفين قيد التطوير', 3000);
     }
+
+    // paramedic skip cradintals 
+
+    private generateRandomId(length: number = 12): string {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+
+        addNewParamedic() {
+        const generatedUsername = 'p_' + this.generateRandomId(10); // e.g., p_A1b2C3d4E5
+        const generatedPassword = this.generateRandomId(12);
+        const paramedicData = {
+            ...this.newParamedic,
+            username: generatedUsername,
+            password: generatedPassword,
+            email: `${generatedUsername}@internal.system` // Placeholder email
+        };
+        const validation = this.validationService.validateDriver(paramedicData);
+
+        if (!validation.valid) {
+            validation.errors.forEach(error => {
+                this.toastService.error(error);
+            });
+            return;
+        }
+
+        this.paramedicService.createParamedic(paramedicData as any).subscribe({
+            next: (paramedic) => {
+                this.toastService.success(`تمت إضافة مسعف جديد: ${paramedic.arabicName} (${paramedic.name})`, 3000);
+                this.isAddModalOpen.set(false);
+                this.newParamedic = { arabicName: '', name: '', username: '', email: '', password: '', amountOwed: 0, tripsToday: 0 };
+                this.loadData();
+            },
+            error: (error) => {
+                console.error('Error creating paramedic:', error);
+                this.toastService.error('فشلت عملية إضافة المسعف');
+            }
+        });
+    }
+
 }

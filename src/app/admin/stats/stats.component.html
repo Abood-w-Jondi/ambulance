@@ -72,13 +72,15 @@
       </div>
     }
 
-    <section class="row g-3 mb-4">
+<section class="row g-3 mb-4">
       @for (stat of stats(); track stat.title) {
-        <div class="col-6">
-          <div class="card shadow-sm rounded-3 h-100 p-3">
+        <div class="col-6 col-md-4">
+          <div class="card shadow-sm rounded-3 h-100 p-3 border-0">
             <p class="text-secondary small fw-medium mb-1">{{ stat.title }}</p>
-            <p class="h3 fw-bold text-dark mb-0">{{ stat.value }}</p>
-            <p class="small fw-medium" [ngClass]="stat.trendClass">{{ stat.trend }}</p>
+            <p class="h3 fw-bold text-dark mb-1">{{ stat.value }}</p>
+            @if (stat.trend !== 'N/A') {
+              <span class="small {{ stat.trendClass }}" style="font-size: 0.75rem;">{{ stat.trend }}</span>
+            }
           </div>
         </div>
       }
@@ -90,7 +92,6 @@
           <p class="h6 fw-bold text-dark mb-2">{{ transportationsTitle() }}</p>
           <div class="d-flex align-items-baseline gap-2 mb-3">
             <p class="h2 fw-bold text-dark my-0">{{ stats()[0].value }}</p>
-            <p class="small fw-medium text-success my-0">{{ stats()[0].trend }}</p>
           </div>
           
           <div class="d-grid gap-2 pt-3" style="min-height: 160px; grid-auto-flow: column; grid-auto-columns: 1fr; align-items: end;">

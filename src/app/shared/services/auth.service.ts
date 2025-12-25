@@ -268,7 +268,6 @@ export class AuthService {
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = error.message || 'حدث خطأ غير متوقع';
-    console.log(error, "handling error in AuthService");
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = `خطأ: ${error.error.message}`;

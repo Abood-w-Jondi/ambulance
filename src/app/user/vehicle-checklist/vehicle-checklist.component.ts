@@ -107,7 +107,6 @@ export class VehicleChecklistComponent implements OnInit {
     this.checklistService.getCurrentSession(vehicleId).subscribe({
       next: (response : any) => {
         if (response) {
-          console.log('Loaded session info:', response); // DEBUG
           this.sessionId.set(response.sessionId);
           this.vehicleName.set(response.vehicleName);
 

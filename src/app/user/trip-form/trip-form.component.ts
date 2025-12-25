@@ -114,16 +114,17 @@ export class TripFormComponent implements OnInit {
       this.tripId = params['id'] || null;
     });
 
-    this.vehicleService.getCurrentOdometer(this.tripForm.vehicleId).subscribe({
-      next: (odometer) => {
-        if (odometer !== null && odometer !== undefined) {
-          this.tripForm.start = odometer.currentOdometer;
-        }
-      },
-      error: () => {this.toastService.error('فشل جلب عداد المركبة الحالي')}
+this.vehicleService.getCurrentOdometer(this.tripForm.vehicleId).subscribe({
+  next: (odometer) => {
+    const currentVal = odometer?.currentOdometer;
+
+    // If we have a valid odometer value AND (start is missing OR start is 0)
+    if (currentVal != null && (!this.tripForm.start || this.tripForm.start === 0)) {
+      this.tripForm.start = currentVal;
     }
-      
-    );
+  },
+  error: () => this.toastService.error('فشل جلب عداد المركبة الحالي')
+});
 
 
     // Load options
@@ -427,9 +428,14 @@ export class TripFormComponent implements OnInit {
       this.toastService.error('يرجى تحديد المركبة');
       return false;
     }
+
     
     if (!this.tripForm.patientName) {
       this.toastService.error('يرجى إدخال اسم المريض');
+      return false;
+    }
+    if(this.tripForm.start > this.tripForm.end){
+      this.toastService.error('لا يمكن ان تكون مسافة الرحلة 0 كيلومتر');
       return false;
     }
 

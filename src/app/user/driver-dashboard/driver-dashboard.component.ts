@@ -16,6 +16,7 @@ import { Subscription } from 'rxjs';
 import { ConfirmationModalComponent , ConfirmationModalConfig } from '../../shared/confirmation-modal/confirmation-modal.component';
 import * as L from 'leaflet';
 import { UserService } from '../../shared/services/user.service';
+import { GlobalVarsService } from '../../global-vars.service';
 @Component({
   selector: 'app-driver-dashboard',
   standalone: true,
@@ -86,8 +87,11 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     private locationTrackingService: LocationTrackingService,
     private vehicleCookieService: VehicleCookieService,
     private checklistService: ChecklistService,
-    private userService : UserService
-  ) {}
+    private userService : UserService,
+    private globalVarsService : GlobalVarsService
+  ) {
+    this.globalVarsService.setGlobalHeader("الصفحة الرئيسية")
+  }
 
   ngOnInit(): void {
     this.loadDriverData();
@@ -264,7 +268,6 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
   private loadPendingLoans(driverId: string): void {
     this.tripService.getPatientLoans(driverId, { status: 'uncollected' }).subscribe({
       next: (loans) => {
-        console.log('Pending loans loaded:', loans);
         this.pendingLoansCount.set(loans.length);
         this.pendingLoansAmount.set(loans.reduce((sum, l) => sum + l.loanAmount, 0));
       },
@@ -388,7 +391,6 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     this.reminderCheckTimer = setInterval(() => {
-      console.log('Periodic reminder check triggered');
       this.checkReminderStatus();
     }, this.REMINDER_CHECK_INTERVAL);
   }
@@ -403,22 +405,18 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     const vehicleId = this.vehicleCookieService.getSelectedVehicleId();
 
     if (!vehicleId) {
-      console.log('No vehicle selected, skipping checklist reminder check');
       return;
     }
 
     this.checklistService.getCurrentSession(vehicleId).subscribe({
       next: (response : any) => {
-        console.log('Checklist session data:', response);
         if (response) {
           this.currentSessionId.set(response.sessionId);
           this.currentVehicleName.set(response.vehicleName);
 
           if (response.canShowReminder && !response.checklistCompleted) {
-            console.log('Showing checklist reminder');
             this.showChecklistReminder.set(true);
           } else {
-            console.log('Not showing reminder - canShowReminder:', response.canShowReminder, 'checklistCompleted:', response.checklistCompleted);
           }
         }
       },
@@ -441,7 +439,6 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
           this.showChecklistReminder.set(false);
           const minutes = this.REMINDER_CHECK_INTERVAL / 60000;
           this.toastService.info(`سيظهر التذكير مرة أخرى بعد ${minutes} دقائق`);
-          console.log(`Reminder dismissed, will check again in ${minutes} minutes`);
         },
         error: (err) => {
           console.error('Failed to dismiss reminder:', err);

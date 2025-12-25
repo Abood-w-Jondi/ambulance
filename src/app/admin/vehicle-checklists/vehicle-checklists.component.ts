@@ -145,7 +145,6 @@ export class VehicleChecklistsComponent implements OnInit {
     this.itemsFilter = 'all';
     this.checklistService.getChecklistById(checklistId).subscribe({
       next: (response:any) => {
-        console.log('Loaded checklist details:', response); // DEBUG
         if (response.id) {
           this.selectedChecklist.set(response);
           this.showDetailModal.set(true);

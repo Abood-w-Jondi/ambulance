@@ -62,7 +62,7 @@
       <div class="col-12">
         <div class="text-center text-muted py-5">
           <i class="fa-solid fa-inbox fa-3x mb-3 d-block"></i>
-          <p class="fs-5">لا توجد أنواع نقليات</p>
+          <p class="fs-5">لا توجد أنواع تشخيصات</p>
         </div>
       </div>
     }
@@ -83,7 +83,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">إضافة نوع نقل جديد</h5>
+        <h5 class="modal-title">إضافة نوع تشخيص جديد</h5>
         <button type="button" class="btn-close" (click)="closeAddModal()"></button>
       </div>
       <div class="modal-body">
@@ -189,3 +189,9 @@
   </div>
 </div>
 <div class="modal-backdrop fade" [class.show]="isEditModalOpen()" *ngIf="isEditModalOpen()"></div>
+<app-confirmation-modal
+    [isOpen]="isDeleteModalOpen()"
+    [config]="deleteModalConfig()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()">
+</app-confirmation-modal>

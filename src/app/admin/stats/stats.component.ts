@@ -121,20 +121,29 @@ export class StatsComponent implements OnInit {
         { title: 'إجمالي الإيرادات', value: '...', trend: '...', trendClass: 'text-secondary' },
         { title: 'إجمالي التكاليف', value: '...', trend: '...', trendClass: 'text-secondary' },
         { title: 'صافي الأرباح', value: '...', trend: '...', trendClass: 'text-secondary' },
+        { title: 'حصة المالك', value: '...', trend: '...', trendClass: 'text-secondary' },
+        { title: 'حصة الشركة', value: '...', trend: '...', trendClass: 'text-secondary' },
       ];
     }
 
+    // 1. Calculate Total Costs
     const totalCosts = (data.fuel.totalCost || 0) +
                        (data.maintenance.totalCost || 0) +
                        (data.revenue.totalDriverShare || 0) +
                        (data.revenue.totalParamedicShare || 0) +
                        (data.revenue.totalOtherExpenses || 0);
+
+    // 2. Calculate Base Values
     const netProfit = (data.revenue.totalRevenue || 0) - totalCosts;
+    
+    // 3. New shares logic
+    const ownerShare = data.revenue.totalDriverShare || 0; // Owner = Driver
+    const companyShare = netProfit - ownerShare;           // Company = Net - Owner
 
     return [
       {
         title: 'إجمالي الرحلات',
-        value: (data.trips.total || 0).toLocaleString('en-US'), // Just commas, no currency symbol
+        value: (data.trips.total || 0).toLocaleString('en-US'),
         trend: 'N/A',
         trendClass: 'text-secondary'
       },
@@ -156,9 +165,21 @@ export class StatsComponent implements OnInit {
         trend: 'N/A',
         trendClass: netProfit >= 0 ? 'text-success-up' : 'text-danger-down'
       },
+      /* Added Cards */
+      {
+        title: 'حصة المالك',
+        value: this.formatCurrency(ownerShare),
+        trend: 'N/A',
+        trendClass: 'text-info'
+      },
+      {
+        title: 'حصة الشركة',
+        value: this.formatCurrency(companyShare),
+        trend: 'الصافي بعد الوقود المدفوع و ليس المفترض',
+        trendClass: companyShare >= 0 ? 'text-primary' : 'text-danger'
+      }
     ];
   });
-
   transportations = computed((): TransportationDay[] => {
     // Placeholder for now - would need time-series data from backend
     return [];

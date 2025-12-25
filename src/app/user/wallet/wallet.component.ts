@@ -269,11 +269,6 @@ export class WalletComponent implements OnInit {
 
   submitWithdraw(): void {
     if (this.withdrawAmount > 0 && this.withdrawAmount <= this.walletSummary.currentBalance) {
-      // TODO: Implement withdrawal request functionality
-      console.log('طلب سحب:', {
-        amount: this.withdrawAmount,
-        method: this.withdrawMethod
-      });
       this.toastService.success(`تم طلب سحب مبلغ ₪${this.withdrawAmount} (${this.withdrawMethod === 'bank' ? 'تحويل بنكي' : 'سحب نقدي'})`, 3000);
       this.closeWithdrawModal();
     }

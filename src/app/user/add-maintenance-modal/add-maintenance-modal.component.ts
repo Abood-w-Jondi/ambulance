@@ -148,7 +148,6 @@ export class AddMaintenanceModalComponent implements OnInit {
     // Date is already in YYYY-MM-DD format from HTML5 input
     const dateString = this.recordForm.date;
 
-    console.log('Submitting maintenance record for date:', dateString);
     this.maintenanceService.createMaintenanceRecord({
       vehicleId: this.recordForm.vehicleId,
       date: dateString as any,

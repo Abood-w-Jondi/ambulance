@@ -136,11 +136,11 @@ body {
 
 /* Hover Effects */
 .toggle-success:hover {
-  background-color: var(--success-border);
-  color: #fff;
+  background-color: #03a56f;
+  color: #ffffff;
 }
 .toggle-danger:hover {
-  background-color: var(--danger-border);
+  background-color: rgb(220, 3, 3);
   color: #fff;
 }
 

@@ -127,7 +127,6 @@ export class AcceptTripsComponent implements OnInit, OnDestroy {
 
   rejectTrip(trip: any): void {
     // Note: Rejection logic may need to be implemented on backend
-    console.log('رفض الرحلة:', trip.id);
     this.pendingTrips = this.pendingTrips.filter(t => t.id !== trip.id);
     this.toastService.info(`تم رفض الرحلة للمريض ${trip.patientName}`);
   }

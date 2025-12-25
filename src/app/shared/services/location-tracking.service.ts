@@ -56,7 +56,6 @@ export class LocationTrackingService implements OnDestroy {
    */
   startTracking(vehicleId: string): void {
     if (this.isTracking$.value) {
-      console.log('Location tracking already active');
       return;
     }
 
@@ -81,7 +80,6 @@ export class LocationTrackingService implements OnDestroy {
         this.updatePosition(vehicleId);
       });
 
-    console.log('Location tracking started for vehicle:', vehicleId);
   }
 
   /**
@@ -99,7 +97,6 @@ export class LocationTrackingService implements OnDestroy {
     }
 
     this.isTracking$.next(false);
-    console.log('Location tracking stopped');
   }
 
   /**
@@ -157,7 +154,6 @@ export class LocationTrackingService implements OnDestroy {
         this.vehicleService.updateLocation(vehicleId, geoPos.latitude, geoPos.longitude)
           .subscribe({
             next: () => {
-              console.log('Location updated successfully:', geoPos.latitude, geoPos.longitude);
             },
             error: (err) => {
               console.error('Failed to update location on server:', err);

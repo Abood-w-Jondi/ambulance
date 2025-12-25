@@ -28,6 +28,7 @@ interface FieldConfig {
 interface TableConfig {
   columns: string[];
   rows: TableRowConfig[];
+  checklist ?: boolean
 }
 
 interface TableRowConfig {
@@ -398,13 +399,143 @@ export class MedicalFormComponent implements OnInit, OnDestroy {
         { type: 'textarea', key: 'OTHER', label: 'أخرى', colClass: 'col-12', rows: 3, placeholder: 'وصف أي مشاكل في سلامة الجلد...' }
       ]
     },
-    // Section 8: Cardiovascular & Respiratory (simplified - can be expanded with subsections)
+    // Section 8: Cardiovascular & Respiratory (Expanded)
     {
       key: 'Cardiovascular_Respiratory',
       title: 'القلب والجهاز التنفسي',
       icon: 'fa-lungs',
       fields: [
-        { type: 'text', key: 'Summary', label: 'ملخص', colClass: 'col-12' }
+        {
+          type: 'subsection',
+          key: 'Shortness_of_Breath',
+          label: 'ضيق التنفس (Shortness of Breath)',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Shortness_of_Breath',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'Yes', label: 'نعم' },
+                { type: 'checkbox', key: 'No', label: 'لا' }
+              ]
+            },
+            {
+              type: 'checkboxGroup',
+              key: 'Occurs',
+              label: 'يحدث عند:',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'Ambulating', label: 'المشي/الحركة' },
+                { type: 'checkbox', key: 'Resting', label: 'الراحة' },
+                { type: 'checkbox', key: 'Eating', label: 'الأكل' }
+              ]
+            },
+            { type: 'text', key: 'Freq', label: 'التكرار', colClass: 'col-md-12' },
+            { type: 'text', key: 'Relieved_by', label: 'يرتاح عند', colClass: 'col-md-6' },
+            { type: 'text', key: 'Worsens', label: 'ما يزيده سوءاً', colClass: 'col-md-6' },
+            { type: 'text', key: 'How_Long', label: 'المدة', colClass: 'col-md-3' }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Coughing',
+          label: 'السعال (Coughing)',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Coughing',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'Yes', label: 'نعم' },
+                { type: 'checkbox', key: 'No', label: 'لا' },
+                { type: 'checkbox', key: 'Non_Productive', label: 'غير منتج (جاف)' },
+                { type: 'checkbox', key: 'Productive', label: 'منتج (بلغم)' }
+              ]
+            },
+            { type: 'text', key: 'Amount', label: 'الكمية', colClass: 'col-md-4' },
+            { type: 'text', key: 'Color', label: 'اللون', colClass: 'col-md-4' },
+            { type: 'text', key: 'How_Long', label: 'منذ متى', colClass: 'col-md-4' }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Cardiac_Monitor',
+          label: 'جهاز مراقبة القلب',
+          colClass: 'col-12',
+          fields: [
+            { type: 'checkbox', key: 'N_A', label: 'غير متاح (N/A)', colClass: 'col-12' },
+            { type: 'text', key: 'Rate', label: 'المعدل (Rate)', colClass: 'col-md-6' },
+            { type: 'text', key: 'Rhythm', label: 'الإيقاع (Rhythm)', colClass: 'col-md-6' }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'SpO2',
+          label: 'تشبع الأكسجين (SpO2)',
+          colClass: 'col-12',
+          fields: [
+            { type: 'checkbox', key: 'N_A', label: 'غير متاح', colClass: 'col-md-12' },
+            { type: 'text', key: 'O2_Sat_Pct', label: 'نسبة التشبع %', colClass: 'col-md-4' },
+            {
+              type: 'checkboxGroup',
+              key: 'On_O2',
+              label: 'على الأكسجين؟',
+              colClass: 'col-md-8',
+              fields: [
+                { type: 'checkbox', key: 'Yes', label: 'نعم' },
+                { type: 'checkbox', key: 'No', label: 'لا' }
+              ]
+            }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Respirations',
+          label: 'التنفس (Respirations)',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Respirations',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'Normal', label: 'طبيعي' },
+                { type: 'checkbox', key: 'Apneic', label: 'انقطاع نفس' },
+                { type: 'checkbox', key: 'Weak_Resp', label: 'تنفس ضعيف' },
+                { type: 'checkbox', key: 'Dyspneic', label: 'عسر تنفس' },
+                { type: 'checkbox', key: 'Coughing', label: 'سعال' },
+                { type: 'checkbox', key: 'Wheezing', label: 'أزيز' },
+                { type: 'checkbox', key: 'Retracting', label: 'انسحاب صدري' }
+              ]
+            }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Lungs_Auscultation',
+          label: 'تسمع الرئتين (Lungs Auscultation)',
+          colClass: 'col-12',
+          fields: [
+            {
+              type: 'checkboxGroup',
+              key: 'Lungs_Auscultation',
+              label: '',
+              colClass: 'col-12',
+              fields: [
+                { type: 'checkbox', key: 'Clear', label: 'صافي' },
+                { type: 'checkbox', key: 'Right', label: 'اليمين' },
+                { type: 'checkbox', key: 'Left', label: 'اليسار' }
+              ]
+            },
+            { type: 'text', key: 'Other', label: 'أخرى', colClass: 'col-md-6' },
+            { type: 'text', key: 'Comments', label: 'ملاحظات', colClass: 'col-md-6' }
+          ]
+        }
       ]
     },
     // Section 9: Neurovascular
@@ -420,6 +551,7 @@ export class MedicalFormComponent implements OnInit, OnDestroy {
           label: 'اللون',
           colClass: 'col-12',
           tableConfig: {
+            checklist:true,
             columns: ['RA', 'LA', 'RL', 'LL'],
             rows: [
               { key: 'PINK', label: 'وردي' },
@@ -433,6 +565,7 @@ export class MedicalFormComponent implements OnInit, OnDestroy {
           label: 'الحرارة',
           colClass: 'col-12',
           tableConfig: {
+            checklist:true,
             columns: ['RA', 'LA', 'RL', 'LL'],
             rows: [
               { key: 'WARM', label: 'دافئ' },
@@ -446,6 +579,7 @@ export class MedicalFormComponent implements OnInit, OnDestroy {
           label: 'الحركة',
           colClass: 'col-12',
           tableConfig: {
+            checklist:true,
             columns: ['RA', 'LA', 'RL', 'LL'],
             rows: [
               { key: 'FULL', label: 'كامل' },
@@ -459,6 +593,7 @@ export class MedicalFormComponent implements OnInit, OnDestroy {
           label: 'الإحساس',
           colClass: 'col-12',
           tableConfig: {
+            checklist:true,
             columns: ['RA', 'LA', 'RL', 'LL'],
             rows: [
               { key: 'INTACT', label: 'سليم' },
@@ -493,6 +628,16 @@ export class MedicalFormComponent implements OnInit, OnDestroy {
             { type: 'checkbox', key: 'Intermittent', label: 'متقطع' },
             { type: 'checkbox', key: 'Present', label: 'موجود' },
             { type: 'checkbox', key: 'Absent', label: 'غير موجود' }
+          ]
+        },
+        {
+          type: 'subsection',
+          key: 'Bowel_Sounds',
+          label: 'أصوات الأمعاء',
+          colClass: 'col-12',
+          fields: [
+            { type: 'checkbox', key: 'N_A', label: 'غير متاح (N/A)', colClass: 'col-12' },
+            { type: 'textarea', key: 'Description', label: 'الوصف', colClass: 'col-12' }
           ]
         },
         { type: 'text', key: 'How_Long', label: 'كم من الوقت', colClass: 'col-md-6' },

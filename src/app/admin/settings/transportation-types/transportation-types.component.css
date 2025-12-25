@@ -42,3 +42,7 @@
 .input-group .form-control {
   border-color: #ced4da;
 }
+.btn-close{
+  margin: 0;
+  margin-right: auto;
+}
