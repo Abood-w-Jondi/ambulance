@@ -3,7 +3,7 @@
  */
 export const environment = {
   production: false,
-  apiUrl: 'http://192.168.3.192:8000',  // PHP Backend API base URL
+  apiUrl: 'http://localhost:8000',  // PHP Backend API base URL
   apiVersion: 'v1',
 
   // Full API endpoint

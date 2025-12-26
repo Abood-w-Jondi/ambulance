@@ -281,18 +281,15 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     this.isLocationLoading.set(true);
     this.locationError.set(null);
     
-    this.locationTrackingService.getCurrentPositionOnce()
-      .then(position => {
-        this.currentPosition.set(position);
-        this.isLocationLoading.set(false);
-        this.updateMapPosition(position);
-        this.toastService.success('تم تحديث الموقع');
-      })
-      .catch(error => {
-        this.locationError.set(error.message);
-        this.isLocationLoading.set(false);
-        this.toastService.error('فشل تحديث الموقع');
-      });
+   this.locationTrackingService.getCurrentPosition()
+  .subscribe(position => {
+    if (position) {
+      this.currentPosition.set(position);
+      this.isLocationLoading.set(false);
+      this.updateMapPosition(position);
+      this.toastService.success('تم تحديث الموقع');
+    }
+  });
   }
 
   startTrip(): void {

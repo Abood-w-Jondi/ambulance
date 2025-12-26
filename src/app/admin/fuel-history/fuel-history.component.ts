@@ -160,7 +160,9 @@ export class FuelHistoryComponent implements OnInit {
         const fromDate = this.dateFilterFrom();
         const toDate = this.dateFilterTo();
         if (fromDate && toDate) {
-            params.startDate = fromDate.toISOString().split('T')[0];
+            let dateObj = new Date(fromDate);
+            dateObj.setDate(dateObj.getDate() + 1);
+            params.startDate = dateObj.toISOString().split('T')[0];
             params.endDate = toDate.toISOString().split('T')[0];
         }
 

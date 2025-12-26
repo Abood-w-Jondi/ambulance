@@ -83,7 +83,7 @@ export class StatsComponent implements OnInit {
     this.isLoading.set(true);
     const range = this.selectedRange();
 
-    let params: any = { period: range };
+    let params: any = { period: range , _cached : 'false' };
 
     if (range === 'custom') {
       const start = this.customStartDate();

@@ -1,8 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, interval, Subscription } from 'rxjs';
-import { takeUntil, switchMap, filter } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { VehicleService } from './vehicle.service';
-import { AuthService } from './auth.service';
+import { ToastService } from './toast.service';
 
 export interface GeoPosition {
   latitude: number;
@@ -15,186 +14,175 @@ export interface GeoPosition {
   providedIn: 'root'
 })
 export class LocationTrackingService implements OnDestroy {
-  private readonly UPDATE_INTERVAL_MS = 15 * 1000; // 2 minutes
-  
+  // CONFIGURATION
+  private readonly UPDATE_INTERVAL_MS = 15 * 1000; // 15 seconds
+  private readonly MIN_DISTANCE_METERS = 50;        // 50 meters
+
   private currentPosition$ = new BehaviorSubject<GeoPosition | null>(null);
   private isTracking$ = new BehaviorSubject<boolean>(false);
   private trackingError$ = new BehaviorSubject<string | null>(null);
   private destroy$ = new Subject<void>();
-  private trackingSubscription: Subscription | null = null;
   private watchId: number | null = null;
 
   constructor(
     private vehicleService: VehicleService,
-    private authService: AuthService
+    private toast: ToastService
   ) {}
 
   /**
-   * Get current position as observable
-   */
-  getCurrentPosition(): Observable<GeoPosition | null> {
-    return this.currentPosition$.asObservable();
-  }
-
-  /**
-   * Get tracking status
-   */
-  isTracking(): Observable<boolean> {
-    return this.isTracking$.asObservable();
-  }
-
-  /**
-   * Get tracking errors
-   */
-  getTrackingError(): Observable<string | null> {
-    return this.trackingError$.asObservable();
-  }
-
-  /**
    * Start tracking driver's location
-   * Updates position every 2 minutes and sends to server
+   * Sends initial position immediately, then only when vehicle moves 50m+ AND 15s have passed
    */
   startTracking(vehicleId: string): void {
-    if (this.isTracking$.value) {
-      return;
-    }
+    if (this.isTracking$.value) return;
 
     if (!this.isGeolocationSupported()) {
-      this.trackingError$.next('خدمة الموقع غير متاحة في هذا المتصفح');
+      const msg = 'خدمة الموقع غير مدعومة في هذا المتصفح';
+      this.trackingError$.next(msg);
+      this.toast.error(msg, 5000);
       return;
     }
 
     this.isTracking$.next(true);
     this.trackingError$.next(null);
 
-    // Get initial position
-    this.updatePosition(vehicleId);
+    let lastSentTime = 0;
 
-    // Set up interval for periodic updates
-    this.trackingSubscription = interval(this.UPDATE_INTERVAL_MS)
-      .pipe(
-        takeUntil(this.destroy$),
-        filter(() => this.authService.isAuthenticated())
-      )
-      .subscribe(() => {
-        this.updatePosition(vehicleId);
-      });
+    this.watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        const lastPos = this.currentPosition$.value;
+        const now = Date.now();
 
-  }
+        // Calculate distance from last sent position
+        const distanceMoved = lastPos 
+          ? this.calculateDistance(lastPos.latitude, lastPos.longitude, latitude, longitude) 
+          : Infinity; // First position
 
-  /**
-   * Stop tracking location
-   */
-  stopTracking(): void {
-    if (this.trackingSubscription) {
-      this.trackingSubscription.unsubscribe();
-      this.trackingSubscription = null;
-    }
+        // Check conditions
+        const isFirstPosition = lastPos === null;
+        const enoughTimePassed = (now - lastSentTime) >= this.UPDATE_INTERVAL_MS;
+        const enoughDistanceMoved = distanceMoved >= this.MIN_DISTANCE_METERS;
 
-    if (this.watchId !== null) {
-      navigator.geolocation.clearWatch(this.watchId);
-      this.watchId = null;
-    }
+        // Logic: Send if it's the first position OR (moved enough AND enough time passed)
+        const shouldUpdate = isFirstPosition || (enoughDistanceMoved && enoughTimePassed);
 
-    this.isTracking$.next(false);
-  }
-
-  /**
-   * Get current position once (not continuous tracking)
-   */
-  getCurrentPositionOnce(): Promise<GeoPosition> {
-    return new Promise((resolve, reject) => {
-      if (!this.isGeolocationSupported()) {
-        reject(new Error('Geolocation is not supported'));
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
+        if (shouldUpdate) {
           const geoPos: GeoPosition = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
+            latitude,
+            longitude,
+            accuracy,
             timestamp: new Date(position.timestamp)
           };
+
+          // Update local state
           this.currentPosition$.next(geoPos);
-          resolve(geoPos);
-        },
-        (error) => {
-          const errorMsg = this.getGeolocationErrorMessage(error);
-          this.trackingError$.next(errorMsg);
-          reject(new Error(errorMsg));
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000 // Accept cached position up to 1 minute old
+          lastSentTime = now;
+
+          // Send to server
+          this.vehicleService.updateLocation(vehicleId, latitude, longitude)
+            .subscribe({
+              error: (err) => {
+                console.error('Database Sync Error:', err);
+                // We don't stop tracking, but we log the server failure
+              }
+            });
+
+          const logMsg = isFirstPosition 
+            ? '📍 Initial Location Sent' 
+            : `📍 Location Updated: Moved ${Math.round(distanceMoved)}m`;
+          console.log(logMsg);
+        } else {
+          // Optional: Log why update was skipped
+          const timeSinceLastUpdate = ((now - lastSentTime) / 1000).toFixed(0);
+          console.log(`⏭️ Update Skipped: Moved ${Math.round(distanceMoved)}m, Time elapsed: ${timeSinceLastUpdate}s`);
         }
-      );
-    });
-  }
-
-  /**
-   * Update current position and send to server
-   */
-  private updatePosition(vehicleId: string): void {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const geoPos: GeoPosition = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          timestamp: new Date(position.timestamp)
-        };
-
-        this.currentPosition$.next(geoPos);
-        this.trackingError$.next(null);
-
-        // Send to server
-        this.vehicleService.updateLocation(vehicleId, geoPos.latitude, geoPos.longitude)
-          .subscribe({
-            next: () => {
-            },
-            error: (err) => {
-              console.error('Failed to update location on server:', err);
-              // Don't set tracking error for server errors, only for geolocation errors
-            }
-          });
       },
-      (error) => {
-        const errorMsg = this.getGeolocationErrorMessage(error);
-        this.trackingError$.next(errorMsg);
-        console.error('Geolocation error:', errorMsg);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
+      (error) => this.handleError(error),
+      { 
+        enableHighAccuracy: true, 
+        maximumAge: 0, // Ensure we don't get cached/old data
+        timeout: 10000 
       }
     );
   }
 
   /**
-   * Check if geolocation is supported
+   * Stop tracking and cleanup
+   */
+  stopTracking(): void {
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
+    }
+    this.isTracking$.next(false);
+    console.log('🛑 Location tracking stopped');
+  }
+
+  /**
+   * Calculate distance between two points using Haversine Formula
+   * @returns Distance in meters
+   */
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371e3; // Earth radius in meters
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  /**
+   * Handle geolocation errors
+   */
+  private handleError(error: GeolocationPositionError): void {
+    const errorMsg = this.getGeolocationErrorMessage(error);
+    this.trackingError$.next(errorMsg);
+    this.toast.error(errorMsg, 5000);
+    console.error('Geolocation Error:', errorMsg);
+    
+    // If permission is denied, stop tracking immediately
+    if (error.code === error.PERMISSION_DENIED) {
+      this.stopTracking();
+    }
+  }
+
+  /**
+   * Check if geolocation API is supported
    */
   private isGeolocationSupported(): boolean {
     return 'geolocation' in navigator;
   }
 
   /**
-   * Convert geolocation error code to Arabic message
+   * Convert geolocation error codes to Arabic messages
    */
   private getGeolocationErrorMessage(error: GeolocationPositionError): string {
     switch (error.code) {
       case error.PERMISSION_DENIED:
-        return 'تم رفض إذن الوصول للموقع. يرجى تفعيل خدمة الموقع في إعدادات المتصفح';
+        return 'تم رفض إذن الوصول للموقع. يرجى تفعيل الموقع من إعدادات المتصفح';
       case error.POSITION_UNAVAILABLE:
         return 'معلومات الموقع غير متاحة حالياً';
       case error.TIMEOUT:
-        return 'انتهت مهلة طلب الموقع. يرجى المحاولة مرة أخرى';
+        return 'انتهت مهلة طلب الموقع. تأكد من جودة الإشارة';
       default:
         return 'حدث خطأ غير معروف أثناء تحديد الموقع';
     }
+  }
+
+  // Public getters for UI components
+  getCurrentPosition(): Observable<GeoPosition | null> { 
+    return this.currentPosition$.asObservable(); 
+  }
+  
+  isTracking(): Observable<boolean> { 
+    return this.isTracking$.asObservable(); 
+  }
+  
+  getTrackingError(): Observable<string | null> { 
+    return this.trackingError$.asObservable(); 
   }
 
   ngOnDestroy(): void {
@@ -203,4 +191,3 @@ export class LocationTrackingService implements OnDestroy {
     this.destroy$.complete();
   }
 }
-
