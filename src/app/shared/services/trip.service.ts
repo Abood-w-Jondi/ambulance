@@ -72,6 +72,17 @@ export class TripService {
       map(response => response.data)
     );
   }
+  /**
+ * Completely delete/remove a loan from a trip
+ */
+deleteLoan(tripId: string, notes: string): Observable<any> {
+  return this.http.patch<{ success: boolean; data: any; message: string }>(
+    `${this.API_URL}/${tripId}/delete-loan`, 
+    { notes }
+  ).pipe(
+    map(response => response.data)
+  );
+}
 
   /**
    * Update patient loan amount
@@ -90,7 +101,7 @@ export class TripService {
    */
 getPatientLoans(driverId: string, filters?: PatientLoanFilters): Observable<PatientLoan[]> {
   const httpParams = buildHttpParams(filters);
-
+  driverId = 'all'
   return this.http.get<{ success: boolean; data: PatientLoan[] }>(
     `${environment.apiEndpoint}/drivers/${driverId}/patient-loans`,
     { params: httpParams }

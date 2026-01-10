@@ -320,13 +320,11 @@
                   <input
                     type="number"
                     class="form-control"
-                    [class.bg-light]="tripForm.tripType && tripForm.tripType !== 'اخرى'"
                     [(ngModel)]="tripForm.paramedicShare"
                     name="paramedicShare"
-                    [disabled]="isViewMode || (tripForm.tripType && tripForm.tripType !== 'اخرى')"
-                    [readonly]="tripForm.tripType && tripForm.tripType !== 'اخرى'"
+                    [disabled]="isViewMode"
                     min="0"
-                    step="0.01">
+                    step="10">
                   <small class="text-muted" *ngIf="tripForm.tripType && tripForm.tripType !== 'اخرى'">
                     تلقائي حسب نوع الرحلة
                   </small>
@@ -357,7 +355,7 @@
                   </h6>
                   <div class="calculation-breakdown">
                     <p class="mb-2">
-                      <strong>المبلغ الكلي:</strong> {{ tripForm.totalPrice || 0 }} ₪
+                      <strong>المبلغ الكلي:</strong> {{ tripForm.payedPrice || 0 }} ₪
                     </p>
                     <p class="mb-2 text-muted">
                       - حصة المسعف: {{ tripForm.paramedicShare || 0 }} ₪
@@ -370,10 +368,10 @@
                     </p>
                     <hr>
                     <p class="mb-2">
-                      <strong>الباقي:</strong> {{ ((tripForm.totalPrice || 0) - (tripForm.paramedicShare || 0) - calculatedDiesel) - (tripForm.otherExpenses || 0) }} ₪
+                      <strong>الباقي:</strong> {{ ((tripForm.payedPrice || 0) - (tripForm.paramedicShare || 0) - calculatedDiesel) - (tripForm.otherExpenses || 0) }} ₪
                     </p>
                     <p class="mb-2">
-                      <strong>حصة السائق :</strong> {{ ((tripForm.totalPrice || 0) - (tripForm.paramedicShare || 0) - calculatedDiesel - (tripForm.otherExpenses || 0)) / 3 | number:'1.2-2' }} ₪
+                      <strong>حصة السائق :</strong> {{ ((tripForm.payedPrice || 0) - (tripForm.paramedicShare || 0) - calculatedDiesel - (tripForm.otherExpenses || 0)) / 3 | number:'1.2-2' }} ₪
                     </p>
                   </div>
                 </div>

@@ -39,6 +39,7 @@ export interface DashboardStats {
   };
   financial: {
     totalRevenue: number;
+    payedRevenue: number;
     totalDriverShare: number;
     totalParamedicShare: number;
     totalCompanyShare: number;

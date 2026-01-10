@@ -102,7 +102,7 @@ export class LocationTrackingService implements OnDestroy {
       { 
         enableHighAccuracy: true, 
         maximumAge: 0, // Ensure we don't get cached/old data
-        timeout: 10000 
+        timeout: 30000 
       }
     );
   }
@@ -138,11 +138,12 @@ export class LocationTrackingService implements OnDestroy {
    * Handle geolocation errors
    */
   private handleError(error: GeolocationPositionError): void {
+    if (error.code === error.POSITION_UNAVAILABLE) {
+    // Don't set trackingError$ or show toast for this transient error
+    return;
+  }
     const errorMsg = this.getGeolocationErrorMessage(error);
     this.trackingError$.next(errorMsg);
-    this.toast.error(errorMsg, 5000);
-    console.error('Geolocation Error:', errorMsg);
-    
     // If permission is denied, stop tracking immediately
     if (error.code === error.PERMISSION_DENIED) {
       this.stopTracking();

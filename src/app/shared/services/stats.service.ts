@@ -24,6 +24,7 @@ export interface StatisticsResponse {
   };
   revenue: {
     totalRevenue: number;
+    payedRevenue: number;
     totalDriverShare: number;
     totalParamedicShare: number;
     totalCompanyShare: number;

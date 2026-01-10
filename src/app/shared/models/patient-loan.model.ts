@@ -15,6 +15,8 @@ export interface PatientLoan {
     daysSinceLoan: number;     // Aging indicator
     transferFrom: string;
     transferTo: string;
+    Vname ?: string;
+    dname ?: string;
 }
 
 /**

@@ -48,7 +48,6 @@ export class TripsHistoryComponent implements OnInit {
     'بلاغ كاذب',
     'ينقل',
     'لم يتم النقل',
-    'صيانة',
     'رفض النقل',
     'اخرى'
   ];
@@ -179,7 +178,6 @@ export class TripsHistoryComponent implements OnInit {
       'ينقل': 'bg-info',
       'بلاغ كاذب': 'bg-warning',
       'لم يتم النقل': 'bg-danger',
-      'صيانة': 'bg-secondary',
       'رفض النقل': 'bg-dark',
       'اخرى': 'bg-secondary'
     };
@@ -193,7 +191,6 @@ export class TripsHistoryComponent implements OnInit {
       'ينقل': '#17A2B8',
       'بلاغ كاذب': '#FFC107',
       'لم يتم النقل': '#DC3545',
-      'صيانة': '#6C757D',
       'رفض النقل': '#343A40',
       'اخرى': '#6C757D'
     };

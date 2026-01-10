@@ -29,11 +29,12 @@ type SortOrder = 'asc' | 'desc';
 })
 export class LoanCollectionComponent implements OnInit {
   // Data
-  loans = signal<PatientLoan[]>([]);
+  loans = signal<PatientLoan[]>([]);// Master copy from DB
+  searchQuery = signal<string>('');    // Search input value
   isLoading = signal(false);
   driverId = signal<string | null>(null);
 
-  // Filters
+// Filters
   filterStatus = signal<FilterStatus>('all');
   sortBy = signal<SortBy>('date');
   sortOrder = signal<SortOrder>('desc');
@@ -96,53 +97,62 @@ export class LoanCollectionComponent implements OnInit {
   ngOnInit(): void {
     this.loadDriverAndLoans(true);
   }
+  filteredLoans = computed(() => {
+  const allData = this.loans(); // This looks at your master signal
+  const query = this.searchQuery().toLowerCase().trim();
+  const status = this.filterStatus();
+
+  return allData.filter(loan => {
+    // A. Status Filter
+    const matchesStatus = 
+      status === 'all' || 
+      (status === 'uncollected' && !loan.isCollected) || 
+      (status === 'collected' && loan.isCollected);
+
+    // B. Search Filter
+    const matchesSearch = !query || 
+      loan.patientName?.toLowerCase().includes(query) ||
+      loan.patientContact?.includes(query) ||
+      loan.dname?.toLowerCase().includes(query) ||
+      loan.transferFrom?.toLowerCase().includes(query) ||
+      loan.transferTo?.toLowerCase().includes(query);
+
+    return matchesStatus && matchesSearch;
+  });
+});
 
   loadDriverAndLoans(init: boolean = false): void {
     this.isLoading.set(true);
-    
-    // Get current driver
-    this.driverService.getCurrentDriver().subscribe({
-      next: (driver) => {
-        this.driverId.set(driver.id);
+        this.driverId.set('all');
         this.loadLoans(init);
-      },
-      error: (error) => {
-        console.error('Error loading driver:', error);
-        this.toastService.error('فشل تحميل بيانات السائق');
-        this.isLoading.set(false);
-      }
-    });
   }
 
-  loadLoans(init: boolean = false): void {
-    const driverId = this.driverId();
-    if (!driverId) return;
-
+ loadLoans(init: boolean = false): void {
     this.isLoading.set(true);
-
-    this.tripService.getPatientLoans(driverId, {
-      status: this.filterStatus(),
-      sortBy: this.sortBy(),
-      sortOrder: this.sortOrder()
+    this.tripService.getPatientLoans('all', {
+      status: 'all', // Fetch everything for frontend filtering
+      sortBy: 'date',
+      sortOrder: 'desc'
     } as any).subscribe({
       next: (loans) => {
-        this.loans.set(loans);
+        this.loans.set(loans); // Store in master signal
         this.isLoading.set(false);
-        if (init) {
-          this.updateStats();
-        }
+        this.updateStats(); // Calculate stats from the master list
       },
       error: (error) => {
-        console.error('Error loading loans:', error);
         this.toastService.error('فشل تحميل قائمة الديون');
         this.isLoading.set(false);
       }
     });
   }
+  // Instant UI handlers
+  onSearch(query: string): void {
+    this.searchQuery.set(query);
+  }
 
   onFilterChange(status: FilterStatus): void {
     this.filterStatus.set(status);
-    this.loadLoans();
+    // No loadLoans() call needed anymore!
   }
 
   onSortChange(option: { sortBy: SortBy; sortOrder: SortOrder }): void {
@@ -198,6 +208,41 @@ export class LoanCollectionComponent implements OnInit {
       }
     });
   }
+  isDeleteModalOpen = signal(false);
+  deleteNotes = '';
+  openDeleteModal(loan: PatientLoan): void {
+    this.selectedLoan.set(loan);
+    this.deleteNotes = '';
+    this.isDeleteModalOpen.set(true);
+  }
+
+  closeDeleteModal(): void {
+    this.isDeleteModalOpen.set(false);
+    this.selectedLoan.set(null);
+    this.deleteNotes = '';
+  }
+
+  confirmDelete(): void {
+    const loan = this.selectedLoan();
+    if (!loan) return;
+
+    if (!this.deleteNotes.trim()) {
+      this.toastService.error('يرجى إدخال سبب الحذف');
+      return;
+    }
+
+    this.tripService.deleteLoan(loan.tripId, this.deleteNotes).subscribe({
+      next: () => {
+        this.toastService.success('تم حذف الدين وتعديل سعر الرحلة');
+        this.closeDeleteModal();
+        this.loadLoans();
+      },
+      error: (error) => {
+        console.error('Error deleting loan:', error);
+        this.toastService.error('فشل حذف الدين');
+      }
+    });
+  }
 
   // Collect loan
   openCollectModal(loan: PatientLoan): void {
@@ -221,7 +266,7 @@ export class LoanCollectionComponent implements OnInit {
       return;
     }
 
-    this.tripService.markLoanCollected(loan.tripId, this.collectNotes).subscribe({
+    this.tripService.updateLoanAmount(loan.tripId, 0, this.collectNotes).subscribe({
       next: () => {
         this.toastService.success(`تم تحصيل ${loan.loanAmount} ₪ من ${loan.patientName}`);
         this.closeCollectModal();

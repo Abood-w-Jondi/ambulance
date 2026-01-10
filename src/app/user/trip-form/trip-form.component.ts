@@ -66,6 +66,7 @@ export class TripFormComponent implements OnInit {
   drivers: DriverReference[] = [];
   paramedics: ParamedicReference[] = [];
   vehicles: VehicleReference[] = [];
+  currO : number = 0 
   
   transferStatuses: TransferStatus[] = [
     'لم يتم النقل',
@@ -74,7 +75,6 @@ export class TripFormComponent implements OnInit {
     'رفض النقل',
     'بلاغ كاذب',
     'ميداني',
-    'صيانة',
     'اخرى'
   ];
 
@@ -117,10 +117,11 @@ export class TripFormComponent implements OnInit {
 this.vehicleService.getCurrentOdometer(this.tripForm.vehicleId).subscribe({
   next: (odometer) => {
     const currentVal = odometer?.currentOdometer;
-
+    
     // If we have a valid odometer value AND (start is missing OR start is 0)
     if (currentVal != null && (!this.tripForm.start || this.tripForm.start === 0)) {
       this.tripForm.start = currentVal;
+      this.currO = currentVal;
     }
   },
   error: () => this.toastService.error('فشل جلب عداد المركبة الحالي')
@@ -206,6 +207,9 @@ this.vehicleService.getCurrentOdometer(this.tripForm.vehicleId).subscribe({
     this.tripService.getTripById(this.tripId).subscribe({
       next: (trip) => {
         this.currentTrip = trip;
+        if((!trip.start) || trip.start == 0){
+          trip.start = this.currO
+        }
         this.populateForm(trip);
         this.isLoading = false;
       },
@@ -382,7 +386,7 @@ this.vehicleService.getCurrentOdometer(this.tripForm.vehicleId).subscribe({
     // Calculate shares automatically based on totalPrice, paramedicShare, and fuel cost
     const fuelCost = this.calculatedDiesel * 1.0;  // 1 NIS per km
     const shares = this.calculateShares(
-      this.tripForm.totalPrice || 0,
+      this.tripForm.payedPrice || 0,
       this.tripForm.paramedicShare || 0,
       fuelCost
     );

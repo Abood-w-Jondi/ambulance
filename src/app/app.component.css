@@ -13,3 +13,11 @@
 .main-body::-webkit-scrollbar {
     display: none; 
 }
+.backgroundimage{
+    position: fixed;
+    width: 100svw;
+    z-index: -1;
+    opacity: 10%;
+    top:50%;
+    transform: translateY(-50%);
+}

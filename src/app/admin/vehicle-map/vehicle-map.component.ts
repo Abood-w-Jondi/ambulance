@@ -101,21 +101,41 @@ export class VehicleMapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isSidebarOpen.update(v => !v);
   }
 
-  private initMap(): void {
-    this.map = L.map('vehicle-map', {
-      center: this.PALESTINE_CENTER,
-      zoom: this.DEFAULT_ZOOM,
-      zoomControl: false 
-    });
+ private initMap(): void {
+  this.map = L.map('vehicle-map', {
+    center: this.PALESTINE_CENTER,
+    zoom: this.DEFAULT_ZOOM,
+    zoomControl: false 
+  });
 
-    // Zoom control on Left (since layout is RTL)
-    L.control.zoom({ position: 'topleft' }).addTo(this.map);
+  L.control.zoom({ position: 'topleft' }).addTo(this.map);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  // Define multiple base layers
+  const baseLayers = {
+    'الخريطة الأساسية': L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap &copy; CARTO',
       maxZoom: 20
-    }).addTo(this.map);
-  }
+    }),
+    'عرض تفصيلي': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }),
+    'الخدمات الطبية': L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors, HOT',
+      maxZoom: 20
+    }),
+    'صور القمر الصناعي': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri',
+      maxZoom: 18
+    })
+  };
+
+  // Add default layer
+  baseLayers['عرض تفصيلي'].addTo(this.map);
+
+  // Add layer control to switch between them
+  L.control.layers(baseLayers, {}, { position: 'topleft' }).addTo(this.map);
+}
 
   loadVehicleLocations(): void {
     this.isLoading.set(true);

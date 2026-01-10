@@ -74,6 +74,7 @@ export const routes = [
 			{ path: 'medical-forms', component: MedicalFormsComponent },
 			{ path: 'profile/:id', component: ProfileComponent },
 			{ path: 'profile', component: ProfileComponent },
+			{ path: 'loan-collection', component: LoanCollectionComponent },
 		],
 	},
 
@@ -90,7 +91,6 @@ export const routes = [
 			{ path: 'trip-form', component: TripFormComponent },
 			{ path: 'trip-form/:id', component: TripFormComponent },
 			{ path: 'wallet', component: WalletComponent },
-			{ path: 'loan-collection', component: LoanCollectionComponent },
 			{ path: 'vehicle-checklist', component: VehicleChecklistComponent },
 			{ path: 'medical-form/:tripId', component: MedicalFormComponent },
 			{ path: 'profile', component: ProfileComponent },

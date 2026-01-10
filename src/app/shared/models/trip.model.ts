@@ -90,6 +90,6 @@ export interface Trip {
     populatedByDriver?: boolean;  // Flag to indicate if driver has filled the data
 }
 
-export type TransferStatus = 'ميداني' | 'تم النقل' | 'بلاغ كاذب' | 'ينقل' | 'لم يتم النقل' | 'صيانة' | 'رفض النقل' | 'اخرى';
+export type TransferStatus = 'ميداني' | 'تم النقل' | 'بلاغ كاذب' | 'ينقل' | 'لم يتم النقل' | 'رفض النقل' | 'اخرى';
 export type FilterStatus = 'All' | TransferStatus;
 export type TripType = 'داخلي' | 'وسط' | 'خارجي' | 'اخرى';

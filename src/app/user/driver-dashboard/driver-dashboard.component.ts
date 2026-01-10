@@ -29,11 +29,11 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
   driver = signal<Driver | null>(null);
   driverName = signal<string>('...');
   driverStatus = signal<string>('جاري التحميل...');
-  tripsCompleted = signal<number>(0);
-  totalEarnings = signal<number>(0);
-  pendingLoansCount = signal<number>(0);
-  pendingLoansAmount = signal<number>(0);
-  
+driverShare = signal<number>(0);
+paramedicShare = signal<number>(0);
+centerShare = signal<number>(0);
+totalKilometers = signal<number>(0);
+
   // Location data
   currentPosition = signal<GeoPosition | null>(null);
   locationError = signal<string | null>(null);
@@ -69,7 +69,7 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
   // Reminder check interval constant (in milliseconds)
   // For production: 600000ms (10 minutes)
   // For testing: 30000ms (30 seconds) or 60000ms (1 minute)
-  private readonly REMINDER_CHECK_INTERVAL = 610000; // 10 minutes - change to 30000 for testing
+  private readonly REMINDER_CHECK_INTERVAL = 604000; // 10 minutes - change to 30000 for testing
   private reminderCheckTimer: any = null;
 
   // Subscriptions
@@ -163,9 +163,13 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
       });
 
       this.marker = L.marker(latLng, { icon }).addTo(this.map);
+      this.map.setView(latLng, 10);
     }
+     this.map.panTo(latLng, { 
+    animate: true, 
+    duration: 0.5 
+  });
 
-    this.map.setView(latLng, 15);
   }
 
   private subscribeToLocation(): void {
@@ -217,9 +221,8 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
         this.driverName.set(driver.arabicName || driver.name || 'السائق');
         this.driverStatus.set(driver.arabicStatus || 'متاح');
         
-        // Load trips and loans data
+        // Load trips
         this.loadTodayStats(driver.id);
-        this.loadPendingLoans(driver.id);
         
         // Get the selected vehicle from VehicleCookieService and start location tracking
         const selectedVehicle = this.vehicleCookieService.getSelectedVehicleId();
@@ -240,42 +243,43 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
-  private loadTodayStats(driverId: string): void {
-    // Get today's trips
-    const today = new Date().toISOString().split('T')[0];
-    
-    this.tripService.getTrips({
-      driverId: driverId,
-      startDate: today,
-      endDate: today
-    }).subscribe({
-      next: (response) => {
-        const completedTrips = response.data.filter(t => 
-          ['تم النقل', 'رفض النقل'].includes(t.transferStatus)
-        );
-        this.tripsCompleted.set(completedTrips.length);
-        
-        // Calculate today's earnings
-        const earnings = completedTrips.reduce((sum, t) => sum + (t.driverShare || 0), 0);
-        this.totalEarnings.set(earnings);
-      },
-      error: (error) => {
-        console.error('Error loading today stats:', error);
-      }
-    });
-  }
+private loadTodayStats(driverId: string): void {
+  const today = new Date().toISOString().split('T')[0];
 
-  private loadPendingLoans(driverId: string): void {
-    this.tripService.getPatientLoans(driverId, { status: 'uncollected' }).subscribe({
-      next: (loans) => {
-        this.pendingLoansCount.set(loans.length);
-        this.pendingLoansAmount.set(loans.reduce((sum, l) => sum + l.loanAmount, 0));
-      },
-      error: (error) => {
-        console.error('Error loading pending loans:', error);
-      }
-    });
-  }
+  this.tripService.getTrips({
+    driverId: driverId,
+    startDate: today,
+    endDate: today
+  }).subscribe({
+    next: (response) => {
+      // 1. Filter trips first to include only 'تم النقل' and 'ميداني'
+      const validTrips = (response.data || []).filter(t => 
+        ['تم النقل', 'ميداني'].includes(t.transferStatus)
+      );
+
+      // 2. Calculate totals from the filtered list
+      const totals = validTrips.reduce((acc, t) => {
+        acc.dShare += (t.driverShare || 0);
+        acc.pShare += (t.paramedicShare || 0);
+        acc.cShare += (t.companyShare || 0) + (t.ownerShare || 0);
+
+        const distance = (t.end || 0) - (t.start || 0);
+        acc.kms += (distance > 0 ? distance : 0);
+
+        return acc;
+      }, { dShare: 0, pShare: 0, cShare: 0, kms: 0 });
+
+      // 3. Update the signals
+      this.driverShare.set(totals.dShare);
+      this.paramedicShare.set(totals.pShare);
+      this.centerShare.set(totals.cShare);
+      this.totalKilometers.set(totals.kms);
+    },
+    error: (error) => {
+      console.error('Error loading today stats:', error);
+    }
+  });
+}
 
   refreshLocation(): void {
     this.isLocationLoading.set(true);
@@ -287,7 +291,6 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
       this.currentPosition.set(position);
       this.isLocationLoading.set(false);
       this.updateMapPosition(position);
-      this.toastService.success('تم تحديث الموقع');
     }
   });
   }
@@ -345,10 +348,6 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
 
   viewTrips(): void {
     this.router.navigate(['/user/my-trips']);
-  }
-
-  viewLoans(): void {
-    this.router.navigate(['/user/loan-collection']);
   }
 
   viewWallet(): void {
@@ -434,8 +433,7 @@ export class DriverDashboardComponent implements OnInit, AfterViewInit, OnDestro
       this.checklistService.dismissReminder(sessionId).subscribe({
         next: () => {
           this.showChecklistReminder.set(false);
-          const minutes = this.REMINDER_CHECK_INTERVAL / 60000;
-          this.toastService.info(`سيظهر التذكير مرة أخرى بعد ${minutes} دقائق`);
+          this.toastService.info(`سيظهر التذكير مرة أخرى بعد 10 دقائق`);
         },
         error: (err) => {
           console.error('Failed to dismiss reminder:', err);

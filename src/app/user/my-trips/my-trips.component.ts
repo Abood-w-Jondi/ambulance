@@ -10,6 +10,7 @@ import { VehicleCookieService } from '../../shared/services/vehicle-cookie.servi
 import { MedicalFormService } from '../../shared/services/medical-form.service';
 import { Trip, TransferStatus } from '../../shared/models/trip.model';
 import { GlobalVarsService } from '../../global-vars.service';
+import { NotificationService } from '../../shared/services/notification.service';
 @Component({
   selector: 'app-my-trips',
   standalone: true,
@@ -50,7 +51,6 @@ export class MyTripsComponent implements OnInit, OnDestroy {
     'بلاغ كاذب',
     'لم يتم النقل',
     'رفض النقل',
-    'صيانة',
     'ينقل',
     'اخرى'
   ];
@@ -85,6 +85,7 @@ export class MyTripsComponent implements OnInit, OnDestroy {
     private vehicleCookieService: VehicleCookieService,
     private medicalFormService: MedicalFormService,
     private router: Router,
+    private notificationService: NotificationService,
     public globalVars: GlobalVarsService
   ) {
     const currentUser = this.authService.currentUser();
@@ -332,6 +333,7 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   }
 
   acceptTrip(trip: Trip): void {
+    this.notificationService.stopAlert();
     if (!this.driverId) {
       this.toastService.error('معرّف السائق غير موجود');
       return;
@@ -369,6 +371,7 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   }
 
   viewTripDetails(trip: Trip): void {
+    this.notificationService.stopAlert();
     this.router.navigate(['/user/trip-form', trip.id], {
       queryParams: { mode: 'view' }
     });
@@ -379,9 +382,7 @@ export class MyTripsComponent implements OnInit, OnDestroy {
   }
 
   openCloseConfirmModal(trip: Trip): void {
-    // Check if trip has a final status before allowing closure
-    const finalStatuses: TransferStatus[] = ['تم النقل', 'رفض النقل', 'بلاغ كاذب'];
-    if (!finalStatuses.includes(trip.transferStatus)) {
+    if (trip.transferStatus ==='ينقل') {
       this.toastService.error(`لا يمكن إغلاق الرحلة بحالة "${trip.transferStatus}". يرجى تغيير الحالة إلى حالة نهائية أولاً.`);
       return;
     }
@@ -484,12 +485,6 @@ export class MyTripsComponent implements OnInit, OnDestroy {
     return statusClasses[status] || 'bg-secondary';
   }
 
-  canCloseTrip(trip: Trip): boolean {
-    // Can close if not already closed AND has a final status
-    // Final statuses are: تم النقل, رفض النقل, بلاغ كاذب
-    const finalStatuses: TransferStatus[] = ['تم النقل', 'رفض النقل', 'بلاغ كاذب'];
-    return !trip.isClosed && finalStatuses.includes(trip.transferStatus);
-  }
 
   formatDate(trip: Trip): string {
     return `${trip.day}/${trip.month}/${trip.year}`;

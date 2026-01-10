@@ -140,7 +140,7 @@ export class TripsComponent implements OnInit {
     vehicleSearchTerm = signal('');
 
     vehiclesList: VehicleReference[] = [];
-    transferStatuses: TransferStatus[] = ['ميداني', 'تم النقل', 'بلاغ كاذب', 'ينقل', 'لم يتم النقل', 'صيانة', 'رفض النقل', 'اخرى'];
+    transferStatuses: TransferStatus[] = ['ميداني', 'تم النقل', 'بلاغ كاذب', 'ينقل', 'لم يتم النقل', 'رفض النقل', 'اخرى'];
     tripTypes: TripType[] = ['داخلي', 'وسط', 'خارجي', 'اخرى'];
 
     // Computed filtered lists
@@ -343,8 +343,6 @@ export class TripsComponent implements OnInit {
             case 'لم يتم النقل':
             case 'رفض النقل':
                 return '#DC3545';
-            case 'صيانة':
-                return '#6C757D';
             case 'ينقل':
                 return '#FFC107';
             default:
@@ -362,8 +360,6 @@ export class TripsComponent implements OnInit {
             case 'لم يتم النقل':
             case 'رفض النقل':
                 return 'text-bg-danger';
-            case 'صيانة':
-                return 'text-bg-secondary';
             case 'ينقل':
                 return 'text-bg-warning';
             default:
@@ -820,8 +816,7 @@ export class TripsComponent implements OnInit {
         }
 
         // Check if trip has a final status before allowing closure
-        const finalStatuses: TransferStatus[] = ['تم النقل', 'رفض النقل', 'بلاغ كاذب'];
-        if (!finalStatuses.includes(trip.transferStatus)) {
+        if (trip.transferStatus === 'ينقل') {
             this.toastService.error(`لا يمكن إغلاق الرحلة بحالة "${trip.transferStatus}". يرجى تغيير الحالة إلى حالة نهائية أولاً.`);
             return;
         }

@@ -311,7 +311,7 @@
                                     </button>
                                     <button
                                         class="btn btn-sm btn-success rounded-pill action-btn"
-                                        *ngIf="canCloseTrip(trip)"
+                                        *ngIf="(!trip.isClosed && (trip.transferStatus !== 'ينقل'))"
                                         (click)="openCloseConfirmModal(trip)">
                                         <i class="fas fa-lock me-1"></i>
                                         إغلاق

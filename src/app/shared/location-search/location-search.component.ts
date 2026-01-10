@@ -44,11 +44,11 @@ export class LocationSearchComponent implements OnInit {
     }
 
     const common = this.commonLocations().filter(loc =>
-      loc.name.toLowerCase().includes(term)
+      loc.name.toLowerCase()
     );
 
     const custom = this.customLocations().filter(loc =>
-      loc.name.toLowerCase().includes(term)
+      loc.name.toLowerCase()
     );
 
     return [...common, ...custom];

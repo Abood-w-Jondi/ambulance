@@ -19,7 +19,7 @@
       </button>
     </div>
     <div class="col-6">
-      <button class="btn btn-outline-secondary w-100 py-3 fw-bold" (click)="endShift()">
+      <button class="btn btn-secondary w-100 py-3 fw-bold" (click)="endShift()">
         إنهاء الدوام
       </button>
     </div>
@@ -28,38 +28,43 @@
   <!-- ملخص اليوم -->
   <h3 class="fw-bold mb-3">ملخص اليوم</h3>
   <div class="row mb-4 g-3">
-    <div class="col-6 col-md-3">
-      <div class="card border shadow-sm">
-        <div class="card-body money">
-          <p class="text-muted mb-2">الرحلات المكتملة</p>
-          <h2 class="display-5 fw-bold mb-0">{{ tripsCompleted() }}</h2>
-        </div>
+ <div class="row g-3">
+  <div class="col-6 col-md-3">
+    <div class="card border shadow-sm">
+      <div class="card-body money">
+        <p class="text-muted mb-2">حصة السائق</p>
+        <h2 class="display-6 fw-bold mb-0">{{ driverShare() | number:'1.0-2' }} ₪</h2>
       </div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="card border shadow-sm">
-        <div class="card-body money">
-          <p class="text-muted mb-2">أرباح اليوم</p>
-          <h2 class="display-5 fw-bold mb-0">{{ totalEarnings() | number:'1.0-2' }} ₪</h2>
-        </div>
+  </div>
+
+  <div class="col-6 col-md-3">
+    <div class="card border shadow-sm">
+      <div class="card-body money">
+        <p class="text-muted mb-2">حصة المسعف</p>
+        <h2 class="display-6 fw-bold mb-0">{{ paramedicShare() | number:'1.0-2' }} ₪</h2>
       </div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="card border shadow-sm" [class.border-warning]="pendingLoansCount() > 0">
-        <div class="card-body money">
-          <p class="text-muted mb-2">ديون غير محصّلة</p>
-          <h2 class="display-5 fw-bold mb-0" [class.text-warning]="pendingLoansCount() > 0">{{ pendingLoansCount() }}</h2>
-        </div>
+  </div>
+
+  <div class="col-6 col-md-3">
+    <div class="card border shadow-sm">
+      <div class="card-body money">
+        <p class="text-muted mb-2">حصة المركز</p>
+        <h2 class="display-6 fw-bold mb-0">{{ centerShare() | number:'1.0-2' }} ₪</h2>
       </div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="card border shadow-sm" [class.border-warning]="pendingLoansAmount() > 0">
-        <div class="card-body money">
-          <p class="text-muted mb-2">إجمالي الديون</p>
-          <h2 class="display-5 fw-bold mb-0" [class.text-warning]="pendingLoansAmount() > 0">{{ pendingLoansAmount() | number:'1.0-2' }} ₪</h2>
-        </div>
+  </div>
+
+  <div class="col-6 col-md-3">
+    <div class="card border shadow-sm">
+      <div class="card-body money">
+        <p class="text-muted mb-2">إجمالي الكيلومترات</p>
+        <h2 class="display-6 fw-bold mb-0">{{ totalKilometers() | number:'1.0-1' }} كم</h2>
       </div>
     </div>
+  </div>
+</div>
   </div>
 
   <!-- الموقع الحالي - Map -->
@@ -114,7 +119,7 @@
   <!-- الإجراءات السريعة -->
   <h3 class="fw-bold mb-3">الإجراءات السريعة</h3>
   <div class="row g-3 mb-5">
-    <div class="col-6 col-md-3">
+    <div class="col-12 col-md-4">
       <div class="card border shadow-sm h-100" role="button" (click)="openFuelModal()">
         <div class="card-body text-center d-flex flex-column align-items-center justify-content-center py-4">
           <i class="fas fa-gas-pump text-primary fa-2x mb-3"></i>
@@ -122,7 +127,7 @@
         </div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-12 col-md-4">
       <div class="card border shadow-sm h-100" role="button" (click)="openMaintenanceModal()">
         <div class="card-body text-center d-flex flex-column align-items-center justify-content-center py-4">
           <i class="fas fa-wrench text-primary fa-2x mb-3"></i>
@@ -130,24 +135,11 @@
         </div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-12 col-md-4">
       <div class="card border shadow-sm h-100" role="button" (click)="viewTrips()">
         <div class="card-body text-center d-flex flex-column align-items-center justify-content-center py-4">
           <i class="fas fa-receipt text-primary fa-2x mb-3"></i>
           <p class="fw-medium mb-0">عرض الرحلات</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card border shadow-sm h-100 position-relative" role="button" (click)="viewLoans()">
-        <div class="card-body text-center d-flex flex-column align-items-center justify-content-center py-4">
-          <i class="fas fa-hand-holding-usd text-success fa-2x mb-3"></i>
-          <p class="fw-medium mb-0">تحصيل الديون</p>
-          @if (pendingLoansCount() > 0) {
-            <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger">
-              {{ pendingLoansCount() }}
-            </span>
-          }
         </div>
       </div>
     </div>

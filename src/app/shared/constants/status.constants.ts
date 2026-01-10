@@ -5,7 +5,6 @@ export const TRANSFER_STATUS = {
   FALSE_REPORT: 'بلاغ كاذب',
   IN_TRANSFER: 'ينقل', // Fixed typo from 'يتقل'
   NOT_COMPLETED: 'لم يتم النقل',
-  MAINTENANCE: 'صيانة',
   REFUSED: 'رفض النقل',
   OTHER: 'اخرى'
 } as const;
@@ -20,7 +19,6 @@ export const TRANSFER_STATUS_COLORS: Record<string, string> = {
   [TRANSFER_STATUS.FALSE_REPORT]: '#DC3545',
   [TRANSFER_STATUS.NOT_COMPLETED]: '#DC3545',
   [TRANSFER_STATUS.REFUSED]: '#DC3545',
-  [TRANSFER_STATUS.MAINTENANCE]: '#6C757D',
   [TRANSFER_STATUS.OTHER]: '#6C757D'
 };
 

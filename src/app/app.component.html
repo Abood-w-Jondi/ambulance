@@ -2,6 +2,7 @@
 <app-side-bar [showSideBar]="showSideBar" *ngIf="!dontshowsidebar"></app-side-bar>
 
 <div class="main-content" [ngClass]="{'with-sidebar': showSideBar}">
+  <img src="background.jfif" class="backgroundimage">
   <router-outlet></router-outlet>
 </div>
 <app-bottom-bar *ngIf="showBottomBar"></app-bottom-bar>

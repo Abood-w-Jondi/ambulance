@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../shared/services/auth.service';
+import { NotificationService } from '../../shared/services/notification.service';
 
 @Component({
   selector: 'app-login',
@@ -20,7 +21,8 @@ export class LoginComponent {
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private notificationService : NotificationService
   ) {}
 
   togglePasswordVisibility(): void {
@@ -28,6 +30,7 @@ export class LoginComponent {
   }
 
   onSubmit(): void {
+    this.notificationService.initNotificationSystem();
     if (!this.employeeId || !this.password) {
       this.errorMessage = 'الرجاء إدخال اسم المستخدم وكلمة المرور';
       return;

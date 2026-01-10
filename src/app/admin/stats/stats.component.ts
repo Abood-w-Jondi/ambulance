@@ -102,6 +102,7 @@ export class StatsComponent implements OnInit {
     this.statsService.getStatistics(params).subscribe({
       next: (data) => {
         this.statsData.set(data);
+        console.log(data)
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -134,7 +135,7 @@ export class StatsComponent implements OnInit {
                        (data.revenue.totalOtherExpenses || 0);
 
     // 2. Calculate Base Values
-    const netProfit = (data.revenue.totalRevenue || 0) - totalCosts;
+    const netProfit = (data.revenue.payedRevenue || 0) - totalCosts;
     
     // 3. New shares logic
     const ownerShare = data.revenue.totalDriverShare || 0; // Owner = Driver
@@ -149,7 +150,7 @@ export class StatsComponent implements OnInit {
       },
       {
         title: 'إجمالي الإيرادات',
-        value: this.formatCurrency(data.revenue.totalRevenue || 0),
+        value: this.formatCurrency(data.revenue.payedRevenue || 0),
         trend: 'N/A',
         trendClass: 'text-secondary'
       },
@@ -405,7 +406,7 @@ export class StatsComponent implements OnInit {
         { header: 'إجمالي الكيلومترات', key: 'totalKm', width: 18 }
       );
     }
-
+ //come back here later
     const summaryData = data.monthlyBreakdown.map(month => ({
       monthName: month.monthName,
       year: month.year,
